@@ -1,0 +1,18 @@
+Package: CondDensReg
+Type: Package
+Title: Conditional density regression for individual-level data
+Version: 0.1.0
+Authors@R: c(person("Alexander", "Fottner", role = "aut",
+		            email = "alexander.fottner@uni-a.de"), 
+			 person("Eva-Maria", "Maier", role = c("aut", "cre"), 
+			        email = "eva-maria.maier@hu-berlin.de"),
+			 person("Lea", "Runge", role = "aut", 
+			        email = "lea.runge.1@hu-berlin.de"))
+Maintainer: Eva-Maria Maier <eva-maria.maier@hu-berlin.de>
+Description: Structured additive regression models for mixed densities as
+    response and scalar covariates are fitted via Poisson regression models, where
+    the continuous part of the density is approximated with histograms.
+License: GPL-2
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
