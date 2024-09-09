@@ -286,7 +286,7 @@ dens_reg <- function(dta,
     ) - 4 - length(var_vec)):(length(
       colnames(dta_est)
     ) - 4)))
-  checking(
+  checking_dens_reg(
     m_density_var,
     k_density_var,
     sp_density_var,
@@ -311,7 +311,8 @@ dens_reg <- function(dta,
     }
   }
   if (is.null(sp_density_var)) {
-    sp_density_var <- -1
+    sp_density_var_vec <- -1
+    sp_density_var<-"NULL"
   }
   if (is.null(penalty_discrete)) {
     if (isFALSE(domain_continuous)) {
@@ -324,7 +325,7 @@ dens_reg <- function(dta,
       penalty_discrete <- "NULL"
     }
   } else{
-    fx = "TRUE"
+    fx = "FALSE"
   }
   ### E: Habe ich auskommentiert und lade es außerhalb der Funktion
   # source("mixed_density_smooth.R")
@@ -413,7 +414,7 @@ dens_reg <- function(dta,
           ",",
           k_density_var,
           "),mc = c(TRUE, FALSE), np = FALSE, sp=array(c(-1,",
-          sp_density_var,
+          sp_density_var_vec,
           " ))",
           ",fx=",
           fx,
@@ -454,7 +455,7 @@ dens_reg <- function(dta,
           ",mc = c(TRUE, FALSE), np = FALSE, by=",
           effect[5],
           ",sp=array(c(-1,",
-          sp_density_var,
+          sp_density_var_vec,
           " )),fx=",
           fx,
           ",xt=list(NULL,list(values_discrete=",
@@ -526,7 +527,7 @@ dens_reg <- function(dta,
         ",mc = c(TRUE, FALSE), np = FALSE, by=",
         effect[2],
         ",sp=array(c(-1,",
-        sp_density_var,
+        sp_density_var_vec,
         " )),fx=",
         fx,
         ",xt=list(NULL,list(values_discrete=",
@@ -649,15 +650,23 @@ dens_reg <- function(dta,
         clr(f_hat_clr, inverse = TRUE, w = dta_est$Delta[1:nrow(obs_density)])
     }
   }
+ 
   if (!isFALSE(values_discrete) & !isFALSE(domain_continuous)) {
-    interval_width <-
-      (domain_continuous[2] - domain_continuous[1]) / bin_number
-    t <- seq(
-      from = domain_continuous[1] + 1 / 2 * interval_width,
-      to = domain_continuous[2] - 1 / 2 * interval_width,
-      by = interval_width
-    )
-    t <- sort(c(t, values_discrete))
+    # interval_width <-
+    #   (domain_continuous[2] - domain_continuous[1]) / bin_number
+    # t <- seq(
+    #   from = domain_continuous[1] + 1 / 2 * interval_width,
+    #   to = domain_continuous[2] - 1 / 2 * interval_width,
+    #   by = interval_width
+    # )
+    if(colnames(dta_est)[2]=="weighted_counts"){
+    t <- unique(dta_est[,3])}
+    else{
+      t<-unique(dta_est[,2])
+    }
+    if (is.null(bin_number)){
+      bin_number<-nrow(t)-length(values_discrete)
+    }
     discrete_ind <- match(values_discrete, t)
     if (!is.null(ncol(f_hat_clr))) {
       f_hat <-
@@ -717,7 +726,7 @@ dens_reg <- function(dta,
     levels_singles <- c()
     ## find
     for (single in group_specific_intercepts) {
-      n <- length(unique(dta[, single]))
+      n <- length(unique(dta[, ..single]))
       levels_singles <- append(levels_singles, n)
     }
     positions_singles <-
@@ -796,7 +805,7 @@ dens_reg <- function(dta,
 
 
 ## Check arguments of dens_reg (preprocess checks remaining argumets)
-checking <-
+checking_dens_reg <-
   function(m_density_var,
            k_density_var,
            sp_density_var,
