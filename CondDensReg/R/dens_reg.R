@@ -114,9 +114,12 @@
 #' (before transformation to \eqn{L^2_0(\lambda)}, compare details). See
 #' \code{\link[mgcv]{choose.k}} for more information.
 #' If missing (\code{NULL}) it is set to 10.
-#' @param sp_density_var Integer specifying the smoothing parameter for the marginal
+#' @param sp_density_var Integer or vector specifying the smoothing parameter for the marginal
 #' penalty matrix for \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} (anisotropic penalty; like
-#' the argument \code{sp} in \code{\link[mgcv]{ti}}, etc.).
+#' the argument \code{sp} in \code{\link[mgcv]{ti}}, etc.). If a vector is submitted, all smoothing parameters
+#' in density direction are treated as fixed but with different values for the different partial effects. The
+#' order of parameters within this vector is the same as the order of partial effects as arguments of \code{dens_reg}.
+#' It must be of the same length as the number of partial effects.
 #' In the discrete case of only discrete values and a zero \code{penalty_discrete}, the smoothing
 #' parameter \code{sp_density_var} is set to zero in order to obtain an unpenalized
 #' model. If missing (\code{NULL}) or a negative value is supplied, the parameter
@@ -845,8 +848,8 @@ checking_dens_reg <-
       stop("k_density_var must be a natural number.")
     }
 
-    if (!check_integer_or_null(sp_density_var)) {
-      stop("sp_density_var must be an integer or NULL.")
+    if (!is.numeric(sp_density_var)&!is.null(sp_density_var)) {
+      stop("sp_density_var must be numeric or NULL.")
     }
 
     if (!check_integer_or_null(penalty_discrete)) {
