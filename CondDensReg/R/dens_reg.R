@@ -62,6 +62,7 @@
 #' @import tidyr
 #' @importFrom dplyr "%>%" arrange mutate
 #' @importFrom FDboost clr
+#' @importFrom Rdpack reprompt
 #'
 #' @param dta Data set of type \code{\link[base]{data.frame}} or
 #' \code{\link[data.table]{data.table}} containing the observations \eqn{(y_i, x_i)}
@@ -650,7 +651,7 @@ dens_reg <- function(dta,
         clr(f_hat_clr, inverse = TRUE, w = dta_est$Delta[1:nrow(obs_density)])
     }
   }
- 
+
   if (!isFALSE(values_discrete) & !isFALSE(domain_continuous)) {
     # interval_width <-
     #   (domain_continuous[2] - domain_continuous[1]) / bin_number
@@ -726,7 +727,7 @@ dens_reg <- function(dta,
     levels_singles <- c()
     ## find
     for (single in group_specific_intercepts) {
-      n <- length(unlist(unique(dta[, ..single])))
+      n <- length(unlist(unique(dta[, single])))
       levels_singles <- append(levels_singles, n)
     }
     positions_singles <-

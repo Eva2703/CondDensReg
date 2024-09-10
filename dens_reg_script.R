@@ -1,7 +1,5 @@
 
-devtools::document("C:/Users/learu/Dropbox/Master/Job HU/CondDensReg/R")
-devtools::load_all("C:/Users/learu/Dropbox/Master/Job HU/CondDensReg/R")
-devtools::load_all("C:/Users/learu/Dropbox/Master/Job HU/preprocessing/R")
+devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 
 #  in der Beschreibung/Details wären noch mehr math. Background gut (?)
 ?dens_reg
@@ -51,6 +49,8 @@ group_specific_intercepts <- c("covariate1", "covariate2")
 
 ### fit models ### (Achtung: kann je nach Auswahl d. Effekte ein paar Minuten dauern)
 
+
+devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 # fit model mixed
 m_mixed <- dens_reg(
   dta = dta,
