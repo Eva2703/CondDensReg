@@ -67,7 +67,7 @@ m_mixed <- dens_reg(
   group_specific_intercepts = group_specific_intercepts,
   flexible_effects = NULL,
   flexible_interaction =  NULL,
-  linear_effects = linear_effects,
+  linear_effects = NULL,
   functional_varying_coefficients = NULL,
   effects = TRUE,
   sp_density_var=NULL,

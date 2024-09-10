@@ -5,7 +5,7 @@ current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(paste0(current_working_dir, "/../.."))
 
 # Package to deal with big datasets
-library(data.table)
+#library(data.table)
 # Package to estimate GAMs (like our Poisson model)
 library(mgcv)
 library(devtools)
@@ -178,12 +178,12 @@ saveRDS(model_soep, "model_soep_standard.rds")
 
 
 ## model with dens_reg
-load_all("../CondDensReg")
+devtools::load_all("../CondDensReg")
 
 model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, sample_weights = 4,
                      m_density_var = c(2, 2),
                      k_density_var = 12,
-                     group_specific_intercepts = c("West_East","c_age","West_East_c_age"),
+                     group_specific_intercepts = c("West_East"),#,"c_age","West_East_c_age"),
                     #  flexible_effects = list(
                     # list("syear","ps",c(2,2),8),
                     # list("syear_","ps",c(2,2),7,"West_East"),
