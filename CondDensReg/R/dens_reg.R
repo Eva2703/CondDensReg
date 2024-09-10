@@ -142,7 +142,7 @@
 #' in the model. If mising (\code{NULL}), no linear is included.
 #' @param flexible_effects List of lists of the form
 #' \code{list(list("cov_1","basis_1", m_1,k_1,"by_1"),list(...),...)}. Each list
-#' is adding one flexible effect of the form \eqn{f_by(cov)} to the model with:
+#' is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
 #' \itemize{
 #' \item \code{"cov"}: Name of a numeric variable included in \code{var_vec}.
 #' \item \code{"basis"}: Character string specifying the type for the marginal
