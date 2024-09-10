@@ -726,7 +726,7 @@ dens_reg <- function(dta,
     levels_singles <- c()
     ## find
     for (single in group_specific_intercepts) {
-      n <- length(unique(dta[, ..single]))
+      n <- length(unlist(unique(dta[, ..single])))
       levels_singles <- append(levels_singles, n)
     }
     positions_singles <-

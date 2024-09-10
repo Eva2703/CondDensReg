@@ -182,24 +182,17 @@ load_all("Z:/densREG/CondDensReg")
 model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, sample_weights = 4, 
                      m_density_var = c(2, 2),
                      k_density_var = 12, 
-                     group_specific_intercepts = c("West_East"),#,"c_age","West_East_c_age"),
+                     group_specific_intercepts = c("West_East","c_age","West_East_c_age"),
                      flexible_effects = list(
-                    list("syear","ps",c(2,2),8)),
-                     #   list("syear_","ps",c(2,2),7,"West_East"),
-                     #   list("syear","ps",c(2,2),8,"c_age"),
-                     #   list("syear","ps",c(2,2),8,"West_c_age"),
-                     #   list("syear_","ps",c(2,2),7,"East_c_age"),)
-                     effects=FALSE,
+                    list("syear","ps",c(2,2),8),
+                    list("syear_","ps",c(2,2),7,"West_East"),
+                    list("syear","ps",c(2,2),8,"c_age"),
+                    list("syear","ps",c(2,2),8,"West_c_age"),
+                     list("syear_","ps",c(2,2),7,"East_c_age")),
+                     effects=TRUE,
                      knots = list(syear_ = knots_east))
 
 
-
-
-
-
-
-
-"counts~ti(share, bs=\"md\",mc=FALSE, np=FALSE, m = list(c(2, 2)), k = 12,sp=NULL,fx=TRUE,xt=list(list(values_discrete=c(0, 1),  domain_continuous=c(0, 1), weights_discrete=c(1, 1),penalty_discrete= 1)))+ ti(share, bs=\"md\",m = list(c(2, 2)), k = 12,mc = FALSE, np = FALSE, by=West_East,sp=NULL,fx=TRUE,xt=list(list(values_discrete=c(0, 1),  domain_continuous=c(0, 1), weights_discrete=c(1, 1),penalty_discrete= 1)))+ ti(share, bs=\"md\",m = list(c(2, 2)), k = 12,mc = FALSE, np = FALSE, by=c_age,sp=NULL,fx=TRUE,xt=list(list(values_discrete=c(0, 1),  domain_continuous=c(0, 1), weights_discrete=c(1, 1),penalty_discrete= 1)))+ ti(share, bs=\"md\",m = list(c(2, 2)), k = 12,mc = FALSE, np = FALSE, by=West_East_c_age,sp=NULL,fx=TRUE,xt=list(list(values_discrete=c(0, 1),  domain_continuous=c(0, 1), weights_discrete=c(1, 1),penalty_discrete= 1)))+ ti(syear,share, bs=c(\"ps\",\"md\"),m = list(c(2, 2),c(2, 2)), k =c( 8,12),mc = c(TRUE, FALSE), np = FALSE, sp=array(c(-1,-1 )),fx=TRUE,xt=list(NULL,list(values_discrete=c(0, 1),  domain_continuous=c(0, 1), weights_discrete=c(1, 1),penalty_discrete= 1)))+ as.factor(group_id) -1 + offset(log(Delta) + gam_offsets)"
 
 
 
