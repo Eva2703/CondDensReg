@@ -11,9 +11,10 @@ library(mgcv)
 library(devtools)
 
 # load self-written smoother for mixed reference measure
-load_all("Z:/densREG/CondDensReg")
+#load_all("Z:/densREG/CondDensReg")
+load_all("../CondDensReg")
 # load functions used to prepare data appropriately to be used in Poisson model
-source("Z:/densREG/data_prep.R")
+# source("Z:/densREG/data_prep.R")
 
 # load data, add missing variables and transform characters to ordered factors
 # (necessary for reference coding in gam(); lowest factor level is used as
@@ -177,37 +178,17 @@ saveRDS(model_soep, "model_soep_standard.rds")
 
 
 ## model with dens_reg
-load_all("Z:/densREG/CondDensReg")
+load_all("../CondDensReg")
 
-model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, sample_weights = 4, 
+model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, sample_weights = 4,
                      m_density_var = c(2, 2),
-                     k_density_var = 12, 
+                     k_density_var = 12,
                      group_specific_intercepts = c("West_East","c_age","West_East_c_age"),
-                     flexible_effects = list(
-                    list("syear","ps",c(2,2),8),
-                    list("syear_","ps",c(2,2),7,"West_East"),
-                    list("syear","ps",c(2,2),8,"c_age"),
-                    list("syear","ps",c(2,2),8,"West_c_age"),
-                     list("syear_","ps",c(2,2),7,"East_c_age")),
+                    #  flexible_effects = list(
+                    # list("syear","ps",c(2,2),8),
+                    # list("syear_","ps",c(2,2),7,"West_East"),
+                    # list("syear","ps",c(2,2),8,"c_age"),
+                    # list("syear","ps",c(2,2),8,"West_c_age"),
+                    #  list("syear_","ps",c(2,2),7,"East_c_age")),
                      effects=TRUE,
                      knots = list(syear_ = knots_east))
-
-
-
-
-
-
-model_soep <- gam(counts ~ ti(share, bs = "md", m = list(c(2, 2)), k = 12,
-                              mc = FALSE, np = FALSE,sp=NULL) # default: no penalty for discrete component
-
-                         + ti(share, bs = "md", m = list(c(2, 2)), k = 12,
-                       mc = FALSE, np = FALSE, by = West_East_c_age)
-                  + ti(syear, share, bs = c("ps", "md"), m = list(c(2,2), c(2,2)),
-                       k = c(8, 12), mc = c(TRUE, FALSE), np = FALSE, sp=array(c(-1,-1)))#
-
-                  + as.factor(group_id) - 1 # no scalar intercept, but one intercept per covariate combination
-                  + offset(log(Delta) + gam_offsets),
-                  data = dta_est, weights = dta_est$gam_weights,
-                  knots = list(syear_ = knots_east),
-                  method = "REML", family = poisson())
-
