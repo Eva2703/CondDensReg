@@ -118,8 +118,8 @@
 #' penalty matrix for \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} (anisotropic penalty; like
 #' the argument \code{sp} in \code{\link[mgcv]{ti}}, etc.). If a vector is submitted, all smoothing parameters
 #' in density direction are treated as fixed but with different values for the different partial effects. The
-#' order of parameters within this vector is the same as the order of partial effects as arguments of \code{dens_reg}.
-#' It must be of the same length as the number of partial effects.
+#' order of parameters within this vector is the same as the order of partial effects as arguments of \code{dens_reg} with the firtst parameter corresponding to the intercept.
+#' It must be of the same length as the number of partial effects plus one.
 #' In the discrete case of only discrete values and a zero \code{penalty_discrete}, the smoothing
 #' parameter \code{sp_density_var} is set to zero in order to obtain an unpenalized
 #' model. If missing (\code{NULL}) or a negative value is supplied, the parameter
@@ -316,13 +316,22 @@ dens_reg <- function(dta,
   }
   if (is.null(sp_density_var)) {
     sp_density_var_vec <- -1
-    sp_density_var<-"NULL"
+    sp_density_var_<-"NULL"
+  }else{
+
+  if (length(sp_density_var)==1){
+    sp_density_var_<-sp_density_var
+    sp_density_var_vec<-sp_density_var
   }
+  }
+
+
+
   if (is.null(penalty_discrete)) {
     if (isFALSE(domain_continuous)) {
       fx <- "FALSE"
       penalty_discrete <- "NULL"
-      sp_density_var <- 0
+      sp_density_var_ <- 0
     }
     else{
       fx <- "FALSE"
@@ -334,6 +343,11 @@ dens_reg <- function(dta,
   ### E: Habe ich auskommentiert und lade es außerhalb der Funktion
   # source("mixed_density_smooth.R")
   # source("plain_fcts.R")
+  j<-1
+  if (length(sp_density_var)>1){
+    sp_density_var_<-sp_density_var[j]
+    sp_density_var_vec<-sp_density_var[j]
+  }
   f_main <-
     paste0(
       "counts~ti(",
@@ -345,7 +359,7 @@ dens_reg <- function(dta,
       "), k = ",
       k_density_var,
       ",sp=",
-      sp_density_var,
+      sp_density_var_,
       ",fx=",
       fx,
       ",xt=list(list(values_discrete=",
@@ -364,7 +378,12 @@ dens_reg <- function(dta,
   f_linear <- ""
   f_function_var_coef <- ""
   f_flex_interact <- ""
+  j<-j+1
   for (effect in group_specific_intercepts) {
+    if (length(sp_density_var)>1){
+      sp_density_var_<-sp_density_var[j]
+      sp_density_var_vec<-sp_density_var[j]
+    }
     f_intercepts <-
       paste0(
         f_intercepts,
@@ -379,7 +398,7 @@ dens_reg <- function(dta,
         ",mc = FALSE, np = FALSE, by=",
         effect,
         ",sp=",
-        sp_density_var,
+        sp_density_var_,
         ",fx=",
         fx,
         ",xt=list(list(values_discrete=",
@@ -393,8 +412,13 @@ dens_reg <- function(dta,
 
         ")))"
       )
+    j<-j+1
   }
   for (effect in flexible_effects) {
+    if (length(sp_density_var)>1){
+      sp_density_var_<-sp_density_var[j]
+      sp_density_var_vec<-sp_density_var[j]
+    }
     if (is.null(effect[5][[1]])) {
       f_flexibles <-
         paste0(
@@ -474,8 +498,13 @@ dens_reg <- function(dta,
           ")))"
         )
     }
+    j<-j+1
   }
   for (effect in linear_effects) {
+    if (length(sp_density_var)>1){
+      sp_density_var_<-sp_density_var[j]
+      sp_density_var_vec<-sp_density_var[j]
+    }
     f_linear <-
       paste0(
         f_intercepts,
@@ -490,7 +519,7 @@ dens_reg <- function(dta,
         ",mc = FALSE, np = FALSE, by=",
         effect,
         ",sp=",
-        sp_density_var,
+        sp_density_var_,
         ",fx=",
         fx,
         ",xt=list(list(values_discrete=",
@@ -504,8 +533,13 @@ dens_reg <- function(dta,
 
         ")))"
       )
-  }
+  j<-j+1
+    }
   for (effect in functional_varying_coefficients) {
+    if (length(sp_density_var)>1){
+      sp_density_var_<-sp_density_var[j]
+      sp_density_var_vec<-sp_density_var[j]
+    }
     f_function_var_coef <-
       paste0(
         f_function_var_coef,
@@ -545,8 +579,13 @@ dens_reg <- function(dta,
 
         ")))"
       )
-  }
+    j<-j+1
+    }
   for (effect in flexible_interaction) {
+    if (length(sp_density_var)>1){
+      sp_density_var_<-sp_density_var[j]
+      sp_density_var_vec<-sp_density_var[j]
+    }
     f_flex_interact <-
       paste0(
         f_flex_interact,
@@ -570,7 +609,7 @@ dens_reg <- function(dta,
         ",FALSE), np = FALSE,sp=array(c(",
         paste0(rep("-1", length(effect[[1]])), collapse = ","),
         ",",
-        sp_density_var,
+        sp_density_var_,
         " )),fx=",
         fx,
         ",xt=list(",
@@ -585,6 +624,7 @@ dens_reg <- function(dta,
         penalty_discrete,
         ")))"
       )
+    j<-j+1
   }
   f <-
     paste0(

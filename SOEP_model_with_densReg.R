@@ -191,4 +191,5 @@ model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, s
                     # list("syear","ps",c(2,2),8,"West_c_age"),
                     #  list("syear_","ps",c(2,2),7,"East_c_age")),
                      effects=TRUE,
+                    sp_density_var = c(0.4,10),
                      knots = list(syear_ = knots_east))

@@ -70,7 +70,7 @@ m_mixed <- dens_reg(
   linear_effects = NULL,
   functional_varying_coefficients = NULL,
   effects = TRUE,
-  sp_density_var=NULL,
+  sp_density_var=c(1,3,5),
   penalty_discrete = NULL
 )
 
