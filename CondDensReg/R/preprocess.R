@@ -22,17 +22,17 @@
 #' \item \code{density_var} - Marks the mid of the respective histogram bin (for values in \eqn{I\setminus D}) or the discrete value. If a mid corresponds to a discrete value, the mid is shifted to the right by \eqn{0.0001} times the minimal distance to the next interval interval limit OR discrete value so that no mid is exactly corresponding to a discrete value. A warning message is generated in this case.
 #' \item all variable columns which where specified by \code{var_vec} - These columns contain the values of the respective variables.
 #' \item \code{goup_id} - ID of each covariate combination.
-#' \item \code{gam_weights} - Vector to be passed to argument \code{weights} in \code{gam()} when fitting the Poisson Model, if \code{dta} contains sample weights, see Appendix C of Maier et al. (2023).
+#' \item \code{gam_weights} - Vector to be passed to argument \code{weights} in \code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{dta} contains sample weights, see Appendix C of Maier et al. (2023).
 #' \item \code{gam_offset} - Negative logarithm of \code{gam_weights} to be used as offset to the predictor of the Poisson Model, if \code{dta} contains sample weights, see Appendix C of Maier et al. (2023).
 #' \item \code{Delta} - Width of the histogram bin or weight of the dirac measure for a discrete value defined by \code{weights_discrete}. The Poisson model uses \code{offset(log(Delta))} to add the necessary additive term in the predictor that includes binwidths/dirac weights into the estimation.
 #' \item \code{discrete} - Logical value if the respective \code{density_var} is a discrete value in \eqn{D}.
 #' }
 #' @examples
 #' set.seed(101)
-#' 
+#'
 #' # create data where 0 and 1 are the discrete observations, values
 #' # equal 2 are replaced below by drawing from a beta distribution
-#' 
+#'
 #' dta <-data.frame(
 #' obs_density = sample(0:2, 100, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
 #' covariate1 = sample(c("a", "b"), 100, replace = TRUE),
@@ -40,7 +40,7 @@
 #' sample_weights = runif(100, 0, 2)
 #' )
 #' dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density == 2)), shape1 = 3, shape2 = 3)
-#' 
+#'
 #' # Create histogram count dataset for dta using 10 equidistant
 #' # bins and default values for continuous domain, discrete
 #' # values and discrete weights while considering a mixed case
@@ -91,7 +91,7 @@
 #' # filter data set for only observations valued in discrete domain
 #'
 #' dta_discrete<-dta%>%filter(obs_density==0|obs_density==1)
-#' 
+#'
 #' # The use of "domain_continuous=FALSE" refers to histogram data in a
 #' # purely discrete setting:
 #'
