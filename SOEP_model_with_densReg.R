@@ -5,16 +5,15 @@ current_working_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(paste0(current_working_dir, "/../.."))
 
 # Package to deal with big datasets
-#library(data.table)
+library(data.table)
 # Package to estimate GAMs (like our Poisson model)
 library(mgcv)
 library(devtools)
 
 # load self-written smoother for mixed reference measure
-#load_all("Z:/densREG/CondDensReg")
-load_all("../CondDensReg")
+load_all("Z:/densREG/CondDensReg")
 # load functions used to prepare data appropriately to be used in Poisson model
-# source("Z:/densREG/data_prep.R")
+source("Z:/densREG/data_prep.R")
 
 # load data, add missing variables and transform characters to ordered factors
 # (necessary for reference coding in gam(); lowest factor level is used as
@@ -116,11 +115,11 @@ dta_est$East_c_age <- factor(ifelse(grepl("East", dta_est$West_East_c_age),
 dta_<-dta
 dta_$syear_ <- ifelse(dta_$West_East == "East", dta_$syear, mean(dta_est$syear))
 dta_$West_c_age <- factor(ifelse(dta_$West_East_c_age %in% c("West_3", paste0("East_", 1:3)),
-                                    "West_3_East", as.character(dta_$West_East_c_age)),
-                             levels = c("West_3_East", paste0("West_", 2:1)), ordered = TRUE)
+                                 "West_3_East", as.character(dta_$West_East_c_age)),
+                          levels = c("West_3_East", paste0("West_", 2:1)), ordered = TRUE)
 dta_$East_c_age <- factor(ifelse(grepl("East", dta_$West_East_c_age),
-                                    as.character(dta_$West_East_c_age), "West"),
-                             levels = c("West", paste0("East_", 3:1)), ordered = TRUE)
+                                 as.character(dta_$West_East_c_age), "West"),
+                          levels = c("West", paste0("East_", 3:1)), ordered = TRUE)
 
 
 # create preprocessed data set to compare dta_est to with preprocess
@@ -178,18 +177,27 @@ saveRDS(model_soep, "model_soep_standard.rds")
 
 
 ## model with dens_reg
-devtools::load_all("../CondDensReg")
+load_all("Z:/densREG/CondDensReg")
 
 model_new<- dens_reg(dta=dta_, var_vec = c(6,7,8,3,11,12,13), density_var = 1, sample_weights = 4,
                      m_density_var = c(2, 2),
                      k_density_var = 12,
-                     group_specific_intercepts = c("West_East"),#,"c_age","West_East_c_age"),
-                    #  flexible_effects = list(
-                    # list("syear","ps",c(2,2),8),
-                    # list("syear_","ps",c(2,2),7,"West_East"),
-                    # list("syear","ps",c(2,2),8,"c_age"),
-                    # list("syear","ps",c(2,2),8,"West_c_age"),
-                    #  list("syear_","ps",c(2,2),7,"East_c_age")),
+                     group_specific_intercepts = c("West_East","c_age","West_East_c_age"),
+                     flexible_effects = list(
+                       list("syear","ps",c(2,2),8),
+                       list("syear_","ps",c(2,2),7,"West_East"),
+                       list("syear","ps",c(2,2),8,"c_age"),
+                       list("syear","ps",c(2,2),8,"West_c_age"),
+                       list("syear_","ps",c(2,2),7,"East_c_age")),
                      effects=TRUE,
-                    sp_density_var = c(0.4,10),
                      knots = list(syear_ = knots_east))
+
+
+saveRDS(model_new, "model_soep_dens_Reg.rds")
+
+
+
+
+model_new<-readRDS("model_SOEP_with_densReg.rds")
+model_alt<-readRDS("model_soep_standard.rds")
+model<-model_new$model
