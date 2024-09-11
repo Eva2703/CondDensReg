@@ -240,7 +240,7 @@ dens_reg <- function(dta,
                      m_density_var,
                      k_density_var=10,
                      sp_density_var = NULL,
-                     penalty_discrete = 1,
+                     penalty_discrete = NULL,
                      group_specific_intercepts = NULL,
                      # list: c("var_name1",...)
                      ##  ti(density_var, bs = "md", m = m_density_var, k = k_densitdy var, mc = FALSE, np = FALSE, by = var_name1)
