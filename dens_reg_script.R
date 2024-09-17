@@ -169,11 +169,11 @@ p7<-predict(m_mixed, type= "pdf", new_data=nd%>%select(covariate1))
 
 ### plot predicted effects ####
 devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
-
+all_terms <- sapply(m_cont$model$smooth, "[[",  "label")
 plot(m_cont, type="effects", level="pdf", predict = nd)
 # only intercept and interactive effect
 
-plot(m_cont, type="effects", level="pdf", predict = nd, terms=c(1,5))
+plot(m_cont, type="effects", level="pdf", predict = nd, terms=c(1))
 
 
 
