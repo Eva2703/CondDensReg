@@ -93,9 +93,7 @@ m_dis <- dens_reg(
   flexible_interaction = NULL,
   linear_effects = NULL,
   functional_varying_coefficients = NULL,
-  effects = TRUE,
-
-  penalty_discrete = NULL
+  effects = TRUE
 )
 
 
@@ -114,13 +112,12 @@ m_cont <- dens_reg(
   domain_continuous = c(0,1),
   m_density_var = c(2, 2),
   k_density_var = 12,
-  group_specific_intercepts = group_specific_intercepts,
+  group_specific_intercepts = NULL,
   flexible_effects = NULL,
   flexible_interaction = flex_inter,
   linear_effects = NULL,
   functional_varying_coefficients = NULL,
-  effects = TRUE,
-  penalty_discrete = NULL
+  effects = TRUE
 )
 
 
@@ -171,6 +168,7 @@ p7<-predict(m_mixed, type= "pdf", new_data=nd%>%select(covariate1))
 
 
 ### plot predicted effects ####
+devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 
 plot(m_cont, type="effects", level="pdf", predict = nd)
 # only intercept and interactive effect
