@@ -1156,10 +1156,17 @@ plot.dens_reg_obj <-
             sp <- "[(),:]"
 
             parts <- unlist(strsplit(names(effects)[j], sp))
-            parts<-parts[parts%in%(colnames(predict))]
+            included<-sapply(colnames(predict), function(substr) {
+              any(grepl(substr,parts, ignore.case = TRUE))
+            })
+            parts<-colnames(predict)[included]
+
+
+
+            #parts<-parts[parts%in%(colnames(predict))]
             terms_title<-paste(parts,collapse=", ")
             legend_labels<-paste(as.data.frame(unlist(t((predict%>%select(parts))))))
-            legend_labels<-gsub('[c()]', '', legend_labels)
+            #legend_labels<-gsub('["c(")]', '', legend_labels)
             if( names(effects)[j]=="intercept"){
               eff<-eff[,1]
               single<-TRUE

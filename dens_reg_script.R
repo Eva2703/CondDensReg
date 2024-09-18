@@ -113,8 +113,8 @@ m_cont <- dens_reg(
   m_density_var = c(2, 2),
   k_density_var = 12,
   group_specific_intercepts = NULL,
-  flexible_effects = NULL,
-  flexible_interaction = flex_inter,
+  flexible_effects = flexible_effects,
+  flexible_interaction = NULL,
   linear_effects = NULL,
   functional_varying_coefficients = NULL,
   effects = TRUE
@@ -174,7 +174,7 @@ all_terms <- sapply(m_cont$model$smooth, "[[",  "label")
 plot(m_cont, type="effects", level="pdf", display_all =  FALSE)
 # only intercept and interactive effect
 
-plot(m_mixed, type="effects", level="pdf", predict = nd)
+plot(m_cont, type="effects", level="pdf", predict = nd)
 
 
 
