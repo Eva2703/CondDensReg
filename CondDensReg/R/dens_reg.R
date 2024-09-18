@@ -1153,30 +1153,50 @@ plot.dens_reg_obj <-
             )
           j <- 1
           for (eff in effects) {
+            sp <- "[(),:]"
+
+            parts <- unlist(strsplit(names(effects)[j], sp))
+            parts<-parts[parts%in%(colnames(predict))]
+            terms_title<-paste(parts,collapse=", ")
+            if( names(effects)[j]=="intercept"){
+              eff<-eff[,1]
+              single<-TRUE
+              terms_title<-"intercept"
+              legend.position="none"
+            }else{
+              single<-TRUE
+              legend.position=NULL
+            }
+
             if (all(obj$histo_data$discrete == FALSE)) {
+
               p <-
                 plot_densities(
                   eff,
                   G = G,
                   domain = domain,
-                  single = TRUE,
+                  #single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
-                  ylab = "density"
+                  legend_title = terms_title,
+                  ylab = "density",
+                  single=single,
+                  legend.position=legend.position
                 )
               plot_list <- append(plot_list, list(p))
-              j <- j + 1
-            }
+              j <- j + 1}
+
             if (all(obj$histo_data$discrete == TRUE)) {
               p <-
                 plot_densities_discrete(
                   eff,
                   G = G,
                   values_discrete = unlist(obj$params[2]),
-                  single = TRUE,
+                 # single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
-                  ylab = "density"
+                  legend_title = terms_title,
+                  ylab = "density",
+                  single=single,
+                 legend.position=legend.position
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1
@@ -1189,10 +1209,12 @@ plot.dens_reg_obj <-
                   G = G,
                   domain = domain,
                   values_discrete = unlist(obj$params[2]),
-                  single = TRUE,
+                 # single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
-                  ylab = "density"
+                  legend_title = terms_title,
+                  ylab = "density",
+                  single=single,
+                 legend.position=legend.position
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1
@@ -1206,12 +1228,12 @@ plot.dens_reg_obj <-
               obj,
               type = "terms",
               which = terms,
-              new_data = predict,
-              level = level
+              new_data = predict
             )
           j <- 1
           for (eff in effects) {
             if (all(obj$histo_data$discrete == FALSE)) {
+              lev <- sort(unique(obj$histo_data[[flexible_effects[[1]]]]))
               p <-
                 plot_densities(
                   eff,
@@ -1219,7 +1241,8 @@ plot.dens_reg_obj <-
                   domain = domain,
                   single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
+                  legend_title = terms_title,
+                  legend_names="",
                   ylab = "clr(density)"
                 )
               plot_list <- append(plot_list, list(p))
@@ -1233,7 +1256,7 @@ plot.dens_reg_obj <-
                   values_discrete = unlist(obj$params[2]),
                   single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
+                  legend_title = terms_title,
                   ylab = "clr(density)"
                 )
               plot_list <- append(plot_list, list(p))
@@ -1249,7 +1272,7 @@ plot.dens_reg_obj <-
                   values_discrete = unlist(obj$params[2]),
                   single = TRUE,
                   main = names(effects)[j],
-                  legend_title = "row in\nnew data",
+                  legend_title = terms_title,
                   ylab = "clr(density)"
                 )
               plot_list <- append(plot_list, list(p))

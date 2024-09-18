@@ -174,7 +174,7 @@ all_terms <- sapply(m_cont$model$smooth, "[[",  "label")
 plot(m_cont, type="effects", level="pdf", display_all =  FALSE)
 # only intercept and interactive effect
 
-plot(m_cont, type="effects", level="pdf", predict = nd, terms=c(1))
+plot(m_cont, type="effects", level="pdf", predict = nd)
 
 
 
