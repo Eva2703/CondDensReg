@@ -26,7 +26,8 @@
 
 \item{level}{Indicates for \code{type="effects"} with "clr" that the clr-transformed effects in \eqn{L^2_0(\mu)} and with "pdf" that the partial effects in \eqn{B^2(\mu)} are plotted.}
 
-\item{display_all}{Indicates for \code{type="effects"} wether all curves are plotted for effects depending on continuous covariates, i.e., for each observed value of the covariate one curve is plotted, (\code{display_all=TRUE}) or if only three curves (min, med, max) are shown (\code{display_all=FALSE}).}
+\item{display_all}{Indicates for \code{type="effects"} and \code{predict=NULL} wether all curves are plotted for effects depending on continuous covariates, i.e., for each observed value of the covariate one curve is plotted, (\code{display_all=TRUE}) or if only three curves (min, med, max) are shown (\code{display_all=FALSE}).
+If the effects are predicted for new data, i.e., \code{predict} is not \code{NULL}, \code{display_all=FALSE} causes that only the predicted effects for the first, middle and last row are displayed.}
 
 \item{pick_sites}{Vector of integers from 1 to 6. Indicates for \code{type="effects"} if only certain effects should be plotted. Number corresponds to the order of the different effect types in the argument of \code{dens_reg}. If missing (\code{NULL}) all included effects are plotted.}
 

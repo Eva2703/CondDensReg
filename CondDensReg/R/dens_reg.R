@@ -226,7 +226,41 @@
 #' \item \code{ID_covCombi}: Data frame which gives an overview over the assignment
 #' of the unique covariate combinations to the group IDs.
 #' }
+#' @examples
+#' \donttest{
+#' # create data (mixed)
+#'
+#'dta <- data.frame(
+#'obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
+#'covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+#'covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+#'covariate3 = rep(rnorm(n = 15), 10),
+#'covariate4 = rep(rnorm(n = 10), 15),
+#'covariate5=rep(rnorm(n = 10), 15),
+#'sample_weights = runif(150, 0, 2))
+#'dta[which(dta$obs_density == 2),]$obs_density <-rbeta(length(which(dta$obs_density == 2)), shape1 = 3, shape2 = 3)
+#'dta$covariate1 <- ordered(dta$covariate1)
+#'dta$covariate2 <- ordered(dta$covariate2)
+#'
+#'# create discrete data
+#'
+#'dta_dis <- data.frame(
+#'obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45,0.3)),
+#'covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+#'covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+#'covariate3 = rep(rnorm(n = 15), 10),
+#'covariate4 = rep(rnorm(n = 10), 15),
+#'covariate5=rep(rnorm(n = 10), 15),
+#'sample_weights = runif(150, 0, 2))
+#'dta_dis$covariate1 <- ordered(dta_dis$covariate1)
+#'dta_dis$covariate2 <- ordered(dta_dis$covariate2)
+
+#'
+#'
+#' }
 #' @export
+#' @references Maier, E. M., Fottner, A., Stöcker, A., Okhrin, Y., & Greven, S. (2023). Conditional density regression for individual-level data.
+
 
 dens_reg <- function(dta,
                      var_vec,

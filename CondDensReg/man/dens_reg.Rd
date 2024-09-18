@@ -18,7 +18,7 @@ dens_reg(
   m_density_var,
   k_density_var = 10,
   sp_density_var = NULL,
-  penalty_discrete = 1,
+  penalty_discrete = NULL,
   group_specific_intercepts = NULL,
   linear_effects = NULL,
   flexible_effects = NULL,
@@ -266,4 +266,39 @@ part of the domain. For details, see Maier et al. (2023).
 estimates the corresponding poisson model. Furthermore, the resulting densities on
 pdf- and clr-level as well as the estimated partial effects on both levels are
 calculated.
+}
+\examples{
+\donttest{
+# create data (mixed)
+
+dta <- data.frame(
+obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
+covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+covariate3 = rep(rnorm(n = 15), 10),
+covariate4 = rep(rnorm(n = 10), 15),
+covariate5=rep(rnorm(n = 10), 15),
+sample_weights = runif(150, 0, 2))
+dta[which(dta$obs_density == 2),]$obs_density <-rbeta(length(which(dta$obs_density == 2)), shape1 = 3, shape2 = 3)
+dta$covariate1 <- ordered(dta$covariate1)
+dta$covariate2 <- ordered(dta$covariate2)
+
+# create discrete data
+
+dta_dis <- data.frame(
+obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45,0.3)),
+covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+covariate3 = rep(rnorm(n = 15), 10),
+covariate4 = rep(rnorm(n = 10), 15),
+covariate5=rep(rnorm(n = 10), 15),
+sample_weights = runif(150, 0, 2))
+dta_dis$covariate1 <- ordered(dta_dis$covariate1)
+dta_dis$covariate2 <- ordered(dta_dis$covariate2)
+
+
+}
+}
+\references{
+Maier, E. M., Fottner, A., Stöcker, A., Okhrin, Y., & Greven, S. (2023). Conditional density regression for individual-level data.
 }
