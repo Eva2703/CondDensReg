@@ -1158,11 +1158,14 @@ plot.dens_reg_obj <-
             parts <- unlist(strsplit(names(effects)[j], sp))
             parts<-parts[parts%in%(colnames(predict))]
             terms_title<-paste(parts,collapse=", ")
+            legend_labels<-paste(as.data.frame(unlist(t((predict%>%select(parts))))))
+            legend_labels<-gsub('[c()]', '', legend_labels)
             if( names(effects)[j]=="intercept"){
               eff<-eff[,1]
               single<-TRUE
               terms_title<-"intercept"
               legend.position="none"
+              legend_labels<-"intercept"
             }else{
               single<-TRUE
               legend.position=NULL
@@ -1180,7 +1183,8 @@ plot.dens_reg_obj <-
                   legend_title = terms_title,
                   ylab = "density",
                   single=single,
-                  legend.position=legend.position
+                  legend.position=legend.position,
+                  legend_names = legend_labels
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1}
@@ -1196,7 +1200,8 @@ plot.dens_reg_obj <-
                   legend_title = terms_title,
                   ylab = "density",
                   single=single,
-                 legend.position=legend.position
+                 legend.position=legend.position,
+                 legend_names = legend_labels
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1
@@ -1214,7 +1219,8 @@ plot.dens_reg_obj <-
                   legend_title = terms_title,
                   ylab = "density",
                   single=single,
-                 legend.position=legend.position
+                 legend.position=legend.position,
+                 legend_names = legend_labels
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1

@@ -148,7 +148,7 @@ plot(m_mixed, type="effects", display_all = FALSE,level="clr", main="test",legen
 all_terms <- sapply(m_mixed$model$smooth, "[[",  "label")
 
 # create newdata for predict
-nd<-data.frame(covariate1=c("a","b","c"),covariate4=c(0.4,0.5,0.1), covariate2=c("d","d","c"),covariate3=c(1,0,0.2),covariate5=c(0.2,0.4,1))
+nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 
 # predict mixed model, all terms on pdf-level without newdata
 p1<-predict(m_mixed, type= "terms",level="pdf")
@@ -174,7 +174,7 @@ all_terms <- sapply(m_cont$model$smooth, "[[",  "label")
 plot(m_cont, type="effects", level="pdf", display_all =  FALSE)
 # only intercept and interactive effect
 
-plot(m_cont, type="effects", level="pdf", predict = nd)
+plot(m_mixed, type="effects", level="pdf", predict = nd)
 
 
 
