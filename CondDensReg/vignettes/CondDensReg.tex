@@ -1,0 +1,192 @@
+\documentclass{article}
+\usepackage{amstext}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[round]{natbib}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{rotating}
+\usepackage{authblk}
+\usepackage[left=25mm, right=25mm, top=20mm, bottom=20mm]{geometry}
+%\usepackage[nolists]{endfloat}
+%\usepackage{mathspec}
+\usepackage{dsfont}
+\usepackage{bbm}
+
+%\VignetteEngine{knitr::knitr}
+%\VignetteDepends{FDboost, fda, fields, maps, mapdata}
+%\VignetteIndexEntry{FDboost density-on-scalar births}
+
+\newcommand{\Rpackage}[1]{{\normalfont\fontseries{b}\selectfont #1}}
+\newcommand{\Robject}[1]{\texttt{#1}}
+\newcommand{\Rclass}[1]{\textit{#1}}
+\newcommand{\Rcmd}[1]{\texttt{#1}}
+\newcommand{\Roperator}[1]{\texttt{#1}}
+\newcommand{\Rarg}[1]{\texttt{#1}}
+\newcommand{\Rlevel}[1]{\texttt{#1}}
+
+\newcommand{\RR}{\textsf{R}}
+\renewcommand{\S}{\textsf{S}}
+\newcommand{\df}{\mbox{df}}
+\DeclareMathOperator{\clr}{clr}
+\newcommand{\ddelta}{\, \mathrm{d}\delta}
+
+\RequirePackage[T1]{fontenc}
+\RequirePackage{graphicx,ae,fancyvrb}
+\IfFileExists{upquote.sty}{\RequirePackage{upquote}}{}
+\usepackage{relsize}
+
+\renewcommand{\baselinestretch}{1}
+\setlength\parindent{0pt}
+
+
+\hypersetup{%
+  pdftitle = {density-on-scalar births},
+  pdfsubject = {package vignette},
+  pdfauthor = {Eva-Maria Maier},
+%% change colorlinks to false for pretty printing
+  colorlinks = {true},
+  linkcolor = {blue},
+  citecolor = {blue},
+  urlcolor = {red},
+  hyperindex = {true},
+  linktocpage = {true},
+}
+
+\usepackage{Sweave}
+\begin{document}
+\input{CondDensReg-concordance}
+
+\setkeys{Gin}{width=\textwidth}
+
+\title{Live births in Germany: density-on-scalar regression}
+\author{Eva-Maria Maier
+\thanks{E-mail: eva-maria.maier@hu-berlin.de}}
+\affil{\textit{Wirtschaftswissenschaftliche Fakult\"at, \\
+Humboldt-Universit\"at zu Berlin, \\
+Unter den Linden 6, D-10099 Berlin, Germany.}}
+% Spandauer Stra{\ss}e 1, D-10178 Berlin, Germany.}}
+\date{}
+\maketitle
+
+% Inline code evaluation with , e.g., 10
+
+% \noindent$^1$
+%            \newline
+
+% To Do: Referenzen, wenn mein Paper auf Arxiv
+
+\noindent
+This vignette illustrates how to use \Rpackage{FDboost}, which was designed for functional regression (Brockhaus et al., 2015),
+for density-on-scalar regression.
+Despite being a special case of function-on-scalar regression (at least for densities defined on a nontrivial interval with respect to the Lebesgue measure, which we refer to as \emph{continuous case}), it has to be treated differently due to the special properties of probability density functions, namely nonnegativity and integration to one.
+Our vignette is based on the approach by Maier et al. (2021).
+
+\section{Load and plot data}
+
+We use the data set \texttt{birthDistribution} from the package \Rpackage{FDboost}, containing densities of live births in Germany over the months per year (1950-2019) and sex (male and female), resulting in 140 densities.
+It is a list with the following elements:
+\begin{itemize}
+\item
+\texttt{birth\_densities}:
+A 140 x 12 matrix containing the birth densities in its rows. The first 70 rows correspond to male newborns, the second 70 rows to female ones. Within both of these, the years are ordered increasingly (1950-2019).
+\item
+\texttt{birth\_densities\_clr}:
+A 140 x 12 matrix containing the clr transformed densities in its rows. Same structure as \texttt{birth\_densities}.
+\item
+\texttt{sex}:
+A factor vector of length 140 with levels \texttt{"m"} (male) and \texttt{"f"} (female), corresponding to the sex of the newborns for the rows of \texttt{birth\_densities} and \texttt{birth\_densities\_clr}. The first 70 elements are \texttt{"m"}, the second 70 \texttt{"f"}.
+\item
+\texttt{year}:
+A vector of length 140 containing the integers $1950, \ldots, 2019, 1950, \ldots, 2019$, corresponding to the years for the rows of \texttt{birth\_densities} and \texttt{birth\_densities\_clr}.
+\item
+\texttt{month}:
+A vector containing the integers from 1 to 12, corresponding to the months for the columns of \texttt{birth\_densities} and \texttt{birth\_densities\_clr} (domain $\mathcal{T}$ of the (clr-)densities).
+\end{itemize}
+This list already is in the format needed to pass it to \Roperator{FDboost}.
+Note that to compensate for the different lengths of the months, the average number of births per day for each month (by sex and year) was used to compute the birth shares from the absolute birth counts.
+The 12 shares corresponding to one year and sex form one density in the Bayes Hilbert space $B^2(\delta) = B^2\left( \mathcal{T}, \mathcal{A}, \delta\right)$, where $\mathcal{T} = \{1, \ldots, 12\}$ corresponds to the set of the 12 months, $\mathcal{A} := \mathcal{P}(\mathcal{T})$ corresponds to the power set of $\mathcal{T}$, and the reference measure $\delta := \sum_{t = 1}^{12} \delta_t$ corresponds to the sum of dirac measures at $t \in \mathcal{T}$.
+Thus, our analysis is an example for the discrete case and the integral of a density is simply the sum of all 12 share values.
+We indicate how to proceed in the continuous case, whenever it is distinct from the discrete one over the course of this vignette.
+We denote the density contained in the $i$-th row of \texttt{birth\_densities} with $f_i = f_{sex_i, year_i}$, where $sex_i$ and $year_i$ denote the $i$-th elements of \texttt{sex} and \texttt{year}, respectively, $i = 1, \ldots, 140$.
+We load the package and the data and plot the densities:
+\begin{Schunk}
+\begin{Sinput}
+> # load FDboost package
+> library(FDboost)
+> # load birth_densities
+> data("birthDistribution", package = "FDboost")
+> # function to plot a matrix or vector containing functions in B^2(delta) or L^2_0(delta);
+> # Is used for densities, effects, predictions (also clr transformed)
+> plot_function <- function(plot_matrix, ...) {
++   funplot(1:12, plot_matrix, xlab = "month", xaxp = c(1, 12, 11), pch = 20, ...)
++   abline( h = 0, col = "grey", lwd = 0.5)
++ }
+> # function to create two plots (by sex) from a matrix containing densities or predictions
+> # (also clr transformed) for males in first half of rows and females in second half
+> plot_birth_densities <- function(birth_matrix, ylim = range(birth_matrix), ...) {
++   par(mfrow = c(1, 2))
++   for (k in 1:2) {
++     n_obs <- nrow(birth_matrix) / 2
++     obs <- 1:n_obs + (k - 1) * n_obs
++     plot_function(birth_matrix[obs, ], main = c("Male", "Female")[k],
++                    ylim = ylim, col = rainbow(n_obs, start = 0.5, end = 1),
++                    lty = c(1, 2, 4, 5), ...)
++   }
++ }
+> # Plot densities
+> plot_birth_densities(birthDistribution$birth_densities, ylab = "densities")
+\end{Sinput}
+\end{Schunk}
+
+\begin{Schunk}
+\begin{Sinput}
+> # legend (also for later plots)
+> year_col <- rainbow(70, start = 0.5, end = 1)
+> year_lty <- c(1, 2, 4, 5)
+> par(mar = c(0, 0, 0, 0) + 0.1)
+> plot(NULL, xaxt = "n", yaxt = "n", bty = "n", ylab = "", xlab = "", xlim = 0:1, ylim = 0:1)
+> legend("top", xpd = TRUE, legend = 1950:2019, lty = year_lty, ncol = 10, bty = "n",
++        text.col = year_col, col = year_col, cex = 0.7)
+\end{Sinput}
+\end{Schunk}
+
+\pagebreak
+Overall, the range of the density values is quite small (from 0.071 to 0.094).
+While there is hardly a visible difference between the two sexes, we see a trend over the years:
+In the early months of the years the density values tend to decrease, in the later ones it is vice versa.
+
+%\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Model equation and clr transformation}
+
+We consider the model
+\begin{align}
+f_i = &\beta_0 \oplus I(sex_i = sex) \odot \beta_{sex} \oplus g(year_i) \oplus \varepsilon_i, && i= 1, \ldots , 140, \label{model_bayes}
+\intertext{with a group-specific intercept $\beta_{sex}$ for $sex \in \{ \text{male, female} \}$, a flexible effect $g(year)$ for $year \in [1950, 2019]$, and functional error terms $\varepsilon_i \in B^2(\delta)$ with $\mathbb{E}(\varepsilon_i) = 0$ the additive neutral element of $B^2(\delta)$, corresponding to a constant density.
+Equivalently, we can consider the centered log-ratio (clr) transformed model}
+\clr \left[ f_i \right]
+= &\clr \left[ \beta_0 \right] + I(sex_i = sex) \cdot \clr \left[ \beta_{sex} \right] + \clr \left[ g(year_i)\right] + \clr \left[ \varepsilon_i \right] && i= 1, \ldots , 140, \label{model_clr}
+\end{align}
+for estimation, which is part of $L_0^2(\delta) = L_0^2\left( \mathcal{T}, \mathcal{A}, \delta\right) = \left\{ f \in L^2\left( \delta \right) ~|~ \int_{\mathcal{T}} f \, \mathrm{d}\delta = 0 \right\}$, a closed subspace of $L^2(\delta) = L^2\left( \mathcal{T}, \mathcal{A}, \delta\right)$.
+\Rpackage{FDboost} was desiged for functions in $L^2(\mathbb{R}, \mathfrak{B}, \lambda)$, where $\mathfrak{B}$ denotes the Borel $\sigma$-algebra and $\lambda$ the Legesgue measure.
+However, with some unfamiliar specifications, \Rpackage{FDboost} can be used to estimate model \eqref{model_clr}.
+% Estimating a density-on-scalar model in the continuous case works similarly.
+Thus, our first step towards estimation is to apply the clr transformation on our densities, which is given by
+\begin{align}
+\clr \left[ f \right]
+:= \log f - \frac1{\delta(\mathcal{T})} \int_{\mathcal{T}} \log f \ddelta
+= \log f_ - \frac1{12} \sum_{t = 1}^{12} \log f(t). \label{definition_clr} %, i = 1, \ldots, 140
+\end{align}
+We call the resulting clr transformed densities \emph{clr-densities} in the following.
+The data set \texttt{birthDistribution} already contains the clr-densities.
+Whenever that's not the case, one can use the function \Roperator{clr()} to compute the clr-densities, which we include here for the sake of completeness.
+Note that the choice of appropriate integration weights \texttt{w} for the corresponding Bayes Hilbert space is crucial to get a reasonable result.
+In our discrete case, equal weights \texttt{w = 1} are appropriate.
+In the continuous case, the choice of the weights depends on the grid on which the function was evaluated.
+The weight for each function value must correspond to the length of the subinterval it represents.
+E.g., for a function defined on $\mathcal{T} = [a, b]$ evaluated on a grid with equidistant distance $d$, where the boundary grid values are $a + \frac{d}{2}$ and $b - \frac{d}{2}$ (i.e., the grid points are centers of subintervals of size $d$), equal weights $d$ should be chosen for \texttt{w}.
+
