@@ -1153,6 +1153,7 @@ plot.dens_reg_obj <-
             )
           j <- 1
           for (eff in effects) {
+
             sp <- "[(),:]"
 
             parts <- unlist(strsplit(names(effects)[j], sp))
@@ -1174,9 +1175,24 @@ plot.dens_reg_obj <-
               legend.position="none"
               legend_labels<-"intercept"
             }else{
+              if(display_all==FALSE){
+                if(length(legend_labels)==1){
+                indx<-c(1)}
+                if(length(legend_labels)==2){
+                  indx<-c(1,length(legend_labels))}
+                if(length(legend_labels)>2){
+                  indx<-c(1,round(length(legend_labels)/2))}
+
+              }else{
+                indx<-1:length(legend_labels)
+              }
               single<-TRUE
               legend.position=NULL
+              eff<-eff[,indx]
+              legend_labels[indx]
             }
+
+
 
             if (all(obj$histo_data$discrete == FALSE)) {
 
