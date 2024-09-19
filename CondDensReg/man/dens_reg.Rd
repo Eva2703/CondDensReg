@@ -268,7 +268,7 @@ pdf- and clr-level as well as the estimated partial effects on both levels are
 calculated.
 }
 \examples{
-\donttest{# for further information on the parameters of the preprocessing step,
+\donttest{# for further information on the parameters of the preprocessing step
 # see ?preprocess
 
 # create data (mixed)
