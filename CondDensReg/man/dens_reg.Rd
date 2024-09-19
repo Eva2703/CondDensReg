@@ -22,7 +22,7 @@ dens_reg(
   group_specific_intercepts = NULL,
   linear_effects = NULL,
   flexible_effects = NULL,
-  functional_varying_coefficients = NULL,
+  varying_coefficients = NULL,
   flexible_interaction = NULL,
   effects = FALSE,
   ...
@@ -142,9 +142,9 @@ specifically for each level of the by-covariate. If missing or \code{NULL},
 the flexible effect is not depending on the level of an additional covariate.
 } If mising (\code{NULL}), no flexible effect is included.}
 
-\item{functional_varying_coefficients}{List of lists of the form
+\item{varying_coefficients}{List of lists of the form
 \code{list(list("covA_1","covB_1","basis1",m1,k1),...)}. Each list is adding
-one functional varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
+one varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
 model with:
 \itemize{
 \item \code{"covA"}: Name of a numeric variable included in \code{var_vec}.
@@ -158,7 +158,7 @@ and the order of its penalty. (see \code{mgcv})
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
 basis \eqn{b_j} for the smooth effect. See \code{mgcv::choose.k} for more
 information.
-}If mising (\code{NULL}), no functional varying coeffecient is included.}
+}If mising (\code{NULL}), no varying coeffecient is included.}
 
 \item{flexible_interaction}{List of lists of the form
 \code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...)),list(...),...)}.
@@ -205,7 +205,7 @@ one estimated partial effect. Both clr- and density-level are included.
 \item \code{params}: List of \code{domain_continuous, values_discrete} and
 \code{bin_number}.
 \item \code{predicted_effects}: List of lists (\code{group_specific_intercepts,
-flexible effects, linear_effects, functional_varying_coefficient, flexible_interaction})
+flexible effects, linear_effects, varying_coefficient, flexible_interaction})
 collecting all modeled partial effects as specified in the function's parameters.
 \item \code{ID_covCombi}: Data frame which gives an overview over the assignment
 of the unique covariate combinations to the group IDs.
@@ -271,32 +271,99 @@ calculated.
 \donttest{
 # create data (mixed)
 
-dta <- data.frame(
-obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
-covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
-covariate2 = sample(c("c", "d"), 150, replace = TRUE),
-covariate3 = rep(rnorm(n = 15), 10),
-covariate4 = rep(rnorm(n = 10), 15),
-covariate5=rep(rnorm(n = 10), 15),
-sample_weights = runif(150, 0, 2))
+dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
+                  covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+                  covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+                  covariate3 = rep(rnorm(n = 15), 10),
+                  covariate4 = rep(rnorm(n = 10), 15),
+                  covariate5=rep(rnorm(n = 10), 15), sample_weights = runif(150, 0, 2))
 dta[which(dta$obs_density == 2),]$obs_density <-rbeta(length(which(dta$obs_density == 2)), shape1 = 3, shape2 = 3)
 dta$covariate1 <- ordered(dta$covariate1)
 dta$covariate2 <- ordered(dta$covariate2)
 
 # create discrete data
 
-dta_dis <- data.frame(
-obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45,0.3)),
-covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
-covariate2 = sample(c("c", "d"), 150, replace = TRUE),
-covariate3 = rep(rnorm(n = 15), 10),
-covariate4 = rep(rnorm(n = 10), 15),
-covariate5=rep(rnorm(n = 10), 15),
-sample_weights = runif(150, 0, 2))
+dta_dis <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45,0.3)),
+                      covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
+                      covariate2 = sample(c("c", "d"), 150, replace = TRUE),
+                      covariate3 = rep(rnorm(n = 15), 10),
+                      covariate4 = rep(rnorm(n = 10), 15),
+                      covariate5=rep(rnorm(n = 10), 15),
+                      sample_weights = runif(150, 0, 2))
 dta_dis$covariate1 <- ordered(dta_dis$covariate1)
 dta_dis$covariate2 <- ordered(dta_dis$covariate2)
 
+# examples for different partial effects
+## group specific intercepts
+group_specific_intercepts <- c("covariate1", "covariate2")
+## linear effects
+linear_effects <- c("covariate4")
+## flexible effects
+flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL), list("covariate3", "ps", c(2, 2), 4, "covariate1"))
+## varying coefficient
+fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2), 4))
+## flexible interaction
+flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5)))
 
+# fit models (warning: calculation may take a few minutes)
+
+# fit model for the mixed case with group specific intercepts and linear effects
+m_mixed <- dens_reg(
+  dta = dta,
+  var_vec = c(2:6),
+  density_var = 1,
+  m_density_var = c(2, 2),
+  k_density_var = 4,
+  group_specific_intercepts = group_specific_intercepts, linear_effects = linear_effects,
+  effects = TRUE, sp_density_var=c(1,3,5))
+
+
+# fit model discrete
+m_dis <- dens_reg(
+  dta = dta_dis,
+  var_vec = c(2:6),
+  density_var = 1,
+  sample_weights = NULL,
+  bin_width = NULL,
+  bin_number = 100,
+  values_discrete = c(0, 1,2),
+  weights_discrete = c(1,1,1),
+  domain_continuous = FALSE,
+  m_density_var = c(2, 2),
+  k_density_var = 4,
+  group_specific_intercepts = group_specific_intercepts,
+  flexible_effects = NULL,
+  flexible_interaction = NULL,
+  linear_effects = NULL,
+  varying_coefficients = NULL,
+  effects = TRUE
+)
+
+
+
+# fit model continuous
+
+m_cont <- dens_reg(
+  dta = dta\%>\%filter(obs_density!=0&obs_density!=1),
+  var_vec = c(2:6),
+  density_var = 1,
+  sample_weights = NULL,
+  bin_width = NULL,
+  bin_number = 100,
+  values_discrete = FALSE,
+  weights_discrete = c(1,1),
+  domain_continuous = c(0,1),
+  m_density_var = c(2, 2),
+  k_density_var = 12,
+  group_specific_intercepts = NULL,
+  flexible_effects = flexible_effects,
+  flexible_interaction = NULL,
+  linear_effects = NULL,
+  varying_coefficients = NULL,
+  effects = TRUE
+)
+
+#'
 }
 }
 \references{
