@@ -227,7 +227,10 @@
 #' of the unique covariate combinations to the group IDs.
 #' }
 #' @examples
-#' \donttest{#' # create data (mixed)
+#' \donttest{# for further information on the parameters of the preprocessing step,
+#' # see ?preprocess
+#'
+#' # create data (mixed)
 #'
 #'dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
 #'                   covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
@@ -268,62 +271,27 @@
 #'
 #' ## fit model for the mixed case with group specific intercepts and linear effects
 #' ### use fixed smoothing parameters in density direction and calculate also the partial effects
-#' m_mixed <- dens_reg(
-#'   dta = dta,
-#'   var_vec = c(2:6),
-#'   density_var = 1,
-#'   m_density_var = c(2, 2),
-#'   k_density_var = 4,
-#'   group_specific_intercepts = group_specific_intercepts, linear_effects = linear_effects,
-#'   effects = TRUE, sp_density_var=c(1,3,5))
 #'
+#' m_mixed <- dens_reg(dta = dta, var_vec = c(2:6), density_var = 1, m_density_var = c(2, 2),
+#'   k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
+#'   linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5))
 #'
-#' # fit model discrete
+#' ## fit model for the discrete case with flexible effects and flexible interaction
+#' ### do not calculate effects
+#'
 #' m_dis <- dens_reg(
-#'   dta = dta_dis,
-#'   var_vec = c(2:6),
-#'   density_var = 1,
-#'   sample_weights = NULL,
-#'   bin_width = NULL,
-#'   bin_number = 100,
-#'   values_discrete = c(0, 1,2),
-#'   weights_discrete = c(1,1,1),
-#'   domain_continuous = FALSE,
-#'   m_density_var = c(2, 2),
-#'   k_density_var = 4,
-#'   group_specific_intercepts = group_specific_intercepts,
-#'   flexible_effects = NULL,
-#'   flexible_interaction = NULL,
-#'   linear_effects = NULL,
-#'   varying_coefficients = NULL,
-#'   effects = TRUE
-#' )
+#'   dta = dta_dis, var_vec = c(2:6), density_var = 1, values_discrete = c(0, 1,2),
+#'   weights_discrete = c(1,1,1), domain_continuous = FALSE, m_density_var = c(2, 2),
+#'   k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
+#'   flexible_effects = flexible_effects, flexible_interaction = flex_inter, effects = FALSE)
+#'
+#' # fit model for the continuous case with a functional varying coeffecient
+#'
+#' m_cont <- dens_reg(dta = dta%>%filter(obs_density!=0&obs_density!=1),
+#'   var_vec = c(2:6), density_var = 1, values_discrete = FALSE, m_density_var = c(2, 2),
+#'   k_density_var = 12, varying_coefficients = fvc, effects = TRUE)
 #'
 #'
-#'
-#' # fit model continuous
-#'
-#' m_cont <- dens_reg(
-#'   dta = dta%>%filter(obs_density!=0&obs_density!=1),
-#'   var_vec = c(2:6),
-#'   density_var = 1,
-#'   sample_weights = NULL,
-#'   bin_width = NULL,
-#'   bin_number = 100,
-#'   values_discrete = FALSE,
-#'   weights_discrete = c(1,1),
-#'   domain_continuous = c(0,1),
-#'   m_density_var = c(2, 2),
-#'   k_density_var = 12,
-#'   group_specific_intercepts = NULL,
-#'   flexible_effects = flexible_effects,
-#'   flexible_interaction = NULL,
-#'   linear_effects = NULL,
-#'   varying_coefficients = NULL,
-#'   effects = TRUE
-#' )
-#'
-#' #'
 #' }
 #' @export
 #' @references Maier, E. M., Fottner, A., Stöcker, A., Okhrin, Y., & Greven, S. (2023). Conditional density regression for individual-level data.
