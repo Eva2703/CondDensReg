@@ -62,7 +62,6 @@ p5<-predict(m_mixed, type= "pdf", new_data=nd)
 
 # predict clr(f_hat) for new data
 p6<-predict(m_mixed, type= "clr", new_data=nd)
-
 }
 
 }

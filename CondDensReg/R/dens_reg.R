@@ -1177,29 +1177,32 @@ checking_dens_reg <-
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
 #'
-#' # plot mixed model (default settings: histogram, not interactive, density-level, display all)
+#' # plot mixed, continuous and discrete model
+#' ## (default settings: histogram, not interactive, density-level, display all)
 #'
 #' plot(m_mixed)
+#' plot(m_cont)
+#' plot(m_dis)
 #'
 #' # plot partial effects on clr-level of the continuous model in an interactive plot, do not show all groups
 #'
-#' plot(m_cont, type="effects, interactive=TRUE, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects", interactive=TRUE, level="clr", display_all=FALSE)
 #'
 #' # show only first plot
 #'
-#' plot(m_cont, type="effects, interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects", interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
 #'
 #' # plot partial effects on density-level estimated for new data based on the mixed model
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata)
 #'
 #' # estimate and plot only the intercept (first term)
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=1)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=1)
 #'
 #' #' # estimate and plot only second term
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=2)
 #' }
 #'
 plot.dens_reg_obj <-
@@ -3908,7 +3911,6 @@ plot.dens_reg_obj <-
 #'
 #' # predict clr(f_hat) for new data
 #' p6<-predict(m_mixed, type= "clr", new_data=nd)
-#'
 #' }
 #'
 predict.dens_reg_obj <-
