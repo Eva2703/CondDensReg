@@ -3849,7 +3849,8 @@ plot.dens_reg_obj <-
 #' @return A list of matrices (if type="terms") with one matrix for each term, different columns for every predicted covariate value.
 #'A matrix with columns for the different covariate combinations if \code{type="pdf"} or \code{="clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
 #' @export
-#' @examples \donttest{
+#' @examples \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#'
 #' # see names of the models' terms
 #' sapply(m_mixed$model$smooth, "[[",  "label")
 #' sapply(m_dis$model$smooth, "[[",  "label")
@@ -3859,20 +3860,23 @@ plot.dens_reg_obj <-
 
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
-#' # predict mixed model, all terms on pdf-level without newdata
+#' # predict mixed model, all terms on pdf-level without new data
 #' p1<-predict(m_mixed, type= "terms",level="pdf")
+#'
 #' # new data and clr-level
 #' p2<-predict(m_mixed, type= "terms",  new_data=nd)
+#'
 #' # only second term
 #' p3<-predict(m_mixed, type= "terms", which=all_terms[2], new_data=nd, level="pdf")
+#'
 #' # without second term
 #' p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
+#'
 #' # predict f_hat for new data
 #' p5<-predict(m_mixed, type= "pdf", new_data=nd)
+#'
 #' # predict clr(f_hat) for new data
 #' p6<-predict(m_mixed, type= "clr", new_data=nd)
-#' # try to predict f_hat with not all needed covariates given in new_data => ERROR
-#' p7<-predict(m_mixed, type= "pdf", new_data=nd%>%select(covariate1))
 #'
 #' }
 #'
