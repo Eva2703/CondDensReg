@@ -3863,13 +3863,13 @@ plot.dens_reg_obj <-
 #' # predict mixed model, all terms on pdf-level without new data
 #' p1<-predict(m_mixed, type= "terms",level="pdf")
 #'
-#' # new data and clr-level
+#' # predict  partial effects at clr-level of the mixed model for new data
 #' p2<-predict(m_mixed, type= "terms",  new_data=nd)
 #'
-#' # only second term
+#' # predict only the second partial effect at density-level of the mixed model for new data
 #' p3<-predict(m_mixed, type= "terms", which=all_terms[2], new_data=nd, level="pdf")
 #'
-#' # without second term
+#' # predict partial effects of the mixed model for new data and at density-level without the second term
 #' p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
 #'
 #' # predict f_hat for new data
