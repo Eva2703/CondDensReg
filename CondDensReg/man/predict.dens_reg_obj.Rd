@@ -42,21 +42,22 @@ sapply(m_dis$model$smooth, "[[",  "label")
 sapply(m_cont$model$smooth, "[[",  "label")
 
 # create newdata for predict
+
 nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 
 # predict mixed model, all terms on pdf-level without new data
 p1<-predict(m_mixed, type= "terms",level="pdf")
 
-# new data and clr-level
+# predict  partial effects at clr-level of the mixed model for new data
 p2<-predict(m_mixed, type= "terms",  new_data=nd)
 
-# only second term
+# predict only the second partial effect at density-level of the mixed model for new data
 p3<-predict(m_mixed, type= "terms", which=all_terms[2], new_data=nd, level="pdf")
 
-# without second term
+# predict partial effects of the mixed model for new data and at density-level without the second term
 p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
 
-# predict f_hat for new data
+# predict f_hat on density-level for new data
 p5<-predict(m_mixed, type= "pdf", new_data=nd)
 
 # predict clr(f_hat) for new data

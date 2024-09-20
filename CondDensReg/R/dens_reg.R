@@ -1170,6 +1170,37 @@ checking_dens_reg <-
 #' @param terms If predict is not \code{NULL}. Vector of term names or the indices of the terms (starting with 1=intercept) specifying which terms should be predicted and plotted.
 #' @return Plot(s) as specified.
 #' @export
+#' @examples \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#'
+#' #' # create newdata for predict
+#'
+#' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
+#'
+#'
+#' # plot mixed model (default settings: histogram, not interactive, density-level, display all)
+#'
+#' plot(m_mixed)
+#'
+#' # plot partial effects on clr-level of the continuous model in an interactive plot, do not show all groups
+#'
+#' plot(m_cont, type="effects, interactive=TRUE, level="clr", display_all=FALSE)
+#'
+#' # show only first plot
+#'
+#' plot(m_cont, type="effects, interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
+#'
+#' # plot partial effects on density-level estimated for new data based on the mixed model
+#'
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata)
+#'
+#' # estimate and plot only the intercept (first term)
+#'
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=1)
+#'
+#' #' # estimate and plot only second term
+#'
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
+#' }
 #'
 plot.dens_reg_obj <-
   function(obj,
@@ -3857,7 +3888,7 @@ plot.dens_reg_obj <-
 #' sapply(m_cont$model$smooth, "[[",  "label")
 #'
 #' # create newdata for predict
-
+#'
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
 #' # predict mixed model, all terms on pdf-level without new data
@@ -3872,7 +3903,7 @@ plot.dens_reg_obj <-
 #' # predict partial effects of the mixed model for new data and at density-level without the second term
 #' p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
 #'
-#' # predict f_hat for new data
+#' # predict f_hat on density-level for new data
 #' p5<-predict(m_mixed, type= "pdf", new_data=nd)
 #'
 #' # predict clr(f_hat) for new data
