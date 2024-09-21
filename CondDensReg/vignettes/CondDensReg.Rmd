@@ -1,6 +1,7 @@
 ---
 title: "CondDensReg"
 output: rmarkdown::html_vignette
+bibliography: references.bib 
 vignette: >
   %\VignetteIndexEntry{CondDensReg}
   %\VignetteEngine{knitr::rmarkdown}
@@ -13,8 +14,20 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-The vignette illustrates how to use the different functions included in the **CondDensReg**-package
+The vignette illustrates how to use the different functions included in the **CondDensReg**-package. The package is designed for the regression of conditional densities based on the approach by @maier2024 which treats the conditional densities as elements of the Bayes Hilbert space. The approach is able to handle continuous and discrete densities as well as densities consisting of discrete and continuous components (mixed case).
 
+## Load the data
 ```{r setup}
 library(CondDensReg)
 ```
+
+## Preprocess the data into count data
+
+## Plot preprocessed data
+
+## Estimate the conditional densities
+
+## Plot different aspects of the estimated model
+
+## References 
+
