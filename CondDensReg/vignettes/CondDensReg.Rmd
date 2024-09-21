@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
+The vignette illustrates how to use the different functions included in the **CondDensReg**-package
 
 ```{r setup}
 library(CondDensReg)
