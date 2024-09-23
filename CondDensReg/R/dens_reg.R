@@ -799,9 +799,7 @@ dens_reg <- function(dta,
   }
   if (!isFALSE(values_discrete) & isFALSE(domain_continuous))
   {
-    if (is.null(bin_number)){
-      bin_number<-nrow(t)
-    }
+
     if (!is.null(ncol(f_hat_clr))) {
       f_hat <-
         apply(
@@ -816,6 +814,11 @@ dens_reg <- function(dta,
       f_hat <-
         clr(f_hat_clr, inverse = TRUE, w = dta_est$Delta[1:nrow(obs_density)])
     }
+  }
+  if (isFALSE(values_discrete) & !isFALSE(domain_continuous))
+  {    if (is.null(bin_number)){
+    bin_number<-nrow(t)
+  }
   }
   if (!effects) {
     result <-    list(
