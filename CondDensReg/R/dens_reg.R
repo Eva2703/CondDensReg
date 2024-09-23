@@ -276,7 +276,7 @@
 #'
 #' m_mixed <- dens_reg(dta = dta, var_vec = c(2:6), density_var = 1, m_density_var = c(2, 2),
 #'   k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
-#'   linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5))
+#'   linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5,0.5))
 #'
 #' ## fit model for the discrete case with flexible effects and flexible interaction
 #' ### do not calculate effects
@@ -578,7 +578,7 @@ dens_reg <- function(dta,
     }
     f_linear <-
       paste0(
-        f_intercepts,
+        f_linear,
         "+ ti(",
         density_var,
         ", bs=",
