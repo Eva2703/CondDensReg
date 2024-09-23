@@ -53,10 +53,10 @@ p1<-predict(m_mixed, type= "terms",level="pdf")
 p2<-predict(m_mixed, type= "terms",  new_data=nd)
 
 # predict only the second partial effect at density-level of the mixed model for new data
-p3<-predict(m_mixed, type= "terms", which=all_terms[2], new_data=nd, level="pdf")
+p3<-predict(m_mixed, type= "terms", which= "ti(obs_density):covariate1b", new_data=nd, level="pdf")
 
 # predict partial effects of the mixed model for new data and at density-level without the second term
-p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
+p4<-predict(m_mixed, type= "terms", exclude= "ti(obs_density):covariate1b", new_data=nd, level="pdf")
 
 # predict f_hat on density-level for new data
 p5<-predict(m_mixed, type= "pdf", new_data=nd)
@@ -65,5 +65,4 @@ p5<-predict(m_mixed, type= "pdf", new_data=nd)
 p6<-predict(m_mixed, type= "clr", new_data=nd)
 
 }
-
 }

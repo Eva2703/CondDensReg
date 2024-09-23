@@ -3890,7 +3890,6 @@ plot.dens_reg_obj <-
 #'
 #' @return A list of matrices (if type="terms") with one matrix for each term, different columns for every predicted covariate value.
 #'A matrix with columns for the different covariate combinations if \code{type="pdf"} or \code{="clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
-#' @export
 #' @examples
 #'
 #' \donttest{# please run the examples of ?dens_reg to estimate the needed models
@@ -3911,10 +3910,10 @@ plot.dens_reg_obj <-
 #' p2<-predict(m_mixed, type= "terms",  new_data=nd)
 #'
 #' # predict only the second partial effect at density-level of the mixed model for new data
-#' p3<-predict(m_mixed, type= "terms", which=all_terms[2], new_data=nd, level="pdf")
+#' p3<-predict(m_mixed, type= "terms", which= "ti(obs_density):covariate1b", new_data=nd, level="pdf")
 #'
 #' # predict partial effects of the mixed model for new data and at density-level without the second term
-#' p4<-predict(m_mixed, type= "terms", exclude=all_terms[2], new_data=nd, level="pdf")
+#' p4<-predict(m_mixed, type= "terms", exclude= "ti(obs_density):covariate1b", new_data=nd, level="pdf")
 #'
 #' # predict f_hat on density-level for new data
 #' p5<-predict(m_mixed, type= "pdf", new_data=nd)
@@ -3923,7 +3922,7 @@ plot.dens_reg_obj <-
 #' p6<-predict(m_mixed, type= "clr", new_data=nd)
 #'
 #' }
-#'
+#' @export
 predict.dens_reg_obj <-
   function(obj,
            new_data = NULL,
