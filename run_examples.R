@@ -1,0 +1,6 @@
+library(devtools)
+devtools::document("C:/Users/learu/CondDensReg/new/CondDensReg")
+devtools::install("C:/Users/learu/CondDensReg/new/CondDensReg")
+library(CondDensReg)
+example("preprocess")
+example("dens_reg")

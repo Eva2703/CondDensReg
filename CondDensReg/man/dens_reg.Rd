@@ -271,6 +271,8 @@ calculated.
 \donttest{# for further information on the parameters of the preprocessing step
 # see ?preprocess
 
+library(dplyr)
+
 # create data (mixed)
 
 dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
@@ -315,7 +317,7 @@ flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps",
 
 m_mixed <- dens_reg(dta = dta, var_vec = c(2:6), density_var = 1, m_density_var = c(2, 2),
   k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
-  linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5))
+  linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5,0.5))
 
 ## fit model for the discrete case with flexible effects and flexible interaction
 ### do not calculate effects

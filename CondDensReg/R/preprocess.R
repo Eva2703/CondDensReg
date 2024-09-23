@@ -28,6 +28,9 @@
 #' \item \code{discrete} - Logical value if the respective \code{density_var} is a discrete value in \eqn{D}.
 #' }
 #' @examples
+#'
+#' library(dplyr)
+#'
 #' set.seed(101)
 #'
 #' # create data where 0 and 1 are the discrete observations, values
