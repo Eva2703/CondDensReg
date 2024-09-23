@@ -54,6 +54,9 @@ The returned object is a \code{data.table}-object which is also an object of the
 \code{preprocess} prepares data containing the original observations \eqn{y_i} appropriately to be used in Poisson models by combining all observations of the same conditional distribution (i.e., all observations sharing identical values in all covariates) into a vector of counts via a histogram on \eqn{I\setminus D} and counts on \eqn{D} where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of discrete values.
 }
 \examples{
+
+library(dplyr)
+
 set.seed(101)
 
 # create data where 0 and 1 are the discrete observations, values

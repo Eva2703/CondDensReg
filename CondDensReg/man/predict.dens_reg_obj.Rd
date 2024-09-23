@@ -34,6 +34,7 @@ A matrix with columns for the different covariate combinations if \code{type="pd
 \code{predict.dens_reg_obj} is the default predict method for data of the class \code{dens_reg_obj}.
 }
 \examples{
+
 \donttest{# please run the examples of ?dens_reg to estimate the needed models
 
 # see names of the models' terms

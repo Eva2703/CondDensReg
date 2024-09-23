@@ -1177,8 +1177,9 @@ checking_dens_reg <-
 #' @param predict If plots for certain covariate values are desired, \code{predict} has to be a data frame with new data in form of a data table with columns named as the relevant covariates. In each row, the user can specify a value of the respective covariate.
 #' @param terms If predict is not \code{NULL}. Vector of term names or the indices of the terms (starting with 1=intercept) specifying which terms should be predicted and plotted.
 #' @return Plot(s) as specified.
-#' @export
-#' @examples \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#' @examples
+#'
+#' \donttest{# please run the examples of ?dens_reg to estimate the needed models
 #'
 #' #' # create newdata for predict
 #'
@@ -1209,6 +1210,8 @@ checking_dens_reg <-
 #'
 #' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
 #' }
+#'
+#' @export
 #'
 plot.dens_reg_obj <-
   function(obj,
@@ -3888,7 +3891,9 @@ plot.dens_reg_obj <-
 #' @return A list of matrices (if type="terms") with one matrix for each term, different columns for every predicted covariate value.
 #'A matrix with columns for the different covariate combinations if \code{type="pdf"} or \code{="clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
 #' @export
-#' @examples \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#' @examples
+#'
+#' \donttest{# please run the examples of ?dens_reg to estimate the needed models
 #'
 #' # see names of the models' terms
 #' sapply(m_mixed$model$smooth, "[[",  "label")
