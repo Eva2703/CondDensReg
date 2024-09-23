@@ -1,7 +1,7 @@
 library(devtools)
 devtools::document("C:/Users/learu/CondDensReg/new/CondDensReg")
 devtools::install("C:/Users/learu/CondDensReg/new/CondDensReg")
-load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
+#load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 
 library(CondDensReg)
 ?preprocess

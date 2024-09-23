@@ -64,15 +64,15 @@ plot(m_cont, type="effects", interactive=FALSE, pick_sites=1, level="clr", displ
 
 # plot partial effects on density-level estimated for new data based on the mixed model
 
-plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata)
+plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd)
 
 # estimate and plot only the intercept (first term)
 
-plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=1)
+plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=1)
 
 # estimate and plot only second term
 
-plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=2)
+plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=2)
 }
 
 }
