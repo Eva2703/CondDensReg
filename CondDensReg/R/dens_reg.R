@@ -230,6 +230,8 @@
 #' \donttest{# for further information on the parameters of the preprocessing step
 #' # see ?preprocess
 #'
+#' library(dplyr)
+#'
 #' # create data (mixed)
 #'
 #'dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
@@ -763,7 +765,11 @@ dens_reg <- function(dta,
         clr(f_hat_clr, inverse = TRUE, w = dta_est$Delta[1:nrow(obs_density)])
     }
   }
-
+  if(colnames(dta_est)[2]=="weighted_counts"){
+    t <- unique(dta_est[,3])}
+  else{
+    t<-unique(dta_est[,2])
+  }
   if (!isFALSE(values_discrete) & !isFALSE(domain_continuous)) {
     # interval_width <-
     #   (domain_continuous[2] - domain_continuous[1]) / bin_number
@@ -772,11 +778,7 @@ dens_reg <- function(dta,
     #   to = domain_continuous[2] - 1 / 2 * interval_width,
     #   by = interval_width
     # )
-    if(colnames(dta_est)[2]=="weighted_counts"){
-    t <- unique(dta_est[,3])}
-    else{
-      t<-unique(dta_est[,2])
-    }
+
     if (is.null(bin_number)){
       bin_number<-nrow(t)-length(values_discrete)
     }
@@ -797,6 +799,9 @@ dens_reg <- function(dta,
   }
   if (!isFALSE(values_discrete) & isFALSE(domain_continuous))
   {
+    if (is.null(bin_number)){
+      bin_number<-nrow(t)
+    }
     if (!is.null(ncol(f_hat_clr))) {
       f_hat <-
         apply(
@@ -1177,32 +1182,29 @@ checking_dens_reg <-
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
 #'
-#' # plot mixed, continuous and discrete model
-#' ## (default settings: histogram, not interactive, density-level, display all)
+#' # plot mixed model (default settings: histogram, not interactive, density-level, display all)
 #'
 #' plot(m_mixed)
-#' plot(m_cont)
-#' plot(m_dis)
 #'
 #' # plot partial effects on clr-level of the continuous model in an interactive plot, do not show all groups
 #'
-#' plot(m_cont, type="effects", interactive=TRUE, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects, interactive=TRUE, level="clr", display_all=FALSE)
 #'
 #' # show only first plot
 #'
-#' plot(m_cont, type="effects", interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects, interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
 #'
 #' # plot partial effects on density-level estimated for new data based on the mixed model
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata)
 #'
 #' # estimate and plot only the intercept (first term)
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=1)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=1)
 #'
 #' #' # estimate and plot only second term
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=2)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
 #' }
 #'
 plot.dens_reg_obj <-
@@ -3911,6 +3913,7 @@ plot.dens_reg_obj <-
 #'
 #' # predict clr(f_hat) for new data
 #' p6<-predict(m_mixed, type= "clr", new_data=nd)
+#'
 #' }
 #'
 predict.dens_reg_obj <-
