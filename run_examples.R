@@ -13,3 +13,6 @@ example("preprocess")
 example("dens_reg")
 example("predict.dens_reg_obj")
 example("plot.dens_reg_obj")
+
+
+vignette("CondDensReg")
