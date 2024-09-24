@@ -18,5 +18,5 @@ data_long$count<-as.vector(rbind(data$married_male,data$unmarried_male,data$marr
 data_long$count<-as.numeric(data_long$count)
 
 data_long<-na.omit(data_long)
-
-save(data_long, file="data_age_birth.RData")
+data_age_birth<-data_long
+save(data_age_birth, file="data_age_birth.RData")
