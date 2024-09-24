@@ -121,7 +121,9 @@ preprocess <- function(dta,
                        bin_number = NULL,
                        values_discrete = c(0, 1),
                        weights_discrete = 1,
-                       domain_continuous = c(0, 1)) {
+                       domain_continuous = c(0, 1),
+                       already_formatted=FALSE) {
+  if(!already_formatted){
   # check for invalid arguments
   checking(
     dta,
@@ -391,6 +393,9 @@ preprocess <- function(dta,
       "Some bin mids have been shifted minimally as they correspond to the discrete values.",
       call. = FALSE
     )
+  }
+  }else{
+    dta_est<-cbind(dta$counts, dta[,var_vec])
   }
   attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
   return(dta_est)
