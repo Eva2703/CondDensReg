@@ -396,10 +396,23 @@ preprocess <- function(dta,
   }
   }else{
     # Delta
-    if(domain_continuous){
+    if(!isFALSE(domain_continuous)){
       cont_values<-unique(dta[,density_var])
-      cont_values<-cont_values%>%filter
+      if(!isFALSE(values_discrete))
+      cont_values<-setdiff(cont_values,values_discrete)
+
+      if (is.null(bin_width)){
+        breaks<-c(domain_continuous[1],cont_values, domain_continuous[2])
+        diffs<-diff(breaks)
+        Delta<-c(diffs[1]+0.5*diffs[2])
+        for (i in 2:(length(cont_values)-1)){
+          Delta<-append(Delta, 0.5*diffs[i]+0.5*diffs[i+1])
+        }
+        Delta<-append(Delta, diffs[i+1]*0.5+diffs[i+2])
+      }
     }
+
+
 
     # discrete
     # gam_offset
@@ -407,7 +420,6 @@ preprocess <- function(dta,
     dta_est<-cbind(dta$counts,dta[,density_var], dta[,var_vec])
 
     #colnames
-
       }
   attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
   return(dta_est)
