@@ -395,8 +395,20 @@ preprocess <- function(dta,
     )
   }
   }else{
-    dta_est<-cbind(dta$counts, dta[,var_vec])
-  }
+    # Delta
+    if(domain_continuous){
+      cont_values<-unique(dta[,density_var])
+      cont_values<-cont_values%>%filter
+    }
+
+    # discrete
+    # gam_offset
+
+    dta_est<-cbind(dta$counts,dta[,density_var], dta[,var_vec])
+
+    #colnames
+
+      }
   attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
   return(dta_est)
 }
