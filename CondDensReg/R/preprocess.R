@@ -399,7 +399,7 @@ preprocess <- function(dta,
     if(!isFALSE(domain_continuous)){
       cont_values<-unique(dta[,density_var])
       if(!isFALSE(values_discrete))
-      cont_values<-setdiff(cont_values,values_discrete)
+        { cont_values<-setdiff(cont_values,values_discrete)}
 
       if (is.null(bin_width)){
         breaks<-c(domain_continuous[1],cont_values, domain_continuous[2])
@@ -409,8 +409,12 @@ preprocess <- function(dta,
           Delta<-append(Delta, 0.5*diffs[i]+0.5*diffs[i+1])
         }
         Delta<-append(Delta, diffs[i+1]*0.5+diffs[i+2])
-      }
+        if(!isFALSE(values_discrete))
+        { ordered_values<-order(c(cont_values, values_discrete))
+          }
+
     }
+
 
 
 
