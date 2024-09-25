@@ -14,6 +14,9 @@
 #' @param values_discrete Vector of values in the domain of the density that have positive probability mass (dirac measure). Defaults to missing (\code{NULL}) in which case it is set to \code{c(0, 1)}. Can also be set to be \code{FALSE} in which case the discrete component is considered to be empty, i.e., the Lebesgue measure is used as reference measure.
 #' @param weights_discrete Vector of weights for the dirac measures corresponding to values_discrete. If missing (\code{NULL}) it is set to 1 in all components as default. Can be a scalar for equal weights for all discrete values or a vector with specific weights for each corresponding discrete value.
 #' @param domain_continuous An interval (i.e., a vector of length 2) specifying the domain of the continuous component of the density. If missing (\code{NULL}) it is set to \code{c(0, 1)} as default. Can also be set to be \code{FALSE} in which case the continuous component is considered to be empty, i.e., a sum of dirac measures is used as reference measure.
+#' @param already_formatted A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
+#' The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
+#' The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).
 #'
 #' @return The returned object is a \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data} with columns:
 #' \itemize{
@@ -48,7 +51,7 @@
 #' # bins and default values for continuous domain, discrete
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains.The following functions are
-#' # equiavalent:
+#' # equivalent:
 #'
 #' preprocess(
 #' dta,
@@ -108,6 +111,20 @@
 #'  weights_discrete = c(0.5, 2),
 #'  domain_continuous  = FALSE
 #')
+#'
+#'# use the option already_formatted to "preprocess" already preprocessed
+#'# data and select only one of two variables for the grouping
+#'
+#'## preprocess data
+#'p<- preprocess(
+#' dta,
+#' var_vec = c("covariate1", "covariate2"),
+#' density_var = "obs_density",
+#' sample_weights = "sample_weights",
+#' bin_number = 10
+#' )
+#'
+#' preprocess(p, var_vec="covariate1", density_var = "obs_density")
 #'
 #'@export
 #'@references Maier, E. M., Fottner, A., Stöcker, A., Okhrin, Y., & Greven, S. (2023). Conditional density regression for individual-level data.
