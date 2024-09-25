@@ -16,6 +16,7 @@ data_long$sex<-factor(rep(rep(c("male","female"),each=2),1120))
 data_long$counts<-as.vector(rbind(data$married_male,data$unmarried_male,data$married_female,data$unmarried_female))
 
 data_long$counts<-as.numeric(data_long$counts)
+data_long$counts[is.na(data_long$counts)] <- 0
 data_long$age<-data_long$age+0.5
 
 data_long<-na.omit(data_long)
