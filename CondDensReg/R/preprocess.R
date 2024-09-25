@@ -455,11 +455,6 @@ preprocess <- function(dta,
       discrete<-c(rep(TRUE, length(values_discrete)))
     }
 
-
-
-
-    # discrete
-    # gam_offset
     if (is.numeric(density_var)){
       density_var<-colnames(dta)[density_var]
     }
@@ -516,7 +511,6 @@ preprocess <- function(dta,
       dta_est<-dta_est[,c(l+2,l+3,1,2:(l+1),l+4,l+7,l+8,l+5,l+6)]
     }
 
-    #colnames
   }
   attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
   return(dta_est)
