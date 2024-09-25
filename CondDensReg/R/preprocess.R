@@ -488,6 +488,8 @@ preprocess <- function(dta,
 
       dta_est$gam_weights <- 1
       dta_est$gam_offsets <- 0
+      l<-length(var_vec)
+      dta_est<-dta_est[,c(l+2,1,2:(l+1),l+3,l+6,l+7,l+4,l+5)]
     }else{
       dta_est<-cbind(dta$counts,dta$weighted_counts,dta[,..density_var], dta[,..var_vec])
       colnames(dta_est)[1]<-"counts"
@@ -509,7 +511,9 @@ preprocess <- function(dta,
       dta_est$discrete<-rep(discrete, max(dta_est$group_id))
 
       dta_est$gam_weights<-ifelse(dta_est$counts != 0, dta_est$weighted_counts / dta_est$counts, 1)
-dta_est$gam_offsets<- -log(dta_est$gam_weights)
+      dta_est$gam_offsets<- -log(dta_est$gam_weights)
+      l<-length(var_vec)
+      dta_est<-dta_est[,c(l+2,l+3,1,2:(l+1),l+4,l+7,l+8,l+5,l+6)]
     }
 
     #colnames
