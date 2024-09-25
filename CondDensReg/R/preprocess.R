@@ -398,6 +398,7 @@ preprocess <- function(dta,
     if (is.data.frame(dta)) {
       dta <- as.data.table(dta)
     }
+
     # Delta
     if(!isFALSE(domain_continuous)){
       cont_values<-unlist(unique(dta[,..density_var]))
@@ -415,12 +416,32 @@ preprocess <- function(dta,
         Delta<-append(Delta, diffs[i+1]*0.5+diffs[i+2])
         if(!isFALSE(values_discrete))
         { ordered_values<-order(c(cont_values, values_discrete))
+        if(length(weights_discrete)==1){
+          weights_discrete<-rep(weights_discrete,length(values_discrete))
+        }
         Delta<-c(Delta, weights_discrete)[ordered_values]
         }
 
 
       }
+      else{
+        if(length(bin_width)==1){
+          Delta<-rep(bin_width,length(cont_values))
+        }else{
+          Delta<-bin_width
+        }
+        if(!isFALSE(values_discrete))
+        { ordered_values<-order(c(cont_values, values_discrete))
+        if(length(weights_discrete)==1){
+          weights_discrete<-rep(weights_discrete,length(values_discrete))
+        }
+        Delta<-c(Delta, weights_discrete)[ordered_values]
+        }
+      }
     }else{
+      if(length(weights_discrete)==1){
+        weights_discrete<-rep(weights_discrete,length(values_discrete))
+      }
       Delta<-weights_discrete
     }
 
