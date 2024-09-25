@@ -436,10 +436,19 @@ preprocess <- function(dta,
       var_vec<-colnames(dta)[var_vec]
     }
     dta_est<-cbind(dta$counts,dta[,..density_var], dta[,..var_vec])
+    colnames(dta_est)[1]<-"counts"
     keys <- paste(var_vec, collapse = ",")
     selection <- c(density_var, var_vec, "group_id")
-    dta_est <- dta_est[, group_id := .GRP,
-                       keyby = keys][, ..selection]
+    dta_est <- dta_est %>%
+      group_by(across(all_of(c(density_var,var_vec)))) %>%
+      summarise(counts = sum(counts), .groups = 'drop')
+
+    dta_est <- dta_est %>%
+      group_by(across(all_of(c(var_vec)))) %>%
+      mutate(group_id = cur_group_id()) %>%
+      ungroup()
+    dta_est<-dta_est[order(dta_est$group_id),]
+
 
     dta_est$Delta<-rep(Delta, max(dta_est$group_id))
 
