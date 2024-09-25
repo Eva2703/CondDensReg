@@ -1,5 +1,6 @@
 load("data_age_birth.RData")
 load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
+document("C:/Users/learu/CondDensReg/new/CondDensReg")
 library(dplyr)
 
 debug(preprocess)
