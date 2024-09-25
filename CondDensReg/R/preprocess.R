@@ -21,7 +21,7 @@
 #' \item \code{weighted_counts} - If \code{sample_weights} is not \code{NULL}: Weighted (histogram) counts for the respective bin/discrete value incorparating the sample weights given by \code{sample_weights}.
 #' \item \code{density_var} - Marks the mid of the respective histogram bin (for values in \eqn{I\setminus D}) or the discrete value. If a mid corresponds to a discrete value, the mid is shifted to the right by \eqn{0.0001} times the minimal distance to the next interval interval limit OR discrete value so that no mid is exactly corresponding to a discrete value. A warning message is generated in this case.
 #' \item all variable columns which where specified by \code{var_vec} - These columns contain the values of the respective variables.
-#' \item \code{goup_id} - ID of each covariate combination.
+#' \item \code{group_id} - ID of each covariate combination.
 #' \item \code{gam_weights} - Vector to be passed to argument \code{weights} in \code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{dta} contains sample weights, see Appendix C of Maier et al. (2023).
 #' \item \code{gam_offset} - Negative logarithm of \code{gam_weights} to be used as offset to the predictor of the Poisson Model, if \code{dta} contains sample weights, see Appendix C of Maier et al. (2023).
 #' \item \code{Delta} - Width of the histogram bin or weight of the dirac measure for a discrete value defined by \code{weights_discrete}. The Poisson model uses \code{offset(log(Delta))} to add the necessary additive term in the predictor that includes binwidths/dirac weights into the estimation.
@@ -124,276 +124,276 @@ preprocess <- function(dta,
                        domain_continuous = c(0, 1),
                        already_formatted=FALSE) {
   if(!already_formatted){
-  # check for invalid arguments
-  checking(
-    dta,
-    var_vec,
-    density_var,
-    sample_weights,
-    bin_width,
-    bin_number,
-    values_discrete,
-    weights_discrete,
-    domain_continuous
-  )
-  # convert to standardised format and convert given indice vectors into column name vecors
-  if ("response" %in% colnames(dta)) {
-    names(dta)[names(dta) == 'response'] <- 'response_'
-  }
-  if (is.data.frame(dta)) {
-    dta <- as.data.table(dta)
-  }
-  if (all(sapply(var_vec, is.numeric))) {
-    var_vec <- colnames(dta)[var_vec]
-  }
-  if (is.numeric(density_var)) {
-    density_var <- colnames(dta)[density_var]
-  }
-  if (is.numeric(sample_weights)) {
-    sample_weights <- colnames(dta)[sample_weights]
-  }
-  if (isFALSE(weights_discrete)) {
-    weights_discrete <- NULL
-  }
-  if (isFALSE(values_discrete)) {
-    values_discrete <- NULL
-  }
-  if (is.null(bin_width) && is.null(bin_number)) {
-    bin_number <- 100
-  }
-  if (!isFALSE(domain_continuous) &
-      is.null(bin_width) && !is.null(bin_number)) {
-    bin_width <-
-      (domain_continuous[2] - domain_continuous[1]) / bin_number
-  }
-  if (!isFALSE(domain_continuous)) {
-    if (is.null(bin_number) && length(bin_width) == 1) {
-      bin_number <-
-        length(seq(
-          from = domain_continuous[1],
-          to = domain_continuous[2],
-          by = bin_width
-        )) - 1
+    # check for invalid arguments
+    checking(
+      dta,
+      var_vec,
+      density_var,
+      sample_weights,
+      bin_width,
+      bin_number,
+      values_discrete,
+      weights_discrete,
+      domain_continuous
+    )
+    # convert to standardised format and convert given indice vectors into column name vecors
+    if ("response" %in% colnames(dta)) {
+      names(dta)[names(dta) == 'response'] <- 'response_'
     }
-    if (is.null(bin_number) && length(bin_width) > 1) {
-      bin_number <- length(bin_width)
+    if (is.data.frame(dta)) {
+      dta <- as.data.table(dta)
     }
-  }
-  # group data by covariate combinations
-  keys <- paste(var_vec, collapse = ",")
-  selection <- c(density_var, var_vec, "group_id", sample_weights)
-  dta_grouped <- dta[, group_id := .GRP,
-                     keyby = keys][, ..selection]
-  # standardise name of sample weights
-  if (!is.null(sample_weights)) {
-    colnames(dta_grouped)[length(colnames(dta_grouped))] <-
-      "weighting_factor"
-  }
-  colnames(dta_grouped)[1] <- "response"
-  # construct data appropiately for the poisson model
-  # join response and regressors since response is viewed as regressor in poisson
-  # density regression
-  if (is.null(sample_weights)) {
-    dta_grouped$weighting_factor <- 1
-  }
-  regressors <-
-    colnames(dta_grouped)[2:(length(colnames(dta_grouped)) - 1)]
-  # if unweighted: use 1 as sample weights
-  dta_grouped$unweighting_factor <- 1
-  # define grid for hist
-  if (!isFALSE(domain_continuous)) {
-    if (length(bin_width) == 1) {
-      grid_hist <-
-        seq(from = domain_continuous[1],
-            to = domain_continuous[2],
-            by = bin_width)
+    if (all(sapply(var_vec, is.numeric))) {
+      var_vec <- colnames(dta)[var_vec]
     }
-    else{
-      grid_hist <- c(domain_continuous[1], cumsum(bin_width))
+    if (is.numeric(density_var)) {
+      density_var <- colnames(dta)[density_var]
     }
-    interval_width <- diff(grid_hist)
-  }
-  shifted <- FALSE
-  # initialize histogram structure
-  num_groups <- max(dta_grouped$group_id)
-  list_of_mids <- list() # initialize lists
-  list_of_counts_weighted <- list()
-  list_of_counts_unweighted <- list()
-  # create hist-data for all groups
-  for (i in 1:num_groups) {
-    dta_temp <-
-      dta_grouped[group_id == i, c("response", "weighting_factor", "unweighting_factor")]
-    counts_discrete_unweighted <- rep(0, length(values_discrete))
-    counts_discrete_weighted <- rep(0, length(values_discrete))
-    if (!is.null(values_discrete)) {
-      # counts for discrete values
-      for (j in 1:length(values_discrete)) {
-        counts_discrete_weighted[j] <-
-          sum(dta_temp[response == values_discrete[j], weighting_factor])
-        counts_discrete_unweighted[j] <-
-          sum(dta_temp[response == values_discrete[j], unweighting_factor])
-      }
+    if (is.numeric(sample_weights)) {
+      sample_weights <- colnames(dta)[sample_weights]
     }
-    dta_hist <- dta_temp[!dta_temp$response %in% values_discrete]
+    if (isFALSE(weights_discrete)) {
+      weights_discrete <- NULL
+    }
+    if (isFALSE(values_discrete)) {
+      values_discrete <- NULL
+    }
+    if (is.null(bin_width) && is.null(bin_number)) {
+      bin_number <- 100
+    }
+    if (!isFALSE(domain_continuous) &
+        is.null(bin_width) && !is.null(bin_number)) {
+      bin_width <-
+        (domain_continuous[2] - domain_continuous[1]) / bin_number
+    }
     if (!isFALSE(domain_continuous)) {
-      # if only discrete values considered: hist equals discrete count data
-      hist_weighted <-
-        weights::wtd.hist(
-          dta_hist$response,
-          breaks = grid_hist,
-          plot = FALSE,
-          weight = dta_hist$weighting_factor,
-          right = FALSE
-        )
-      counts_hist_weighted <- hist_weighted$counts
-      hist_unweighted <-
-        weights::wtd.hist(
-          dta_hist$response,
-          breaks = grid_hist,
-          plot = FALSE,
-          weight = dta_hist$unweighting_factor,
-          right = FALSE
-        )
-      counts_hist_unweighted <- hist_unweighted$counts
-      # if any hsitogram mid is equal to a discrete value, the mid is shifted
-      # slightly (0.0001*min(bin_width/2, distance to next discrete value))
-      if (any(hist_weighted$mids %in% values_discrete) &
-          all(hist_weighted$mids[hist_weighted$mids %in% values_discrete] < hist_weighted$breaks[-1][hist_weighted$mids %in% values_discrete])) {
-        dist2next_tic_or_discrete <-
-          rep(Inf, length(hist_weighted$mids))
-        # find minimal distance to next interval border or discrete value
-        for (j in 1:length(hist_weighted$mids)) {
-          closest_values <-
-            values_discrete[values_discrete > hist_weighted$mids[j]]
-          next_discrete <- min(na.omit(closest_values))
-          dist_discrete <- next_discrete - hist_weighted$mids[j]
-          dist_tic <- interval_width[j] / 2
-          dist2next_tic_or_discrete[j] <-
-            min(dist_discrete, dist_tic)
-        }
-        hist_weighted$mids[hist_weighted$mids %in% values_discrete] <-
-          hist_weighted$mids[hist_weighted$mids %in% values_discrete] + 0.0001 * dist2next_tic_or_discrete[hist_weighted$mids %in% values_discrete]
-        shifted <- TRUE
+      if (is.null(bin_number) && length(bin_width) == 1) {
+        bin_number <-
+          length(seq(
+            from = domain_continuous[1],
+            to = domain_continuous[2],
+            by = bin_width
+          )) - 1
       }
-      list_of_mids[[i]] <- c(values_discrete, hist_weighted$mids)
-      counts_weighted <-
-        c(counts_discrete_weighted, counts_hist_weighted)
-      list_of_counts_weighted[[i]] <- counts_weighted
-      counts_unweighted <-
-        c(counts_discrete_unweighted, counts_hist_unweighted)
-      list_of_counts_unweighted[[i]] <- counts_unweighted
+      if (is.null(bin_number) && length(bin_width) > 1) {
+        bin_number <- length(bin_width)
+      }
+    }
+    # group data by covariate combinations
+    keys <- paste(var_vec, collapse = ",")
+    selection <- c(density_var, var_vec, "group_id", sample_weights)
+    dta_grouped <- dta[, group_id := .GRP,
+                       keyby = keys][, ..selection]
+    # standardise name of sample weights
+    if (!is.null(sample_weights)) {
+      colnames(dta_grouped)[length(colnames(dta_grouped))] <-
+        "weighting_factor"
+    }
+    colnames(dta_grouped)[1] <- "response"
+    # construct data appropiately for the poisson model
+    # join response and regressors since response is viewed as regressor in poisson
+    # density regression
+    if (is.null(sample_weights)) {
+      dta_grouped$weighting_factor <- 1
+    }
+    regressors <-
+      colnames(dta_grouped)[2:(length(colnames(dta_grouped)) - 1)]
+    # if unweighted: use 1 as sample weights
+    dta_grouped$unweighting_factor <- 1
+    # define grid for hist
+    if (!isFALSE(domain_continuous)) {
+      if (length(bin_width) == 1) {
+        grid_hist <-
+          seq(from = domain_continuous[1],
+              to = domain_continuous[2],
+              by = bin_width)
+      }
+      else{
+        grid_hist <- c(domain_continuous[1], cumsum(bin_width))
+      }
+      interval_width <- diff(grid_hist)
+    }
+    shifted <- FALSE
+    # initialize histogram structure
+    num_groups <- max(dta_grouped$group_id)
+    list_of_mids <- list() # initialize lists
+    list_of_counts_weighted <- list()
+    list_of_counts_unweighted <- list()
+    # create hist-data for all groups
+    for (i in 1:num_groups) {
+      dta_temp <-
+        dta_grouped[group_id == i, c("response", "weighting_factor", "unweighting_factor")]
+      counts_discrete_unweighted <- rep(0, length(values_discrete))
+      counts_discrete_weighted <- rep(0, length(values_discrete))
+      if (!is.null(values_discrete)) {
+        # counts for discrete values
+        for (j in 1:length(values_discrete)) {
+          counts_discrete_weighted[j] <-
+            sum(dta_temp[response == values_discrete[j], weighting_factor])
+          counts_discrete_unweighted[j] <-
+            sum(dta_temp[response == values_discrete[j], unweighting_factor])
+        }
+      }
+      dta_hist <- dta_temp[!dta_temp$response %in% values_discrete]
+      if (!isFALSE(domain_continuous)) {
+        # if only discrete values considered: hist equals discrete count data
+        hist_weighted <-
+          weights::wtd.hist(
+            dta_hist$response,
+            breaks = grid_hist,
+            plot = FALSE,
+            weight = dta_hist$weighting_factor,
+            right = FALSE
+          )
+        counts_hist_weighted <- hist_weighted$counts
+        hist_unweighted <-
+          weights::wtd.hist(
+            dta_hist$response,
+            breaks = grid_hist,
+            plot = FALSE,
+            weight = dta_hist$unweighting_factor,
+            right = FALSE
+          )
+        counts_hist_unweighted <- hist_unweighted$counts
+        # if any hsitogram mid is equal to a discrete value, the mid is shifted
+        # slightly (0.0001*min(bin_width/2, distance to next discrete value))
+        if (any(hist_weighted$mids %in% values_discrete) &
+            all(hist_weighted$mids[hist_weighted$mids %in% values_discrete] < hist_weighted$breaks[-1][hist_weighted$mids %in% values_discrete])) {
+          dist2next_tic_or_discrete <-
+            rep(Inf, length(hist_weighted$mids))
+          # find minimal distance to next interval border or discrete value
+          for (j in 1:length(hist_weighted$mids)) {
+            closest_values <-
+              values_discrete[values_discrete > hist_weighted$mids[j]]
+            next_discrete <- min(na.omit(closest_values))
+            dist_discrete <- next_discrete - hist_weighted$mids[j]
+            dist_tic <- interval_width[j] / 2
+            dist2next_tic_or_discrete[j] <-
+              min(dist_discrete, dist_tic)
+          }
+          hist_weighted$mids[hist_weighted$mids %in% values_discrete] <-
+            hist_weighted$mids[hist_weighted$mids %in% values_discrete] + 0.0001 * dist2next_tic_or_discrete[hist_weighted$mids %in% values_discrete]
+          shifted <- TRUE
+        }
+        list_of_mids[[i]] <- c(values_discrete, hist_weighted$mids)
+        counts_weighted <-
+          c(counts_discrete_weighted, counts_hist_weighted)
+        list_of_counts_weighted[[i]] <- counts_weighted
+        counts_unweighted <-
+          c(counts_discrete_unweighted, counts_hist_unweighted)
+        list_of_counts_unweighted[[i]] <- counts_unweighted
+      }
+      else{
+        list_of_mids[[i]] <- c(values_discrete)
+        counts_weighted <- c(counts_discrete_weighted)
+        list_of_counts_weighted[[i]] <- counts_weighted
+        counts_unweighted <- c(counts_discrete_unweighted)
+        list_of_counts_unweighted[[i]] <- counts_unweighted
+      }
+    }
+    # construct hists from counts and mids vectors for each unique covariate
+    # combination and targets
+    dta_targets <-
+      data.table::data.table(
+        counts = unlist(list_of_counts_unweighted, recursive = FALSE),
+        weighted_counts = unlist(list_of_counts_weighted, recursive = FALSE),
+        # unlist to get dta set
+        response = unlist(list_of_mids, recursive = FALSE)
+      )
+    # construct regression features dta_grouped
+    if (!isFALSE(domain_continuous)) {
+      index_vec <-
+        as.vector(sapply(
+          1:num_groups,
+          rep,
+          times = bin_number + length(values_discrete),
+          simplify = "vector"
+        ))
+    } else{
+      index_vec <-
+        as.vector(sapply(
+          1:num_groups,
+          rep,
+          times = length(values_discrete),
+          simplify = "vector"
+        ))
+    }
+    dta_feat <-
+      dta_grouped[, head(.SD, 1), # each hist is associated with one covariate combination
+                  by = group_id][index_vec][, ..regressors]
+    # construct complete dtaset
+    dta_est <- cbind(dta_targets, dta_feat)
+    # We have to specify the argument weights in gam and use an offset in the
+    # formula to include the weights properly; For each bin, the weight to
+    # pass to gam is the weighted count of observations in this bin, divided by
+    # the usual count (i.e., the number) of observations in this bin; the offset
+    # that has to be used is -log of the respective weight. See Paper of Maier et al.(2023).
+    dta_est[, gam_weights := ifelse(counts != 0, weighted_counts / counts, 1)]
+    # If counts == 0, the value of weight can actually be arbitrary, but its log
+    # has to exist
+    dta_est[, gam_offsets := -log(gam_weights)]
+    #}
+    # if no sample weights are given, the column of weighted counts (equal to the
+    # count coulumn in this case) is removed from the dataset
+    if (is.null(sample_weights)) {
+      dta_est <- dta_est[, -2]
+    }
+    # Delta equals bin width/ Dirac weight of discrete value
+    if (length(weights_discrete) == 1) {
+      #same dirac weight for all discrete values
+      dta_est$Delta <- NA
+      dta_est$Delta[!dta_est$response %in% values_discrete] <-
+        rep(bin_width, max(dta_est$group_id))
+      dta_est$Delta[dta_est$response %in% values_discrete] <-
+        weights_discrete
+    }
+    if (length(weights_discrete) > 1) {
+      #different dirac weights
+      discretes <-
+        data.frame(values = values_discrete,
+                   weights = weights_discrete,
+                   count = 0)
+      dta_est$Delta <- NA
+      dta_est$Delta[!dta_est$response %in% values_discrete] <-
+        rep(bin_width, max(dta_est$group_id))
+      for (j in 1:length(discretes$values)) {
+        # Delta= bin width for all bins (=non-discrete values)
+        dta_est$Delta[is.na(dta_est$Delta) &
+                        dta_est$response == discretes$values[j]] <-
+          discretes$weights[j]
+      }
+    }
+    if (is.null(weights_discrete)) {
+      if (length(bin_width) == 1) {
+        dta_est[, Delta := rep(bin_width, max(dta_est$group_id) * bin_number)]
+      }
+      else{
+        dta_est[, Delta := rep(bin_width, max(dta_est$group_id))]
+      }
+    }
+    # sort the data by group_id and within the group by the response variable
+    dta_est <- dta_est %>% arrange(group_id, response)
+    # add column which indicates if a bin is in continuous or discrete domain
+    if (!isFALSE(values_discrete)){
+      dta_est<-dta_est%>%mutate(discrete=response%in%values_discrete)
+    }
+    # reconversion of changed variable names
+    if (!is.null(sample_weights)) {
+      colnames(dta_est)[3] <- density_var
     }
     else{
-      list_of_mids[[i]] <- c(values_discrete)
-      counts_weighted <- c(counts_discrete_weighted)
-      list_of_counts_weighted[[i]] <- counts_weighted
-      counts_unweighted <- c(counts_discrete_unweighted)
-      list_of_counts_unweighted[[i]] <- counts_unweighted
+      colnames(dta_est)[2] <- density_var
     }
-  }
-  # construct hists from counts and mids vectors for each unique covariate
-  # combination and targets
-  dta_targets <-
-    data.table::data.table(
-      counts = unlist(list_of_counts_unweighted, recursive = FALSE),
-      weighted_counts = unlist(list_of_counts_weighted, recursive = FALSE),
-      # unlist to get dta set
-      response = unlist(list_of_mids, recursive = FALSE)
-    )
-  # construct regression features dta_grouped
-  if (!isFALSE(domain_continuous)) {
-    index_vec <-
-      as.vector(sapply(
-        1:num_groups,
-        rep,
-        times = bin_number + length(values_discrete),
-        simplify = "vector"
-      ))
-  } else{
-    index_vec <-
-      as.vector(sapply(
-        1:num_groups,
-        rep,
-        times = length(values_discrete),
-        simplify = "vector"
-      ))
-  }
-  dta_feat <-
-    dta_grouped[, head(.SD, 1), # each hist is associated with one covariate combination
-                by = group_id][index_vec][, ..regressors]
-  # construct complete dtaset
-  dta_est <- cbind(dta_targets, dta_feat)
-  # We have to specify the argument weights in gam and use an offset in the
-  # formula to include the weights properly; For each bin, the weight to
-  # pass to gam is the weighted count of observations in this bin, divided by
-  # the usual count (i.e., the number) of observations in this bin; the offset
-  # that has to be used is -log of the respective weight. See Paper of Maier et al.(2023).
-  dta_est[, gam_weights := ifelse(counts != 0, weighted_counts / counts, 1)]
-  # If counts == 0, the value of weight can actually be arbitrary, but its log
-  # has to exist
-  dta_est[, gam_offsets := -log(gam_weights)]
-  #}
-  # if no sample weights are given, the column of weighted counts (equal to the
-  # count coulumn in this case) is removed from the dataset
-  if (is.null(sample_weights)) {
-    dta_est <- dta_est[, -2]
-  }
-  # Delta equals bin width/ Dirac weight of discrete value
-  if (length(weights_discrete) == 1) {
-    #same dirac weight for all discrete values
-    dta_est$Delta <- NA
-    dta_est$Delta[!dta_est$response %in% values_discrete] <-
-      rep(bin_width, max(dta_est$group_id))
-    dta_est$Delta[dta_est$response %in% values_discrete] <-
-      weights_discrete
-  }
-  if (length(weights_discrete) > 1) {
-    #different dirac weights
-    discretes <-
-      data.frame(values = values_discrete,
-                 weights = weights_discrete,
-                 count = 0)
-    dta_est$Delta <- NA
-    dta_est$Delta[!dta_est$response %in% values_discrete] <-
-      rep(bin_width, max(dta_est$group_id))
-    for (j in 1:length(discretes$values)) {
-      # Delta= bin width for all bins (=non-discrete values)
-      dta_est$Delta[is.na(dta_est$Delta) &
-                      dta_est$response == discretes$values[j]] <-
-        discretes$weights[j]
-    }
-  }
-  if (is.null(weights_discrete)) {
-    if (length(bin_width) == 1) {
-      dta_est[, Delta := rep(bin_width, max(dta_est$group_id) * bin_number)]
-    }
-    else{
-      dta_est[, Delta := rep(bin_width, max(dta_est$group_id))]
-    }
-  }
-  # sort the data by group_id and within the group by the response variable
-  dta_est <- dta_est %>% arrange(group_id, response)
-  # add column which indicates if a bin is in continuous or discrete domain
-  if (!isFALSE(values_discrete)){
-    dta_est<-dta_est%>%mutate(discrete=response%in%values_discrete)
-  }
-  # reconversion of changed variable names
-  if (!is.null(sample_weights)) {
-    colnames(dta_est)[3] <- density_var
-  }
-  else{
-    colnames(dta_est)[2] <- density_var
-  }
 
-  if ("response_" %in% colnames(dta_est)) {
-    names(dta_est)[names(dta_est) == 'response_'] <- 'response'
-  }
-  if (isTRUE(shifted)) {
-    warning(
-      "Some bin mids have been shifted minimally as they correspond to the discrete values.",
-      call. = FALSE
-    )
-  }
+    if ("response_" %in% colnames(dta_est)) {
+      names(dta_est)[names(dta_est) == 'response_'] <- 'response'
+    }
+    if (isTRUE(shifted)) {
+      warning(
+        "Some bin mids have been shifted minimally as they correspond to the discrete values.",
+        call. = FALSE
+      )
+    }
   }else{
     if (is.data.frame(dta)) {
       dta <- as.data.table(dta)
@@ -438,11 +438,21 @@ preprocess <- function(dta,
         Delta<-c(Delta, weights_discrete)[ordered_values]
         }
       }
+
+      if(!isFALSE(values_discrete)){
+        ordered_values<-order(c(cont_values, values_discrete))
+        discrete<-c(rep(FALSE, length(cont_values)),rep(TRUE,length(values_discrete)))[ordered_values]
+      }
+      else{
+        discrete<-c(rep(FALSE, length(cont_values)))
+      }
+
     }else{
       if(length(weights_discrete)==1){
         weights_discrete<-rep(weights_discrete,length(values_discrete))
       }
       Delta<-weights_discrete
+      discrete<-c(rep(TRUE, length(values_discrete)))
     }
 
 
@@ -456,25 +466,54 @@ preprocess <- function(dta,
     if (is.numeric(var_vec)){
       var_vec<-colnames(dta)[var_vec]
     }
-    dta_est<-cbind(dta$counts,dta[,..density_var], dta[,..var_vec])
-    colnames(dta_est)[1]<-"counts"
-    keys <- paste(var_vec, collapse = ",")
-    selection <- c(density_var, var_vec, "group_id")
-    dta_est <- dta_est %>%
-      group_by(across(all_of(c(density_var,var_vec)))) %>%
-      summarise(counts = sum(counts), .groups = 'drop')
 
-    dta_est <- dta_est %>%
-      group_by(across(all_of(c(var_vec)))) %>%
-      mutate(group_id = cur_group_id()) %>%
-      ungroup()
-    dta_est<-dta_est[order(dta_est$group_id),]
+    if (!"weighted_counts"%in% colnames(dta)){
+      dta_est<-cbind(dta$counts,dta[,..density_var], dta[,..var_vec])
+      colnames(dta_est)[1]<-"counts"
+      keys <- paste(var_vec, collapse = ",")
+      selection <- c(density_var, var_vec, "group_id")
+      dta_est <- dta_est %>%
+        group_by(across(all_of(c(density_var,var_vec)))) %>%
+        summarise(counts = sum(counts), .groups = 'drop')
+
+      dta_est <- dta_est %>%
+        group_by(across(all_of(c(var_vec)))) %>%
+        mutate(group_id = cur_group_id()) %>%
+        ungroup()
+      dta_est<-dta_est[order(dta_est$group_id),]
 
 
-    dta_est$Delta<-rep(Delta, max(dta_est$group_id))
+      dta_est$Delta<-rep(Delta, max(dta_est$group_id))
+      dta_est$discrete<-rep(discrete, max(dta_est$group_id))
+
+      dta_est$gam_weights <- 1
+      dta_est$gam_offsets <- 0
+    }else{
+      dta_est<-cbind(dta$counts,dta$weighted_counts,dta[,..density_var], dta[,..var_vec])
+      colnames(dta_est)[1]<-"counts"
+      colnames(dta_est)[2]<-"weighted_counts"
+      keys <- paste(var_vec, collapse = ",")
+      selection <- c(density_var, var_vec, "group_id")
+      dta_est <- dta_est %>%
+        group_by(across(all_of(c(density_var,var_vec)))) %>%
+        summarise(counts = sum(counts),weighted_counts = sum(weighted_counts), .groups = 'drop')
+
+      dta_est <- dta_est %>%
+        group_by(across(all_of(c(var_vec)))) %>%
+        mutate(group_id = cur_group_id()) %>%
+        ungroup()
+      dta_est<-dta_est[order(dta_est$group_id),]
+
+
+      dta_est$Delta<-rep(Delta, max(dta_est$group_id))
+      dta_est$discrete<-rep(discrete, max(dta_est$group_id))
+
+      dta_est$gam_weights<-ifelse(dta_est$counts != 0, dta_est$weighted_counts / dta_est$counts, 1)
+dta_est$gam_offsets<- -log(dta_est$gam_weights)
+    }
 
     #colnames
-      }
+  }
   attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
   return(dta_est)
 }
