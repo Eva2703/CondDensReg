@@ -395,11 +395,15 @@ preprocess <- function(dta,
     )
   }
   }else{
+    if (is.data.frame(dta)) {
+      dta <- as.data.table(dta)
+    }
     # Delta
     if(!isFALSE(domain_continuous)){
-      cont_values<-unique(dta[,density_var])
+      cont_values<-unlist(unique(dta[,..density_var]))
       if(!isFALSE(values_discrete))
-        { cont_values<-setdiff(cont_values,values_discrete)}
+      { cont_values<-setdiff(cont_values,values_discrete)}
+
 
       if (is.null(bin_width)){
         breaks<-c(domain_continuous[1],cont_values, domain_continuous[2])
@@ -411,8 +415,13 @@ preprocess <- function(dta,
         Delta<-append(Delta, diffs[i+1]*0.5+diffs[i+2])
         if(!isFALSE(values_discrete))
         { ordered_values<-order(c(cont_values, values_discrete))
-          }
+        Delta<-c(Delta, weights_discrete)[ordered_values]
+        }
 
+
+      }
+    }else{
+      Delta<-weights_discrete
     }
 
 
@@ -420,8 +429,19 @@ preprocess <- function(dta,
 
     # discrete
     # gam_offset
+    if (is.numeric(density_var)){
+      density_var<-colnames(dta)[density_var]
+    }
+    if (is.numeric(var_vec)){
+      var_vec<-colnames(dta)[var_vec]
+    }
+    dta_est<-cbind(dta$counts,dta[,..density_var], dta[,..var_vec])
+    keys <- paste(var_vec, collapse = ",")
+    selection <- c(density_var, var_vec, "group_id")
+    dta_est <- dta_est[, group_id := .GRP,
+                       keyby = keys][, ..selection]
 
-    dta_est<-cbind(dta$counts,dta[,density_var], dta[,var_vec])
+    dta_est$Delta<-rep(Delta, max(dta_est$group_id))
 
     #colnames
       }
