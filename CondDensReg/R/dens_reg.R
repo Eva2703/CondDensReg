@@ -144,7 +144,7 @@
 #' \eqn{\beta_{cov_1}\cdot cov_1,\ \beta_{cov_2}\cdot cov_2,\ ...} are included
 #' in the model. If mising (\code{NULL}), no linear is included.
 #' @param flexible_effects List of lists of the form
-#' \code{list(list("cov_1","basis_1", m_1,k_1,"by_1"),list(...),...)}. Each list
+#' \code{list(list("cov_1","basis_1", m_1,k_1,mc1,"by_1"),list(...),...)}. Each list
 #' is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
 #' \itemize{
 #' \item \code{"cov"}: Name of a numeric variable included in \code{var_vec}.
@@ -156,13 +156,14 @@
 #' penalty. (see \code{mgcv})
 #' \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
 #' basis \eqn{b_j}. See \code{mgcv::choose.k} for more information.
-#' \item \code{"by"}: Optional, name of a categorical variable included in
+#'  \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
+#'  \item \code{"by"}: Optional, name of a categorical variable included in
 #' \code{var_vec} specifying whether the flexible effect should be modeled
 #' specifically for each level of the by-covariate. If missing or \code{NULL},
 #' the flexible effect is not depending on the level of an additional covariate.
 #' } If mising (\code{NULL}), no flexible effect is included.
 #' @param varying_coefficients  List of lists of the form
-#' \code{list(list("covA_1","covB_1","basis1",m1,k1),...)}. Each list is adding
+#' \code{list(list("covA_1","covB_1","basis1",m1,k1, mc1),...)}. Each list is adding
 #' one varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
 #' model with:
 #' \itemize{
@@ -178,6 +179,7 @@
 #' basis \eqn{b_j} for the smooth effect. See \code{mgcv::choose.k} for more
 #' information.
 #' }If mising (\code{NULL}), no varying coeffecient is included.
+#' \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
 #' @param flexible_interaction  List of lists of the form
 #' \code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...)),list(...),...)}.
 #' Each list is specifying flexible interaction effect between at least two
@@ -1181,7 +1183,7 @@ checking_dens_reg <-
 #'
 #' \donttest{# please run the examples of ?dens_reg to estimate the needed models
 #'
-#' # create newdata for predict
+#' #' # create newdata for predict
 #'
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
@@ -1192,23 +1194,23 @@ checking_dens_reg <-
 #'
 #' # plot partial effects on clr-level of the continuous model in an interactive plot, do not show all groups
 #'
-#' plot(m_cont, type="effects", interactive=TRUE, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects, interactive=TRUE, level="clr", display_all=FALSE)
 #'
 #' # show only first plot
 #'
-#' plot(m_cont, type="effects", interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects, interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
 #'
 #' # plot partial effects on density-level estimated for new data based on the mixed model
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata)
 #'
 #' # estimate and plot only the intercept (first term)
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=1)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=1)
 #'
-#' # estimate and plot only second term
+#' #' # estimate and plot only second term
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=2)
+#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
 #' }
 #'
 #' @export
