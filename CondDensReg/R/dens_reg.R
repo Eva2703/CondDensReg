@@ -1195,23 +1195,23 @@ checking_dens_reg <-
 #'
 #' # plot partial effects on clr-level of the continuous model in an interactive plot, do not show all groups
 #'
-#' plot(m_cont, type="effects, interactive=TRUE, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects", interactive=TRUE, level="clr", display_all=FALSE)
 #'
 #' # show only first plot
 #'
-#' plot(m_cont, type="effects, interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
+#' plot(m_cont, type="effects", interactive=FALSE, pick_sites=1, level="clr", display_all=FALSE)
 #'
 #' # plot partial effects on density-level estimated for new data based on the mixed model
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata)
 #'
 #' # estimate and plot only the intercept (first term)
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=1)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=1)
 #'
 #' #' # estimate and plot only second term
 #'
-#' plot(m_mixed, type="effects, level="pdf", display_all=TRUE,predict=newdata, terms=2)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=2)
 #' }
 #'
 #' @export
