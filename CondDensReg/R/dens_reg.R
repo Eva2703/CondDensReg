@@ -105,7 +105,7 @@
 #' basis over \eqn{I} and the order of the difference penalty (like the argument
 #' \code{m} for P-Spline smooth terms, i.e., \code{bs="ps"} in \code{\link[mgcv]{ti}},
 #' etc.) for basis functions in \eqn{L^2(\lambda)} (before transformation to \eqn{L^2_0(\lambda)},
-#' compare details). If missing (\code{NULL}) it is set to cubic splines with second
+#' compare details). If missing it is set to cubic splines with second
 #' order difference penalty, i.e., \code{m_density_var=c(2,2)}, as default.
 #' @param k_density_var Integer specifying the number of B-spline basis functions
 #' over \eqn{I}, i.e., the length of the vector \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y}
