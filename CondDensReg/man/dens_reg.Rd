@@ -124,7 +124,7 @@ of numeric variables included by \code{var_vec} for which linear effects
 in the model. If mising (\code{NULL}), no linear is included.}
 
 \item{flexible_effects}{List of lists of the form
-\code{list(list("cov_1","basis_1", m_1,k_1,"by_1"),list(...),...)}. Each list
+\code{list(list("cov_1","basis_1", m_1,k_1,mc1,"by_1"),list(...),...)}. Each list
 is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
 \itemize{
 \item \code{"cov"}: Name of a numeric variable included in \code{var_vec}.
@@ -136,14 +136,15 @@ marginal spline basis \eqn{b_j} in covariate direction and the order of its
 penalty. (see \code{mgcv})
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
 basis \eqn{b_j}. See \code{mgcv::choose.k} for more information.
-\item \code{"by"}: Optional, name of a categorical variable included in
+ \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
+ \item \code{"by"}: Optional, name of a categorical variable included in
 \code{var_vec} specifying whether the flexible effect should be modeled
 specifically for each level of the by-covariate. If missing or \code{NULL},
 the flexible effect is not depending on the level of an additional covariate.
 } If mising (\code{NULL}), no flexible effect is included.}
 
 \item{varying_coefficients}{List of lists of the form
-\code{list(list("covA_1","covB_1","basis1",m1,k1),...)}. Each list is adding
+\code{list(list("covA_1","covB_1","basis1",m1,k1, mc1),...)}. Each list is adding
 one varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
 model with:
 \itemize{
@@ -158,10 +159,11 @@ and the order of its penalty. (see \code{mgcv})
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
 basis \eqn{b_j} for the smooth effect. See \code{mgcv::choose.k} for more
 information.
-}If mising (\code{NULL}), no varying coeffecient is included.}
+}If mising (\code{NULL}), no varying coeffecient is included.
+\item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.}
 
 \item{flexible_interaction}{List of lists of the form
-\code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...)),list(...),...)}.
+\code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...)),list(...),...)}.
 Each list is specifying flexible interaction effect between at least two
 continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
 \itemize{
@@ -176,6 +178,7 @@ the type for the marginal bases in covariate direction. See
 \item \code{c(kA, kB, ...)}: Vector of integers or \code{NULL} giving the
 dimension of the marginal basis in direction of \eqn{cov_A} for the smooth
 effect. See \code{mgcv::choose.k} for more information.
+#' \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
 }}
 
 \item{effects}{Indicates if partial effects should be returned (\code{TRUE})
