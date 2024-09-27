@@ -266,11 +266,11 @@
 #' ## linear effects
 #' linear_effects <- c("covariate4")
 #'## flexible effects
-#' flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL), list("covariate3", "ps", c(2, 2), 4, "covariate1"))
+#' flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL,NULL), list("covariate3", "ps", c(2, 2), 4,FALSE, "covariate1"))
 #' ## varying coefficient
-#' fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2), 4))
+#' fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
 #'## flexible interaction
-#' flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5)))
+#' flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5), list(TRUE, FALSE, TRUE)))
 #'
 #'# fit models (warning: calculation may take a few minutes)
 #'
@@ -673,11 +673,12 @@ dens_reg <- function(dta,
       sp_density_var_vec<-sp_density_var[j]
     }
     if (is.null(effect[[5]])){
-      mc<-rep("TRUE", length(effect[[1]]), collapse = ",")
+      mc<-paste0(rep("TRUE", length(effect[[1]])), collapse = ",")
     }
     else{
-      mc<-paste(effect[[5]], collapse=",")
+      mc<-paste0(effect[[5]], collapse=",")
     }
+    print(mc)
     f_flex_interact <-
       paste0(
         f_flex_interact,
