@@ -493,8 +493,11 @@ dens_reg <- function(dta,
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
-    if (is.null(effect[5][1])){
+    if (is.null(effect[5][[1]])){
       mc<-TRUE
+    }
+    else{
+      mc<-effect[5][[1]]
     }
     if (is.null(effect[6][[1]])) {
       f_flexibles <-
@@ -617,6 +620,12 @@ dens_reg <- function(dta,
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
+    if (is.null(effect[5][[1]])){
+      mc<-TRUE
+    }
+    else{
+      mc<-effect[5][[1]]
+    }
     f_function_var_coef <-
       paste0(
         f_function_var_coef,
@@ -639,7 +648,7 @@ dens_reg <- function(dta,
         ",",
         k_density_var,
         ")",
-        ",mc = c(TRUE, FALSE), np = FALSE, by=",
+        ",mc = c(",mc,", FALSE), np = FALSE, by=",
         effect[2],
         ",sp=array(c(-1,",
         sp_density_var_vec,
@@ -1020,7 +1029,7 @@ checking_dens_reg <-
       }
 
       for (effect in effects) {
-        if (length(effect) < 4 || length(effect) > 5) {
+        if (length(effect) < 5 || length(effect) > 6) {
           stop("Each flexible_effects list must have 4 or 5 elements.")
         }
 
@@ -1072,8 +1081,8 @@ checking_dens_reg <-
         }
 
         for (effect in effects) {
-          if (length(effect) != 5) {
-            stop("Each varying_coefficients list must have 5 elements.")
+          if (length(effect) != 6) {
+            stop("Each varying_coefficients list must have 6 elements.")
           }
 
           if (!is.character(effect[[1]]) ||
