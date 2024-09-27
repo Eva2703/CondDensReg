@@ -1201,7 +1201,9 @@ checking_dens_reg <-
 #' @return Plot(s) as specified.
 #' @examples
 #'
-#' \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#' \donttest{# please run the examples of dens_reg to estimate the needed models
+#'
+#' example("dens_reg")
 #'
 #' #' # create newdata for predict
 #'
@@ -3914,7 +3916,9 @@ plot.dens_reg_obj <-
 #'A matrix with columns for the different covariate combinations if \code{type="pdf"} or \code{="clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
 #' @examples
 #'
-#' \donttest{# please run the examples of ?dens_reg to estimate the needed models
+#' \donttest{# please run the examples of dens_reg to estimate the needed models
+#'
+#' example("dens_reg")
 #'
 #' # see names of the models' terms
 #' sapply(m_mixed$model$smooth, "[[",  "label")
