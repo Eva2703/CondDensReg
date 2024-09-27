@@ -672,11 +672,17 @@ dens_reg <- function(dta,
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
+    if (is.null(effect[[5]])){
+      mc<-rep("TRUE", length(effect[[1]]), collapse = ",")
+    }
+    else{
+      mc<-paste(effect[[5]], collapse=",")
+    }
     f_flex_interact <-
       paste0(
         f_flex_interact,
         "+ ti(",
-        paste(effect[[1]], collapse = ","),
+        paste0(effect[[1]], collapse = ","),
         ",",
         density_var
         ,
@@ -691,7 +697,7 @@ dens_reg <- function(dta,
         k_density_var,
         ")",
         ",mc = c(",
-        paste0(rep("TRUE", length(effect[[1]])), collapse = ","),
+        mc,
         ",FALSE), np = FALSE,sp=array(c(",
         paste0(rep("-1", length(effect[[1]])), collapse = ","),
         ",",
