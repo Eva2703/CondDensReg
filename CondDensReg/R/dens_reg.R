@@ -493,7 +493,10 @@ dens_reg <- function(dta,
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
-    if (is.null(effect[5][[1]])) {
+    if (is.null(effect[5][1])){
+      mc<-TRUE
+    }
+    if (is.null(effect[6][[1]])) {
       f_flexibles <-
         paste0(
           f_flexibles,
@@ -515,7 +518,7 @@ dens_reg <- function(dta,
           effect[4],
           ",",
           k_density_var,
-          "),mc = c(TRUE, FALSE), np = FALSE, sp=array(c(-1,",
+          "),mc = c(",mc,", FALSE), np = FALSE, sp=array(c(-1,",
           sp_density_var_vec,
           " ))",
           ",fx=",
@@ -554,8 +557,8 @@ dens_reg <- function(dta,
           ",",
           k_density_var,
           ")",
-          ",mc = c(TRUE, FALSE), np = FALSE, by=",
-          effect[5],
+          ",mc = c(",mc,", FALSE), np = FALSE, by=",
+          effect[6],
           ",sp=array(c(-1,",
           sp_density_var_vec,
           " )),fx=",
