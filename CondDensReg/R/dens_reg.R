@@ -181,7 +181,7 @@
 #' }If mising (\code{NULL}), no varying coeffecient is included.
 #' \item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
 #' @param flexible_interaction  List of lists of the form
-#' \code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...), c("by1","by2",...)),list(...),...)}.
+#' \code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...), "by"),list(...),...)}.
 #' Each list is specifying flexible interaction effect between at least two
 #' continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
 #' \itemize{
@@ -274,7 +274,7 @@
 #' ## varying coefficient
 #' fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
 #'## flexible interaction
-#' flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5), list(TRUE, FALSE, TRUE)))
+#' flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5), list(TRUE, FALSE, TRUE), NULL))
 #'
 #'# fit models (warning: calculation may take a few minutes)
 #'
@@ -682,7 +682,7 @@ dens_reg <- function(dta,
     else{
       mc<-paste0(effect[[5]], collapse=",")
     }
-    print(mc)
+    if (is.null(effect[6][[1]])) {
     f_flex_interact <-
       paste0(
         f_flex_interact,
@@ -721,7 +721,50 @@ dens_reg <- function(dta,
         penalty_discrete,
         ")))"
       )
-    j<-j+1
+    j<-j+1}
+    else{
+      f_flex_interact <-
+        paste0(
+          f_flex_interact,
+          "+ ti(",
+          paste0(effect[[1]], collapse = ","),
+          ",",
+          density_var
+          ,
+          paste0(",bs=c('", paste0(effect[[2]], collapse = "','"), "','md')") ,
+          ",m = list(",
+          paste0(effect[[3]], collapse = ","),
+          ",",
+          deparse(m_density_var),
+          "), k =c( ",
+          paste(effect[[4]], collapse = ","),
+          ",",
+          k_density_var,
+          ")",
+          ",mc = c(",
+          mc,
+          ",FALSE), np = FALSE,sp=array(c(",
+          paste0(rep("-1", length(effect[[1]])), collapse = ","),
+          ",",
+          sp_density_var_vec,
+          " )),fx=",
+          fx,
+          ", by=",
+          effect[6],",xt=list(",
+          paste0(rep("NULL", length(effect[[1]])), collapse = ","),
+          ",list(values_discrete=",
+          deparse(values_discrete),
+          ",  domain_continuous=",
+          deparse(domain_continuous),
+          ", weights_discrete=",
+          deparse(weights_discrete),
+          ",penalty_discrete=",
+          penalty_discrete,
+          ")))"
+        )
+      j<-j+1
+
+    }
   }
   f <-
     paste0(
