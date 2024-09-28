@@ -43,7 +43,9 @@ Plot(s) as specified.
 }
 \examples{
 
-\donttest{# please run the examples of ?dens_reg to estimate the needed models
+\donttest{# please run the examples of dens_reg to estimate the needed models
+
+example("dens_reg")
 
 #' # create newdata for predict
 

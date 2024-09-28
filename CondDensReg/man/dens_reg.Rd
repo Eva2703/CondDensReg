@@ -15,7 +15,7 @@ dens_reg(
   values_discrete = c(0, 1),
   weights_discrete = 1,
   domain_continuous = c(0, 1),
-  m_density_var,
+  m_density_var = c(2, 2),
   k_density_var = 10,
   sp_density_var = NULL,
   penalty_discrete = NULL,
@@ -79,7 +79,7 @@ case).}
 basis over \eqn{I} and the order of the difference penalty (like the argument
 \code{m} for P-Spline smooth terms, i.e., \code{bs="ps"} in \code{\link[mgcv]{ti}},
 etc.) for basis functions in \eqn{L^2(\lambda)} (before transformation to \eqn{L^2_0(\lambda)},
-compare details). If missing (\code{NULL}) it is set to cubic splines with second
+compare details). If missing it is set to cubic splines with second
 order difference penalty, i.e., \code{m_density_var=c(2,2)}, as default.}
 
 \item{k_density_var}{Integer specifying the number of B-spline basis functions
@@ -163,7 +163,7 @@ information.
 \item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.}
 
 \item{flexible_interaction}{List of lists of the form
-\code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...)),list(...),...)}.
+\code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...), "by"),list(...),...)}.
 Each list is specifying flexible interaction effect between at least two
 continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
 \itemize{
@@ -178,7 +178,11 @@ the type for the marginal bases in covariate direction. See
 \item \code{c(kA, kB, ...)}: Vector of integers or \code{NULL} giving the
 dimension of the marginal basis in direction of \eqn{cov_A} for the smooth
 effect. See \code{mgcv::choose.k} for more information.
-#' \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
+ \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
+  \item \code{"by"}: Optional, name of a categorical variable included in
+\code{var_vec} specifying whether the flexible interaction effect should be modeled
+specifically for each level of the by-covariate. If \code{NULL},
+the flexible interaction effect is not depending on the level of an additional covariate.
 }}
 
 \item{effects}{Indicates if partial effects should be returned (\code{TRUE})
@@ -307,11 +311,11 @@ group_specific_intercepts <- c("covariate1", "covariate2")
 ## linear effects
 linear_effects <- c("covariate4")
 ## flexible effects
-flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL), list("covariate3", "ps", c(2, 2), 4, "covariate1"))
+flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL,NULL), list("covariate3", "ps", c(2, 2), 4,FALSE, "covariate1"))
 ## varying coefficient
-fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2), 4))
+fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
 ## flexible interaction
-flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5)))
+flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5), list(TRUE, FALSE, TRUE), NULL))
 
 # fit models (warning: calculation may take a few minutes)
 

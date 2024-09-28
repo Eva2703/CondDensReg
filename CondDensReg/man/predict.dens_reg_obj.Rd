@@ -35,7 +35,9 @@ A matrix with columns for the different covariate combinations if \code{type="pd
 }
 \examples{
 
-\donttest{# please run the examples of ?dens_reg to estimate the needed models
+\donttest{# please run the examples of dens_reg to estimate the needed models
+
+example("dens_reg")
 
 # see names of the models' terms
 sapply(m_mixed$model$smooth, "[[",  "label")
