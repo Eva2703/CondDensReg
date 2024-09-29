@@ -950,10 +950,16 @@ dens_reg <- function(dta,
       smooth_cols <- append(smooth_cols, list(ind))
     }
     for (effect in flexible_interaction) {
+      if (is.null(effect[6][[1]])){
       number_covs <- length(effect[[1]])
       ind <- match(effect[[1]], colnames(dta_est))
       ind <- c(ind, "inter")
       smooth_cols <- append(smooth_cols, list(ind))
+      }else{
+        ind <- match(c(effect[[1]],effect[6][[1]]), colnames(dta_est))
+        ind <- c(ind, "inter")
+        smooth_cols <- append(smooth_cols, list(ind))
+      }
     }
     effects <-
       get_estimated_model_effects(
