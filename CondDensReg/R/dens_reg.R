@@ -1252,7 +1252,7 @@ checking_dens_reg <-
 #'
 #' example("dens_reg")
 #'
-#' #' # create newdata for predict
+#' #' # create new data for predict
 #'
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
@@ -1271,15 +1271,15 @@ checking_dens_reg <-
 #'
 #' # plot partial effects on density-level estimated for new data based on the mixed model
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd)
 #'
 #' # estimate and plot only the intercept (first term)
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=1)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=1)
 #'
 #' #' # estimate and plot only second term
 #'
-#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=newdata, terms=2)
+#' plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=2)
 #' }
 #'
 #' @export
@@ -3972,7 +3972,7 @@ plot.dens_reg_obj <-
 #' sapply(m_dis$model$smooth, "[[",  "label")
 #' sapply(m_cont$model$smooth, "[[",  "label")
 #'
-#' # create newdata for predict
+#' # create new data for predict
 #'
 #' nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 #'
