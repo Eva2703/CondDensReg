@@ -44,7 +44,7 @@ sapply(m_mixed$model$smooth, "[[",  "label")
 sapply(m_dis$model$smooth, "[[",  "label")
 sapply(m_cont$model$smooth, "[[",  "label")
 
-# create newdata for predict
+# create new data for predict
 
 nd<-data.frame(covariate1=c("a","b","c","a"),covariate4=c(0.4,0.5,0.1,0.3), covariate2=c("d","d","c","d"),covariate3=c(1,0,0.2,2),covariate5=c(0.2,0.4,1,2))
 
