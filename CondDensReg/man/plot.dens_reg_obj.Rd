@@ -75,6 +75,10 @@ plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=1)
 #' # estimate and plot only second term
 
 plot(m_mixed, type="effects", level="pdf", display_all=TRUE,predict=nd, terms=2)
+
+# customize some plot parameters, other plot parameters can also be specified by the user
+
+plot(m_mixed, type="effects", display_all = FALSE,level="clr", main="Your title",legend.position="your legend", xlab="your xlab")
 }
 
 }
