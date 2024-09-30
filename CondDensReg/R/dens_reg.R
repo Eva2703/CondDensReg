@@ -209,6 +209,10 @@
 #' }
 #' @param effects Indicates if partial effects should be returned (\code{TRUE})
 #' or not (\code{FALSE}).
+#' #' @param already_formatted A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
+#' The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
+#' The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).
+
 #' @param ...  further arguments for passing on to \code{gam}
 #'
 #'
@@ -349,6 +353,7 @@ dens_reg <- function(dta,
                      ## ti(var_nameA_1,var_nameB_1, density_var, bs = c(basis1A, basis1B, "md"), m = list(m1A,m1B, m_density_var), k = c(k1a,k1B, k_densityVar), mc = c(TRUE, TRUE, FALSE), np = FALSE)
                      ## g(x1,x2)
                      effects = FALSE,
+                     already_formatted,
                      ...)
 {
   if (isFALSE(values_discrete)) {
@@ -365,7 +370,8 @@ dens_reg <- function(dta,
     bin_number ,
     values_discrete ,
     weights_discrete ,
-    domain_continuous
+    domain_continuous,
+    already_formatted
   )
   cov_combi_id <-
     unique(dta_est %>% select((length(
@@ -373,6 +379,8 @@ dens_reg <- function(dta,
     ) - 4 - length(var_vec)):(length(
       colnames(dta_est)
     ) - 4)))
+
+  ### das müsste noch mal neu gemacht werden, jetzt wo wir named lists verwenden!
   # checking_dens_reg(
   #   m_density_var,
   #   k_density_var,
