@@ -2,7 +2,7 @@
 #'
 #' \code{preprocess} prepares data containing the original observations \eqn{y_i} appropriately to be used in Poisson models by combining all observations of the same conditional distribution (i.e., all observations sharing identical values in all covariates) into a vector of counts via a histogram on \eqn{I\setminus D} and counts on \eqn{D} where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of discrete values.
 #' @encoding UTF-8
-#' @importFrom dplyr "%>%" arrange mutate summarise group_by
+#' @importFrom dplyr "%>%" arrange mutate summarise group_by ungroup
 #' @import data.table
 #' @importFrom Rdpack reprompt
 #' @param dta Data of type \code{data.frame} or \code{data.table} with observations of the density variable and covariates as well as optional sampling weights for each observation.
