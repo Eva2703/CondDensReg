@@ -507,7 +507,7 @@ dens_reg <- function(dta,
 
     if(!is.null(names(effect))){
       if(!all(names(effect)%in%c("cov","bs","m","k","mc","by"))){
-        stop("Names of flexible effects incorrect!")
+        stop("Names of flexible effect incorrect!")
       }
       if(is.null(effect$bs)){
        effect$bs<-"ps"
@@ -687,7 +687,7 @@ dens_reg <- function(dta,
 
     if(!is.null(names(effect))){
       if(!all(names(effect)%in%c("cov","by","bs","m","k","mc"))){
-        stop("Names of flexible effects incorrect!")
+        stop("Names of varying coefficient incorrect!")
       }
       if(is.null(effect$bs)){
         effect$bs<-"ps"
@@ -773,11 +773,59 @@ dens_reg <- function(dta,
       )
     j<-j+1
   }
+  l<-1
   for (effect in flexible_interaction) {
     if (length(sp_density_var)>1){
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
+    if(!is.null(names(effect))){
+      if(!all(names(effect)%in%c("covs","bs","m","k","mc","by"))){
+        stop("Names of flexible interaction effect incorrect!")
+      }
+      n_c<-length(effect$covs)
+      if(is.null(effect$bs)){
+        effect$bs<-rep("ps",n_c)
+      }
+      if(is.null(effect$m)){
+        effect$m<-rep(list(c(2,2)),n_c)
+      }
+      if(is.null(effect$k)){
+        effect$k<-rep(10,n_c)
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-rep(TRUE,n_c)
+      }
+      if(is.null(effect$by)){
+        effect$by<-NULL
+      }
+      effect<-list(covs=effect$covs,bs=effect$bs,m=effect$m,k=effect$k,mc=effect$mc,by=effect$by)
+      flexible_interaction[[l]]<-effect
+    }else{
+      effect<-append(effect, rep(list(NULL),6-length(effect)))
+      names(effect)<-c("covs","bs","m","k","mc","by")
+      n_c<-length(effect$covs)
+      if(is.null(effect$bs)){
+        effect$bs<-rep("ps",n_c)
+      }
+      if(is.null(effect$m)){
+        effect$m<-rep(list(c(2,2)),n_c)
+      }
+      if(is.null(effect$k)){
+        effect$k<-rep(10,n_c)
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-rep(TRUE,n_c)
+      }
+      if(is.null(effect$by)){
+        effect$by<-NULL
+      }
+      flexible_interaction[[l]]<-effect
+    }
+
+    l<-l+1
     if (is.null(effect[[5]])){
       mc<-paste0(rep("TRUE", length(effect[[1]])), collapse = ",")
     }
