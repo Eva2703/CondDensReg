@@ -33,18 +33,18 @@ Categorical variable indicating if the baby was "male" or "female".
 ```{r setup, warning=FALSE, message=FALSE, echo=TRUE}
 # load CondDensReg
 library(CondDensReg)
-# load birth_densities
+# load data
 data("data_age_birth", package = "CondDensReg")
 ```
 
 ## Preprocess the data into count data
 As we already have the data formatted as count data (otherwise we would have data which contains every single birth as individual observations as rows), we preprocess the data in order to select the desired variables and add a unique group ID as well as calculate the needed parameters for the later model. The goal of our model is to model the age of the mother in dependence of her marital status and the year, i.e. the variable "sex" is no longer needed. We use the argument <tt>already_formatted=TRUE</tt> and treat the age of the mother as continuous with bin length one.
-```{r, warning=FALSE, message=FALSE, echo=TRUE}
+```{r echo=TRUE, message=FALSE, warning=FALSE}
 dta_pre<-preprocess(dta=data_age_birth, 
            var_vec = c("year","marital_status"), 
            density_var = "age", 
            values_discrete = FALSE,
-           domain_continuous = 15:50,
+           domain_continuous = c(15,50),
            already_formatted = TRUE)
 
 
@@ -59,6 +59,12 @@ library(dplyr)
 ```
 
 ## Estimate the conditional densities
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+model_age<-
+
+
+```
 
 ## Plot different aspects of the estimated model
 
