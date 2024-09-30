@@ -678,16 +678,59 @@ dens_reg <- function(dta,
       )
     j<-j+1
   }
+  l<-1
   for (effect in varying_coefficients) {
     if (length(sp_density_var)>1){
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
     }
-    if (is.null(effect[5][[1]])){
+
+    if(!is.null(names(effect))){
+      if(!all(names(effect)%in%c("cov","by","bs","m","k","mc"))){
+        stop("Names of flexible effects incorrect!")
+      }
+      if(is.null(effect$bs)){
+        effect$bs<-"ps"
+      }
+      if(is.null(effect$m)){
+        effect$m<-c(2,2)
+      }
+      if(is.null(effect$k)){
+        effect$k<-10
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-TRUE
+      }
+
+      effect<-list(cov=effect$cov,by=effect$by,bs=effect$bs,m=effect$m,k=effect$k,mc=effect$mc)
+      varying_coefficients[[l]]<-effect
+    }else{
+      effect<-append(effect, rep(list(NULL),6-length(effect)))
+      names(effect)<-c("cov","by","bs","m","k","mc")
+      if(is.null(effect$bs)){
+        effect$bs<-"ps"
+      }
+      if(is.null(effect$m)){
+        effect$m<-c(2,2)
+      }
+      if(is.null(effect$k)){
+        effect$k<-10
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-TRUE
+      }
+
+      varying_coefficients[[l]]<-effect
+    }
+    l<-l+1
+
+    if (is.null(effect[6][[1]])){
       mc<-TRUE
     }
     else{
-      mc<-effect[5][[1]]
+      mc<-effect[6][[1]]
     }
     f_function_var_coef <-
       paste0(
