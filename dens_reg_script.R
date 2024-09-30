@@ -172,6 +172,7 @@ devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 nd<-rbind(nd,nd)
 all_terms <- sapply(m_cont$model$smooth, "[[",  "label")
 plot(m_cont, type="effects", level="pdf", display_all =  FALSE)
+
 # only intercept and interactive effect
 
 plot(m_cont, type="effects", level="pdf", predict = nd, display_all = FALSE)
