@@ -176,7 +176,7 @@ plot(m_cont, type="effects", level="pdf", display_all =  FALSE)
 
 plot(m_cont, type="effects", level="pdf", predict = nd, display_all = FALSE)
 
-
+debug(plot.dens_reg_obj)
 
 
 

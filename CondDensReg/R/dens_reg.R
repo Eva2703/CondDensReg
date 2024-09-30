@@ -1370,7 +1370,7 @@ plot.dens_reg_obj <-
                 if(length(legend_labels)==2){
                   indx<-c(1,length(legend_labels))}
                 if(length(legend_labels)>2){
-                  indx<-c(1,round(length(legend_labels)/2))}
+                  indx<-c(1,round(length(legend_labels)/2),length(legend_labels))}
 
               }else{
                 indx<-1:length(legend_labels)
