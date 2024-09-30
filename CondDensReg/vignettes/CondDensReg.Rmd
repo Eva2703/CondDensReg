@@ -14,10 +14,10 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 ```
-The vignette illustrates how to use the different functions included in the **CondDensReg**-package and is similar to the vignette **density-on-scalar_birth** written by Eva-Maria Maier in the package **FDboost**. The package is designed for the regression of conditional densities based on the approach by @maier2024 which treats the conditional densities as elements of the Bayes Hilbert space. The approach is able to handle continuous and discrete densities as well as densities consisting of discrete and continuous components (mixed case).
+The vignette illustrates how to use the different functions included in the **CondDensReg**-package. The package is designed for the regression of conditional densities based on the approach by @maier2024 which treats the conditional densities as elements of the Bayes Hilbert space. The approach is able to handle continuous and discrete densities as well as densities consisting of discrete and continuous components (mixed case).
 
 ## Load the data
-We use the data set <tt> birthDistribution </tt> from the package **{FDboost}**, containing densities of live births in Germany over the months per year (1950-2019) and sex (male and female), resulting in 140 densities.
+We use the data set <tt> birthDistribution </tt> from the package **{CondDensReg}**, containing densities of live births in Germany over the months per year (1950-2019) and sex (male and female), resulting in 140 densities.
 It is a list with the following elements:
 <ul>
 * <tt>birth_densities</tt>:
@@ -36,45 +36,21 @@ Instead of the list format, we need a data frame of observations
 ```{r setup, warning=FALSE, message=FALSE, echo=TRUE}
 # load CondDensReg
 library(CondDensReg)
-# load FDboost package
-library(FDboost)
 # load birth_densities
-data("birthDistribution", package = "FDboost")
+data("data_age_birth", package = "CondDensReg")
 ```
 
 ## Preprocess the data into count data
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
 # transform list data in data frame of individual observations
 
-births_df<-data.frame(year=rep(rep(birthDistribution$year[1:70],each=12),2), month=rep(birthDistribution$month,140), sex=rep(c("m","f"),each=840))
-
-# sample from observed discrete densities individual observations 
-set.seed(101)
-number_of_males<-c()
-number_of_females<-c()
-for (year in 1:70){
-  distr_males<-sample(c(1:12),sample(75:200, 1), prob=birthDistribution$birth_densities[year,], replace=TRUE)
-  monthly_counts_male<-as.vector(table(distr_males))
-  number_of_males<-append(number_of_males,monthly_counts_male)
-  
-  distr_females<-sample(c(1:12),sample(75:200, 1), prob=birthDistribution$birth_densities[year+70,], replace=TRUE)
-  monthly_counts_female<-as.vector(table(distr_females))
-  number_of_females<-append(number_of_females,monthly_counts_female)
-}
-number_both<-c(number_of_males, number_of_females)
-births_df<-births_df[rep(c(1:1680),times=number_both),]
-
-# use preprocess 
-
-births_histo<- preprocess(births_df, var_vec = c(1,3), density_var = 2, values_discrete = c(1:12), domain_continuous = FALSE)
-class(births_histo)
 ```
 ## Plot preprocessed data
 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
 library(dplyr)
 # plot
-plot_single_histo(births_histo%>%filter(group_id==1), case = "discrete")
+
 
 ```
 
