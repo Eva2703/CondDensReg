@@ -368,19 +368,19 @@ dens_reg <- function(dta,
     ) - 4 - length(var_vec)):(length(
       colnames(dta_est)
     ) - 4)))
-  checking_dens_reg(
-    m_density_var,
-    k_density_var,
-    sp_density_var,
-    penalty_discrete,
-    group_specific_intercepts,
-    linear_effects,
-    flexible_effects,
-    varying_coefficients,
-    flexible_interaction,
-    effects,
-    dta
-  )
+  # checking_dens_reg(
+  #   m_density_var,
+  #   k_density_var,
+  #   sp_density_var,
+  #   penalty_discrete,
+  #   group_specific_intercepts,
+  #   linear_effects,
+  #   flexible_effects,
+  #   varying_coefficients,
+  #   flexible_interaction,
+  #   effects,
+  #   dta
+  # )
   if (is.numeric(density_var)) {
     density_var <- colnames(dta)[density_var]
   }
@@ -397,10 +397,10 @@ dens_reg <- function(dta,
     sp_density_var_<-"NULL"
   }else{
 
-  if (length(sp_density_var)==1){
-    sp_density_var_<-sp_density_var
-    sp_density_var_vec<-sp_density_var
-  }
+    if (length(sp_density_var)==1){
+      sp_density_var_<-sp_density_var
+      sp_density_var_vec<-sp_density_var
+    }
   }
 
 
@@ -426,6 +426,15 @@ dens_reg <- function(dta,
     sp_density_var_<-sp_density_var[j]
     sp_density_var_vec<-sp_density_var[j]
   }
+
+
+
+
+
+
+
+
+
   f_main <-
     paste0(
       "counts~ti(",
@@ -492,7 +501,56 @@ dens_reg <- function(dta,
       )
     j<-j+1
   }
+  l<-1
   for (effect in flexible_effects) {
+
+
+    if(!is.null(names(effect))){
+      if(!all(names(effect)%in%c("cov","bs","m","k","mc","by"))){
+        stop("Names of flexible effects incorrect!")
+      }
+      if(is.null(effect$bs)){
+       effect$bs<-"ps"
+      }
+      if(is.null(effect$m)){
+        effect$m<-c(2,2)
+      }
+      if(is.null(effect$k)){
+        effect$k<-10
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-TRUE
+      }
+      if(is.null(effect$by)){
+        effect$by<-NULL
+      }
+      effect<-list(cov=effect$cov,bs=effect$bs,m=effect$m,k=effect$k,mc=effect$mc,by=effect$by)
+      flexible_effects[[l]]<-effect
+    }else{
+      effect<-append(effect, rep(list(NULL),6-length(effect)))
+      names(effect)<-c("cov","bs","m","k","mc","by")
+      if(is.null(effect$bs)){
+        effect$bs<-"ps"
+      }
+      if(is.null(effect$m)){
+        effect$m<-c(2,2)
+      }
+      if(is.null(effect$k)){
+        effect$k<-10
+      }
+      if(is.null(effect$mc)){
+
+        effect$mc<-TRUE
+      }
+      if(is.null(effect$by)){
+        effect$by<-NULL
+      }
+      flexible_effects[[l]]<-effect
+    }
+
+
+
     if (length(sp_density_var)>1){
       sp_density_var_<-sp_density_var[j]
       sp_density_var_vec<-sp_density_var[j]
@@ -503,6 +561,7 @@ dens_reg <- function(dta,
     else{
       mc<-effect[5][[1]]
     }
+    l<-l+1
     if (is.null(effect[6][[1]])) {
       f_flexibles <-
         paste0(
@@ -617,8 +676,8 @@ dens_reg <- function(dta,
 
         ")))"
       )
-  j<-j+1
-    }
+    j<-j+1
+  }
   for (effect in varying_coefficients) {
     if (length(sp_density_var)>1){
       sp_density_var_<-sp_density_var[j]
@@ -670,7 +729,7 @@ dens_reg <- function(dta,
         ")))"
       )
     j<-j+1
-    }
+  }
   for (effect in flexible_interaction) {
     if (length(sp_density_var)>1){
       sp_density_var_<-sp_density_var[j]
@@ -683,45 +742,45 @@ dens_reg <- function(dta,
       mc<-paste0(effect[[5]], collapse=",")
     }
     if (is.null(effect[6][[1]])) {
-    f_flex_interact <-
-      paste0(
-        f_flex_interact,
-        "+ ti(",
-        paste0(effect[[1]], collapse = ","),
-        ",",
-        density_var
-        ,
-        paste0(",bs=c('", paste0(effect[[2]], collapse = "','"), "','md')") ,
-        ",m = list(",
-        paste0(effect[[3]], collapse = ","),
-        ",",
-        deparse(m_density_var),
-        "), k =c( ",
-        paste(effect[[4]], collapse = ","),
-        ",",
-        k_density_var,
-        ")",
-        ",mc = c(",
-        mc,
-        ",FALSE), np = FALSE,sp=array(c(",
-        paste0(rep("-1", length(effect[[1]])), collapse = ","),
-        ",",
-        sp_density_var_vec,
-        " )),fx=",
-        fx,
-        ",xt=list(",
-        paste0(rep("NULL", length(effect[[1]])), collapse = ","),
-        ",list(values_discrete=",
-        deparse(values_discrete),
-        ",  domain_continuous=",
-        deparse(domain_continuous),
-        ", weights_discrete=",
-        deparse(weights_discrete),
-        ",penalty_discrete=",
-        penalty_discrete,
-        ")))"
-      )
-    j<-j+1}
+      f_flex_interact <-
+        paste0(
+          f_flex_interact,
+          "+ ti(",
+          paste0(effect[[1]], collapse = ","),
+          ",",
+          density_var
+          ,
+          paste0(",bs=c('", paste0(effect[[2]], collapse = "','"), "','md')") ,
+          ",m = list(",
+          paste0(effect[[3]], collapse = ","),
+          ",",
+          deparse(m_density_var),
+          "), k =c( ",
+          paste(effect[[4]], collapse = ","),
+          ",",
+          k_density_var,
+          ")",
+          ",mc = c(",
+          mc,
+          ",FALSE), np = FALSE,sp=array(c(",
+          paste0(rep("-1", length(effect[[1]])), collapse = ","),
+          ",",
+          sp_density_var_vec,
+          " )),fx=",
+          fx,
+          ",xt=list(",
+          paste0(rep("NULL", length(effect[[1]])), collapse = ","),
+          ",list(values_discrete=",
+          deparse(values_discrete),
+          ",  domain_continuous=",
+          deparse(domain_continuous),
+          ", weights_discrete=",
+          deparse(weights_discrete),
+          ",penalty_discrete=",
+          penalty_discrete,
+          ")))"
+        )
+      j<-j+1}
     else{
       f_flex_interact <-
         paste0(
@@ -932,11 +991,11 @@ dens_reg <- function(dta,
     smooth_cols <- c()
     for (effect in flexible_effects) {
       #
-      if (is.null(effect[5][[1]])) {
+      if (is.null(effect[6][[1]])) {
         ind <- match(effect[1][[1]], colnames(dta_est))
         smooth_cols <- append(smooth_cols, ind)
       } else{
-        ind <- match(c(effect[1][[1]], effect[5][[1]]), colnames(dta_est))
+        ind <- match(c(effect[1][[1]], effect[6][[1]]), colnames(dta_est))
         smooth_cols <- append(smooth_cols, list(ind))
       }
     }
@@ -951,10 +1010,10 @@ dens_reg <- function(dta,
     }
     for (effect in flexible_interaction) {
       if (is.null(effect[6][[1]])){
-      number_covs <- length(effect[[1]])
-      ind <- match(effect[[1]], colnames(dta_est))
-      ind <- c(ind, "inter")
-      smooth_cols <- append(smooth_cols, list(ind))
+        number_covs <- length(effect[[1]])
+        ind <- match(effect[[1]], colnames(dta_est))
+        ind <- c(ind, "inter")
+        smooth_cols <- append(smooth_cols, list(ind))
       }else{
         ind <- match(c(effect[[1]],effect[6][[1]]), colnames(dta_est))
         ind <- c(ind, "inter_by")
@@ -1089,9 +1148,9 @@ checking_dens_reg <-
       }
 
       for (effect in effects) {
-        if (length(effect) < 5 || length(effect) > 6) {
-          stop("Each flexible_effects list must have 4 or 5 elements.")
-        }
+        # if (length(effect) < 5 || length(effect) > 6) {
+        #   stop("Each flexible_effects list must have 4 or 5 elements.")
+        # }
 
         if (!is.character(effect[[1]]) ||
             !is.numeric(dta[[effect[[1]]]])) {
@@ -1300,7 +1359,6 @@ plot.dens_reg_obj <-
            predict = NULL,
            terms = NULL,
            ...) {
-    #source("plain_fcts.R")
     if (type == "histo") {
       if (any(obj$histo_data$discrete == TRUE) &
           any(obj$histo_data$discrete == FALSE)) {
@@ -1366,7 +1424,7 @@ plot.dens_reg_obj <-
             }else{
               if(display_all==FALSE){
                 if(length(legend_labels)==1){
-                indx<-c(1)}
+                  indx<-c(1)}
                 if(length(legend_labels)==2){
                   indx<-c(1,length(legend_labels))}
                 if(length(legend_labels)>2){
@@ -1407,13 +1465,13 @@ plot.dens_reg_obj <-
                   eff,
                   G = G,
                   values_discrete = unlist(obj$params[2]),
-                 # single = TRUE,
+                  # single = TRUE,
                   main = names(effects)[j],
                   legend_title = terms_title,
                   ylab = "density",
                   single=single,
-                 legend.position=legend.position,
-                 legend_names = legend_labels
+                  legend.position=legend.position,
+                  legend_names = legend_labels
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1
@@ -1426,13 +1484,13 @@ plot.dens_reg_obj <-
                   G = G,
                   domain = domain,
                   values_discrete = unlist(obj$params[2]),
-                 # single = TRUE,
+                  # single = TRUE,
                   main = names(effects)[j],
                   legend_title = terms_title,
                   ylab = "density",
                   single=single,
-                 legend.position=legend.position,
-                 legend_names = legend_labels
+                  legend.position=legend.position,
+                  legend_names = legend_labels
                 )
               plot_list <- append(plot_list, list(p))
               j <- j + 1
