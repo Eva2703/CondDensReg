@@ -17,22 +17,19 @@ knitr::opts_chunk$set(
 The vignette illustrates how to use the different functions included in the **CondDensReg**-package. The package is designed for the regression of conditional densities based on the approach by @maier2024 which treats the conditional densities as elements of the Bayes Hilbert space. The approach is able to handle continuous and discrete densities as well as densities consisting of discrete and continuous components (mixed case).
 
 ## Load the data
-We use the data set <tt> birthDistribution </tt> from the package **{CondDensReg}**, containing densities of live births in Germany over the months per year (1950-2019) and sex (male and female), resulting in 140 densities.
+We use the data set <tt> birthDistribution </tt> from the package **{CondDensReg}**, containing the count data of the age of the mother for all live births in Germany between the years 1992 and 2023 aggregated by the marital status of the mother and the sex of the child. The 4480 x 5 dataframe contains the following columns:
 It is a list with the following elements:
 <ul>
-* <tt>birth_densities</tt>:
-A 140 x 12 matrix containing the birth densities in its rows. The first 70 rows correspond to male newborns, the second 70 rows to female ones. Within both of these, the years are ordered increasingly (1950-2019).
-* <tt>birth_densities_clr</tt>:
-A 140 x 12 matrix containing the clr transformed densities in its rows. Same structure as <tt>birth_densities</tt>.
-* <tt>sex</tt>:
-A factor vector of length 140 with levels <tt>"m"</tt> (male) and <tt>"f"</tt> (female), corresponding to the sex of the newborns for the rows of <tt>birth_densities</tt> and <tt>birth_densities_clr</tt>. The first 70 elements are <tt>"m"</tt>, the second 70 <tt>"f"</tt>.
-* <tt>year</tt>:
-A vector of length 140 containing the integers $1950, \ldots, 2019, 1950, \ldots, 2019$, corresponding to the years for the rows of <tt>birth_densities</tt> and <tt>birth_densities_clr</tt>.
-* <tt>month</tt>:
-A vector containing the integers from 1 to 12, corresponding to the months for the columns of <tt>birth_densities</tt> and <tt>birth_densities_clr</tt> (domain $\mathcal{T}$ of the (clr-)densities).
-</ul>
 
-Instead of the list format, we need a data frame of observations
+* <tt>years</tt>: Integer between 1992 and 2023.
+* <tt>age</tt>: Age of the mother (birth year method, i.e. the birth year of the mother minus the birth year of the child), between 15.5 and 49.5. As we treat each age as a bin, e.g. for the age 15 the bin spans from 15 to 16, the bin mid, i.e. for example 15.5 is used. Ages below 15 or above 49 are omitted for the sake of simplicity.
+* <tt>marital_status</tt>:
+Categorical variable indicating if the mother was "married" or "unmarried" at the time of birth.
+* <tt>sex</tt>:
+Categorical variable indicating if the baby was "male" or "female".
+</ul>
+* <tt>counts</tt>: Integer of the total number of births matching the corresponding variables.
+
 ```{r setup, warning=FALSE, message=FALSE, echo=TRUE}
 # load CondDensReg
 library(CondDensReg)
@@ -41,6 +38,7 @@ data("data_age_birth", package = "CondDensReg")
 ```
 
 ## Preprocess the data into count data
+As we already have the data formatted as count data (otherwise we would have data which contains every single birth as individual observations as rows), we preprocess the data in order to select the desired variables and add a unique group ID as well as calculate the needed parameters for the later model. The goal of our model is to model the age of the mother in dependence of her marital status and the year, i.e. the variable "sex" is no longer needed. We 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
 # transform list data in data frame of individual observations
 
