@@ -957,7 +957,7 @@ dens_reg <- function(dta,
       smooth_cols <- append(smooth_cols, list(ind))
       }else{
         ind <- match(c(effect[[1]],effect[6][[1]]), colnames(dta_est))
-        ind <- c(ind, "inter")
+        ind <- c(ind, "inter_by")
         smooth_cols <- append(smooth_cols, list(ind))
       }
     }
