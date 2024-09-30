@@ -165,21 +165,23 @@
 #' the flexible effect is not depending on the level of an additional covariate.
 #' } If mising (\code{NULL}), no flexible effect is included.
 #' @param varying_coefficients  List of lists of the form
-#' \code{list(list("covA_1","covB_1","basis1",m1,k1, mc1),...)}. Each list is adding
+#' \code{list(list(cov="covA_1", by="covB_1", bs="basis1", m=m1, k=k1, mc=mc1),...)}.
+#'  If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with \code{NULL} if it contains less than 6 elements.
+#' Each list is adding
 #' one varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
 #' model with:
 #' \itemize{
-#' \item \code{"covA"}: Name of a numeric variable included in \code{var_vec}.
-#'  \item \code{"covB"}: Name of a numeric variable included in \code{var_vec}.
-#' \item \code{"basis"}: Character string specifying the type for the marginal
+#' \item \code{cov}: Name of a numeric variable included in \code{var_vec}.
+#'  \item \code{by}: Name of a numeric variable included in \code{var_vec}.
+#' \item \code{bs}: Character string specifying the type for the marginal
 #' basis in covariate direction. See \code{mgcv::smooth.terms} for details and
-#' full list.
+#' full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
 #' \item \code{m}: Vector of two integers or \code{NULL} giving the order of the
 #' marginal spline basis \eqn{b_j} in covariate direction for the smooth effect
-#' and the order of its penalty. (see \code{mgcv})
+#' and the order of its penalty. (see \code{mgcv}) If not specified or \code{m=NULL}, \code{m=c(2,2)} is used
 #' \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
 #' basis \eqn{b_j} for the smooth effect. See \code{mgcv::choose.k} for more
-#' information.
+#' information. If not specified or \code{k=NULL}, \code{k=10} is used.
 #' }If mising (\code{NULL}), no varying coeffecient is included.
 #' \item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
 #' @param flexible_interaction  List of lists of the form
