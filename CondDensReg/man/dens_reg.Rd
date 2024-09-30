@@ -123,21 +123,23 @@ of numeric variables included by \code{var_vec} for which linear effects
 \eqn{\beta_{cov_1}\cdot cov_1,\ \beta_{cov_2}\cdot cov_2,\ ...} are included
 in the model. If mising (\code{NULL}), no linear is included.}
 
-\item{flexible_effects}{List of lists of the form
-\code{list(list("cov_1","basis_1", m_1,k_1,mc1,"by_1"),list(...),...)}. Each list
+\item{flexible_effects}{List of (named) lists of the form
+\code{list(list(cov="cov_1",bs="basis_1", m=m_1,k=k_1,mc=mc1,by="by_1"),list(...),...)}.
+If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with \code{NULL} if it contains less than 6 elements.
+Each list
 is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
 \itemize{
-\item \code{"cov"}: Name of a numeric variable included in \code{var_vec}.
-\item \code{"basis"}: Character string specifying the type for the marginal
+\item \code{cov}: Name of a numeric variable included in \code{var_vec}.
+\item \code{bs}: Character string specifying the type for the marginal
 basis in covariate direction. See \code{mgcv::smooth.terms} for details and
-full list.
+full list. If not specified or \code{NULL}, the penalized B-spline basis "ps" is used.
 \item \code{m}: Vector of two integers or \code{NULL} giving the order of the
 marginal spline basis \eqn{b_j} in covariate direction and the order of its
-penalty. (see \code{mgcv})
+penalty (see \code{mgcv}). If not specified or \code{NULL}, \code{m=c(2,2)} is used.
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
-basis \eqn{b_j}. See \code{mgcv::choose.k} for more information.
+basis \eqn{b_j}. See \code{mgcv::choose.k} for more information.. If not specified or \code{NULL}, \code{k=10} is used.
  \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
- \item \code{"by"}: Optional, name of a categorical variable included in
+ \item \code{by}: Optional, name of a categorical variable included in
 \code{var_vec} specifying whether the flexible effect should be modeled
 specifically for each level of the by-covariate. If missing or \code{NULL},
 the flexible effect is not depending on the level of an additional covariate.
@@ -311,7 +313,7 @@ group_specific_intercepts <- c("covariate1", "covariate2")
 ## linear effects
 linear_effects <- c("covariate4")
 ## flexible effects
-flexible_effects <-list(list("covariate3", "ps", c(2, 2), 4, NULL,NULL), list("covariate3", "ps", c(2, 2), 4,FALSE, "covariate1"))
+flexible_effects <-list(list(cov="covariate3", bs="ps", m=c(2, 2), k=4), list(cov="covariate3", bs="ps", m=c(2, 2), k=4, mc=FALSE, by="covariate1"))
 ## varying coefficient
 fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
 ## flexible interaction
