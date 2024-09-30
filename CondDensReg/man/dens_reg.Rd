@@ -25,6 +25,7 @@ dens_reg(
   varying_coefficients = NULL,
   flexible_interaction = NULL,
   effects = FALSE,
+  already_formatted,
   ...
 )
 }
@@ -191,7 +192,10 @@ the flexible interaction effect is not depending on the level of an additional c
 }}
 
 \item{effects}{Indicates if partial effects should be returned (\code{TRUE})
-or not (\code{FALSE}).}
+or not (\code{FALSE}).
+#' @param already_formatted A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
+The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
+The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).}
 
 \item{...}{further arguments for passing on to \code{gam}}
 }
