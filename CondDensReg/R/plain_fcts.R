@@ -120,6 +120,7 @@ get_smooth_effects <-
               append(estimated_effects, list(effect))
             j <- j + 1
           } else{
+            if(cols_in_origData[[i]][length(cols_in_origData[[i]])]=="inter"){
             effect <- matrix(pred_terms[, positions[j]], nrow = G)
             to_select <- c()
             inds <-
@@ -136,10 +137,37 @@ get_smooth_effects <-
             estimated_effects <-
               append(estimated_effects, list(effect))
             j <- j + 1
+            }
+            else{
+              n_levels <- nrow(unique(origData %>% select(as.numeric(cols_in_origData[[i]][length(cols_in_origData[[i]])-1]))))
+              for (k in (2:n_levels)) {
+
+                x <- as.numeric(cols_in_origData[[i]][length(cols_in_origData[[i]])-1])
+                lev <- origData %>% select(all_of(x)) %>% sapply(levels)
+                effect <- matrix(pred_terms[, positions[j]], nrow = G)
+                groupID_index <-
+                  unique(origData %>% select(group_id, as.numeric(cols_in_origData[[i]][1:(length(cols_in_origData[[i]])-1)])))
+                groupID_index$ind <- c(1:ncol(effect))
+                groupID_index <- groupID_index %>% filter(.[[length(cols_in_origData[[i]])]] == lev[k])
+                to_select <- c()
+                for (covCol in rev(2:(length(cols_in_origData[[i]]) -
+                                  1))) {
+                  groupID_index <- groupID_index[order(groupID_index[, ..covCol]), ]
+                }
+                uniq_groups <- unique(groupID_index$group_id)
+                to_select <- append(to_select, uniq_groups)
+                effect <- effect[, to_select]
+                estimated_effects <-
+                  append(estimated_effects, list(effect))
+                j <- j + 1
+
+              }
+            }
           }
         }
       }
-    } else{
+    }
+    else{
       for (i in c(1:length(positions))) {
         effect <- matrix(pred_terms[, positions[i]], nrow = G)
         groupID_index <-
