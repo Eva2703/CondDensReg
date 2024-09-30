@@ -132,12 +132,12 @@ is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
 \item \code{cov}: Name of a numeric variable included in \code{var_vec}.
 \item \code{bs}: Character string specifying the type for the marginal
 basis in covariate direction. See \code{mgcv::smooth.terms} for details and
-full list. If not specified or \code{NULL}, the penalized B-spline basis "ps" is used.
+full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
 \item \code{m}: Vector of two integers or \code{NULL} giving the order of the
 marginal spline basis \eqn{b_j} in covariate direction and the order of its
-penalty (see \code{mgcv}). If not specified or \code{NULL}, \code{m=c(2,2)} is used.
+penalty (see \code{mgcv}). If not specified or \code{m=NULL}, \code{m=c(2,2)} is used.
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
-basis \eqn{b_j}. See \code{mgcv::choose.k} for more information.. If not specified or \code{NULL}, \code{k=10} is used.
+basis \eqn{b_j}. See \code{mgcv::choose.k} for more information. If not specified or \code{k=NULL}, \code{k=10} is used.
  \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
  \item \code{by}: Optional, name of a categorical variable included in
 \code{var_vec} specifying whether the flexible effect should be modeled
@@ -165,23 +165,24 @@ information.
 \item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.}
 
 \item{flexible_interaction}{List of lists of the form
-\code{list(list(c("covA_1","covB_1",...),c("basisA_1","basisB_1",...), list(mA_1, mB_1,...), c(kA_1, kB_1,...), c(mcA_1, mcB_1,...), "by"),list(...),...)}.
+\code{list(list(covs=c("covA_1","covB_1",...),bs=c("basisA_1","basisB_1",...), m=list(mA_1, mB_1,...), k=c(kA_1, kB_1,...), mc=c(mcA_1, mcB_1,...), by="by"),list(...),...)}.
+#' If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with vectors/lists of \code{NULL} if it contains less than 6 elements.
 Each list is specifying flexible interaction effect between at least two
 continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
 \itemize{
-\item \code{c("covA_1","covB_1", ...)}: Vector of names of numeric variables
+\item \code{covs}: Vector of names of numeric variables
 included in \code{var_vec}.
-\item \code{c("basisA", "basisB", ...}:Vector of character strings specifying
+\item \code{bs}:Vector of character strings specifying
 the type for the marginal bases in covariate direction. See
-\code{mgcv::smooth.terms} for details and full list.
-\item\code{list(mA,mB,...)}: List containing vectors of two integers or
-\code{NULL} giving the order of the marginal spline basis in direction of
-\eqn{cov_A} for the smooth effect and the order of its penalty. (see \code{mgcv})
-\item \code{c(kA, kB, ...)}: Vector of integers or \code{NULL} giving the
-dimension of the marginal basis in direction of \eqn{cov_A} for the smooth
-effect. See \code{mgcv::choose.k} for more information.
+\code{mgcv::smooth.terms} for details and full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
+\item\code{m}: List containing vectors of two integers or
+\code{NULL} giving the order of the marginal spline basis in direction of the respective covariate in \code{covs} for the smooth effect and the order of its penalty. (see \code{mgcv})
+If not specified or \code{m=NULL}, a list of \code{c(2,2)} is used.
+\item \code{k}: Vector of integers or \code{NULL} giving the
+dimension of the marginal basis in direction of the respective covariate in \code{covs} for the smooth
+effect. See \code{mgcv::choose.k} for more information. If not specified or \code{k=NULL}, a vector specifying each parameter as \code{k=10} is used.
  \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
-  \item \code{"by"}: Optional, name of a categorical variable included in
+  \item \code{by}: Optional, name of a categorical variable included in
 \code{var_vec} specifying whether the flexible interaction effect should be modeled
 specifically for each level of the by-covariate. If \code{NULL},
 the flexible interaction effect is not depending on the level of an additional covariate.
@@ -317,7 +318,7 @@ flexible_effects <-list(list(cov="covariate3", bs="ps", m=c(2, 2), k=4), list(co
 ## varying coefficient
 fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
 ## flexible interaction
-flex_inter <-list(list(c("covariate3", "covariate4","covariate5"), c("ps", "ps","ps"),list( c(2, 2), c(2, 2), c(2, 2)),c( 4, 4,5), list(TRUE, FALSE, TRUE), NULL))
+flex_inter <-list(list(covs=c("covariate3", "covariate4","covariate5"), bs=c("ps", "ps","ps"), m=list( c(2, 2), c(2, 2), c(2, 2)), k=c( 4, 4,5), mc=list(TRUE, FALSE, TRUE), by=NULL))
 
 # fit models (warning: calculation may take a few minutes)
 
