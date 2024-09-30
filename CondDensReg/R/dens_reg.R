@@ -277,7 +277,7 @@
 #'## flexible effects
 #' flexible_effects <-list(list(cov="covariate3", bs="ps", m=c(2, 2), k=4), list(cov="covariate3", bs="ps", m=c(2, 2), k=4, mc=FALSE, by="covariate1"))
 #' ## varying coefficient
-#' fvc <-list(list("covariate3", "covariate4", "ps", c(2, 2) , 4, TRUE))
+#' fvc <-list(list(cov="covariate3", by="covariate4", bs="ps", m=c(2, 2) , k=4))
 #'## flexible interaction
 #' flex_inter <-list(list(covs=c("covariate3", "covariate4","covariate5"), bs=c("ps", "ps","ps"), m=list( c(2, 2), c(2, 2), c(2, 2)), k=c( 4, 4,5), mc=list(TRUE, FALSE, TRUE), by=NULL))
 #'
