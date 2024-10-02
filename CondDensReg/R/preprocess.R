@@ -529,7 +529,7 @@ preprocess <- function(dta,
     }
 
   }
-  attr(dta_est, "class")<-c("histogram_count_data", class(dta_est))
+  attr(dta_est, "class")<-c("histogram_count_data", "data.frame", "data.table")
   return(dta_est)
 }
 ################################################################################
