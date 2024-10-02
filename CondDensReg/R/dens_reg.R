@@ -353,7 +353,7 @@ dens_reg <- function(dta,
                      ## ti(var_nameA_1,var_nameB_1, density_var, bs = c(basis1A, basis1B, "md"), m = list(m1A,m1B, m_density_var), k = c(k1a,k1B, k_densityVar), mc = c(TRUE, TRUE, FALSE), np = FALSE)
                      ## g(x1,x2)
                      effects = FALSE,
-                     already_formatted,
+                     already_formatted=FALSE,
                      ...)
 {
   if (isFALSE(values_discrete)) {
@@ -977,6 +977,7 @@ dens_reg <- function(dta,
   } else{
     densi <- density_var
   }
+  dta_est<-as.data.table(dta_est)
   obs_density <- unique(dta_est[, ..densi])
   f_hat_clr <-
     matrix(f_hat_clr,
