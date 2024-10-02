@@ -68,7 +68,7 @@ model_age<-dens_reg(dta=data_age_birth,
            domain_continuous = c(15,50),
            already_formatted = TRUE,
            group_specific_intercepts = c("marital_status"),
-          # flexible_effects=list(list(cov="year"),list(cov="year", by="marital_status")),
+          flexible_effects=list(list(cov="year"),list(cov="year", by="marital_status")),
            effects=FALSE)
 
 
