@@ -25,7 +25,7 @@ dens_reg(
   varying_coefficients = NULL,
   flexible_interaction = NULL,
   effects = FALSE,
-  already_formatted,
+  already_formatted = FALSE,
   ...
 )
 }
@@ -150,7 +150,7 @@ the flexible effect is not depending on the level of an additional covariate.
 \code{list(list(cov="covA_1", by="covB_1", bs="basis1", m=m1, k=k1, mc=mc1),...)}.
  If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with \code{NULL} if it contains less than 6 elements.
 Each list is adding
-one varying coefficient of the form \eqn{ cov_A*f(cov_B)} to the
+one varying coefficient of the form \eqn{ cov_B*f(cov_A)} to the
 model with:
 \itemize{
 \item \code{cov}: Name of a numeric variable included in \code{var_vec}.
@@ -169,7 +169,7 @@ information. If not specified or \code{k=NULL}, \code{k=10} is used.
 
 \item{flexible_interaction}{List of lists of the form
 \code{list(list(covs=c("covA_1","covB_1",...),bs=c("basisA_1","basisB_1",...), m=list(mA_1, mB_1,...), k=c(kA_1, kB_1,...), mc=c(mcA_1, mcB_1,...), by="by"),list(...),...)}.
-#' If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with vectors/lists of \code{NULL} if it contains less than 6 elements.
+If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with vectors/lists of \code{NULL} if it contains less than 6 elements.
 Each list is specifying flexible interaction effect between at least two
 continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
 \itemize{
@@ -192,10 +192,11 @@ the flexible interaction effect is not depending on the level of an additional c
 }}
 
 \item{effects}{Indicates if partial effects should be returned (\code{TRUE})
-or not (\code{FALSE}).
-#' @param already_formatted A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
+or not (\code{FALSE}).}
+
+\item{already_formatted}{A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
 The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
-The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).}
+The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} and/or \code{bin_number}. In these cases, the binning is based on the given bin number or width.}
 
 \item{...}{further arguments for passing on to \code{gam}}
 }
