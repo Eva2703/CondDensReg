@@ -20,7 +20,7 @@
 #' @param domain_continuous An interval (i.e., a vector of length 2) specifying the domain of the continuous component of the density. If missing (\code{NULL}) it is set to \code{c(0, 1)} as default. Can also be set to be \code{FALSE} in which case the continuous component is considered to be empty, i.e., a sum of dirac measures is used as reference measure.
 #' @param already_formatted A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
 #' The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
-#' The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).
+#' The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} and/or \code{bin_number}. In these cases, the binning is based on the given bin number or width.
 #'
 #' @return The returned object is a \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data} with columns:
 #' \itemize{
@@ -427,7 +427,7 @@ preprocess <- function(dta,
       { cont_values<-setdiff(cont_values,values_discrete)}
 
 
-      if (is.null(bin_width)){
+      if (is.null(bin_width)&is.null(bin_number)){
         breaks<-c(domain_continuous[1],cont_values, domain_continuous[2])
         diffs<-diff(breaks)
         Delta<-c(diffs[1]+0.5*diffs[2])
@@ -451,13 +451,34 @@ preprocess <- function(dta,
         }else{
           Delta<-bin_width
         }
-        if(!isFALSE(values_discrete))
-        { ordered_values<-order(c(cont_values, values_discrete))
-        if(length(weights_discrete)==1){
-          weights_discrete<-rep(weights_discrete,length(values_discrete))
-        }
-        Delta<-c(Delta, weights_discrete)[ordered_values]
-        }
+        if (!"weighted_counts"%in% colnames(dta)){
+        dta_tmp<-preprocess(dta, density_var=density_var, var_vec=var_vec, bin_number=bin_number, bin_width= bin_width, already_formatted = FALSE, sample_weights = "counts",
+                            domain_continuous = domain_continuous, values_discrete = values_discrete)
+        dta_est<-dta_tmp[,-1]
+        dta_est$gam_weights <- 1
+        dta_est$gam_offsets <- 0
+        colnames(dta_est)[1]<-"counts"
+        return(dta_est)
+        }else{
+          dta_tmp_1<-preprocess(dta, density_var=density_var, var_vec=var_vec, bin_number=bin_number, bin_width= bin_width, already_formatted = FALSE, sample_weights = "counts",
+                                domain_continuous = domain_continuous, values_discrete = values_discrete)
+          dta_tmp_2<-preprocess(dta, density_var=density_var, var_vec=var_vec, bin_number=bin_number, bin_width= bin_width, already_formatted = FALSE, sample_weights = "weighted_counts",
+                     domain_continuous = domain_continuous, values_discrete = values_discrete)
+
+        dta_est<-dta_tmp_2
+        dta_est[,1]<-dta_tmp_1[,2]
+        dta_est$gam_weights<-ifelse(dta_est$counts != 0, dta_est$weighted_counts / dta_est$counts, 1)
+        dta_est$gam_offsets<- -log(dta_est$gam_weights)
+        return(dta_est)
+          }
+
+        # if(!isFALSE(values_discrete))
+        # { ordered_values<-order(c(cont_values, values_discrete))
+        # if(length(weights_discrete)==1){
+        #   weights_discrete<-rep(weights_discrete,length(values_discrete))
+        # }
+        # Delta<-c(Delta, weights_discrete)[ordered_values]
+        # }
       }
 
       if(!isFALSE(values_discrete)){
