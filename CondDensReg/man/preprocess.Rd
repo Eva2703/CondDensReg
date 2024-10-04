@@ -39,7 +39,7 @@ preprocess(
 
 \item{already_formatted}{A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
 The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
-The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} (in these cases, only the value of the bin width is used for further calculations, the binning itself remains unaffected).}
+The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} and/or \code{bin_number}. In these cases, the binning is based on the given bin number or width.}
 }
 \value{
 The returned object is a \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data} with columns:
