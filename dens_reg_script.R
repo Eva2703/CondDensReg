@@ -188,3 +188,19 @@ nd
 ## rundung +align, leerzeichen hinter komma
 ## sowie bei ohne predict
 ##
+
+
+
+
+
+
+
+
+devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
+debug(preprocess)
+dta_pre<-preprocess(dta=data_age_birth,
+                    var_vec = c("year","marital_status"),
+                    density_var = "age",
+                    values_discrete = FALSE,
+                    domain_continuous = c(15,50),
+                    already_formatted = TRUE, bin_number = 10)
