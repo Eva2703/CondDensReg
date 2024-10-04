@@ -198,9 +198,11 @@ nd
 
 devtools::load_all("C:/Users/learu/CondDensReg/new/CondDensReg")
 debug(preprocess)
-dta_pre<-preprocess(dta=data_age_birth,
+dta_weighted<-data_age_birth
+dta_weighted$weighted_counts<-dta_weighted$counts+9
+dta_pre<-preprocess(dta=dta_weighted,
                     var_vec = c("year","marital_status"),
                     density_var = "age",
                     values_discrete = FALSE,
                     domain_continuous = c(15,50),
-                    already_formatted = TRUE, bin_number = 10)
+                    already_formatted = TRUE, bin_width = 5)
