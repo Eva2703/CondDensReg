@@ -1,3 +1,12 @@
+# Daten-Info muss im Package noch ergänzt werden:
+## Quelle: https://www-genesis.destatis.de/genesis/online?operation=ergebnistabelleUmfang&levelindex=1&levelid=1728031893574&downloadname=12612-0007#abreadcrumb
+## Lebendgeborene: Deutschland, Jahre, Alter der Mutter, Geschlecht der Lebendgeborenen, Familienstand der Eltern
+## Kategorien <15 und >50 raus
+## Alter= Geburtsjahrmethode (Alter=Geburtsjahr Mutter - Geburtsjahr Kind)
+## Geschlecht des Kindes erst mal drin gelassen (fällt dann im Preprocess-Step weg)
+## Alter zu bin-mids(+0.5) geändert
+
+
 library(dplyr)
 data<-read.csv("raw_age_birth.csv",sep=";", header=FALSE)
 data<-data[-c(1:10),]
