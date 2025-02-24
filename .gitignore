@@ -9,3 +9,13 @@ income_share_data.rds
 run_examples.R
 try_new_preprocess.R
 try_value_script.R
+run_examples_dens_reg.R
+run_examples_md_smooth.R
+run_examples_plot_dens_obj.R
+run_examples_preprocess.R
+DESCRIPTION
+NAMESPACE
+unfinished/R
+unfinished/tests
+unfinished/CondDensReg_0.1.0.*
+unfinished/DESCRIPTION
