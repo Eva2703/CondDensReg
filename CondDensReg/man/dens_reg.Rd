@@ -7,57 +7,81 @@
 \usage{
 dens_reg(
   dta,
-  var_vec,
-  density_var,
+  y = NULL,
   sample_weights = NULL,
-  bin_width = NULL,
-  bin_number = NULL,
+  counts = NULL,
+  weighted_counts = NULL,
   values_discrete = c(0, 1),
   weights_discrete = 1,
   domain_continuous = c(0, 1),
-  m_density_var = c(2, 2),
-  k_density_var = 10,
-  sp_density_var = NULL,
+  bin_number = NULL,
+  bin_width = NULL,
+  m_continuous = c(2, 2),
+  k_continuous = 10,
+  sp_y = NULL,
+  method = "REML",
   penalty_discrete = NULL,
   group_specific_intercepts = NULL,
   linear_effects = NULL,
-  flexible_effects = NULL,
+  smooth_effects = NULL,
   varying_coefficients = NULL,
-  flexible_interaction = NULL,
-  effects = FALSE,
-  already_formatted = FALSE,
+  smooth_interactions = NULL,
+  effects = TRUE,
   ...
 )
 }
 \arguments{
 \item{dta}{Data set of type \code{\link[base]{data.frame}} or
 \code{\link[data.table]{data.table}} containing the observations \eqn{(y_i, x_i)}
-of response and covariates as well as optional sampling weights for each
-observation in the rows (\eqn{i = 1,...,N}).}
+of response and covariates as well as optional sample weights (compare
+\code{sample_weights}) for each observation in the rows (\eqn{i = 1, ..., N}).}
 
-\item{var_vec}{Vector of variables in \code{dta} on which the covariate
-combinations are based. (All covariates or a subset in case some covariates
-are a refinement of others.) The vector can either contain the variable names
-as strings or the column positions of the respective variables in \code{dta}.}
+\item{y}{Variable in \code{dta} containing the response observations
+\eqn{y_i}. Either the variable name can be given as string or the column
+position of the variable in \code{dta} as integer. If missing (\code{NULL}),
+if there is a unique column of \code{dta} not specified in \code{sample_weights},
+\code{counts}, and \code{weighted_counts} and not used as covariate during
+effect specification (see below), this unique column is used.}
 
-\item{density_var}{Variable in \code{dta} which corresponds to the response.
-Variable name as string or numeric column position of the variable in \code{dta}.}
+\item{sample_weights}{(Optional) variable in \code{dta} which contains a sample
+weight for each observation. Either the variable name can be given as string
+or the column position of the variable in \code{dta} as integer. If missing
+(\code{NULL}), no sample weights are included per default (i.e., all
+observations have the same weight 1).}
 
-\item{sample_weights}{Variable in \code{dta} which contains a sample weight
-for each observation. Variable name as string or numeric column position of
-the variable in \code{dta}. If missing (\code{NULL}), no sample weights are
-included per default.}
+\item{counts}{(Optional) variable in \code{dta} which contains a count for
+each observation (for cases, where the available data contains counts instead
+of individual observations, which is common in particular for discrete data).
+Either the variable name can be given as string or the column position of the
+variable in \code{dta} as integer. If \code{bin_number} and \code{bin_width}
+are both \code{NULL}, midpoints of unique observations \eqn{y_i} are used as
+boundaries of histogram bins (if \eqn{I} is not empty, i.e., if there is a
+continuous component), which are then used to compute the bin widths (which are
+later required es offset in the regression model).
+If argument \code{counts} is missing (\code{NULL}; default), counts are
+constructed from individual observations (which is equivalent to each observation
+counted once). Note that if \code{counts} and \code{sample_weights} are both
+not \code{NULL}, the latter is ignored (also indicated via a warning message).
+Please use \code{weighted_counts} (additionally to \code{counts}) to include
+possible weighted data.}
 
-\item{bin_width}{Width of histogram bins partitioning \eqn{I} (the subset of
-the domain corresponding to the continuous part of the densities). Can be one
-scalar value (specifying an equidistant bin width), or a vector containing the
-width of each bin. The combined length of the specified bins must match the
-length of the continuous part of the domain. Alternative to \code{bin_number}.}
-
-\item{bin_number}{Number of equidistant histogram bins partitioning \eqn{I}.
-Alternative to \code{bin_width}. If \code{bin_number} and \code{bin_width} are
-both given and the two values are not compatible, an error is returned. If
-neither parameter is specified, \code{bin_number=100} is used as default.}
+\item{weighted_counts}{(Optional) variable in \code{dta} which contains a
+weighted count for each observation (compare Appendix D of Maier et al. (2025b)).
+In this case, also absolute counts have to be specified via \code{counts}.
+Otherwise, \code{weighted_counts} is ignored. Either the variable name can be
+given as string or the column position of the variable in \code{dta} as integer.
+If missing (\code{NULL}), counts are constructed from individual observations
+(which is equivalent to all observations counted once)
+% @param already_formatted A logical indicating if the data in \code{dta} is
+% already formatted as count data. If \code{already_formatted = TRUE}, the data
+% have to have a column named \code{"counts"}, an additional column with the
+% name \code{"weighted_counts"} is optional.
+% % The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{y}.
+% The bin width is computed automatically based on the observed continuous
+% values unless an integer or a vector is submitted by the user via
+% \code{bin_width} and/or \code{bin_number}. In these cases, the binning is
+% based on the given bin number or width.
+.}
 
 \item{values_discrete}{Vector of values in \eqn{\mathcal{D}}{D} (the subset of
 the domain corresponding to the discrete part of the densities). Defaults to
@@ -71,165 +95,221 @@ components as default. Can be a scalar for equal weights for all discrete values
 or a vector with specific weights for each corresponding discrete value.}
 
 \item{domain_continuous}{An interval (i.e., a vector of length 2) specifying
-\eqn{I}. If missing (\code{NULL}) it is set to \code{c(0, 1)} as default. If
+\eqn{I} (the subset of the domain corresponding to the continuous part of the
+densities). If missing (\code{NULL}) it is set to \code{c(0, 1)} as default. If
 set to \code{FALSE}, the continuous component is considered to be empty, i.e.,
 a weighted sum of dirac measures is used as reference measure (discrete special
 case).}
 
-\item{m_density_var}{Vector of two integers specifying the order of the B-spline
-basis over \eqn{I} and the order of the difference penalty (like the argument
-\code{m} for P-Spline smooth terms, i.e., \code{bs="ps"} in \code{\link[mgcv]{ti}},
-etc.) for basis functions in \eqn{L^2(\lambda)} (before transformation to \eqn{L^2_0(\lambda)},
-compare details). If missing it is set to cubic splines with second
-order difference penalty, i.e., \code{m_density_var=c(2,2)}, as default.}
+\item{bin_number}{Number of equidistant histogram bins partitioning \eqn{I}.
+Alternative to \code{bin_width}. If neither parameter is specified,
+\code{bin_number = 100} is used as default. If \code{bin_number} and \code{bin_width} are
+both given and the two values are not compatible, an error is returned.}
 
-\item{k_density_var}{Integer specifying the number of B-spline basis functions
-over \eqn{I}, i.e., the length of the vector \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y}
-(like the argument \code{k} for P-Spline smooth terms, i.e., \code{bs="ps"} in
-\code{\link[mgcv]{ti}}, etc.) for basis functions in \eqn{L^2(\lambda)}
-(before transformation to \eqn{L^2_0(\lambda)}, compare details). See
-\code{\link[mgcv]{choose.k}} for more information.
+\item{bin_width}{Width of histogram bins partitioning \eqn{I}. Can be one
+scalar value (specifying an equidistant bin width), or a vector containing the
+width of each bin. The combined length of the specified bins must match the
+length of the continuous part of the domain. Alternative to \code{bin_number}.
+If \code{bin_number} and \code{bin_width} are both given and the two values
+are not compatible, an error is returned.}
+
+\item{m_continuous}{Vector of two integers specifying the order of the B-spline
+basis over \eqn{I} and the order of the difference penalty (like the argument
+\code{m} for P-Spline smooth terms \code{bs = "ps"} in \code{\link[mgcv]{ti}},
+etc.) for basis functions in \eqn{L^2(\lambda)}, before transformation to
+\eqn{L^2_0(\lambda)} (compare details). If missing it is set to cubic splines
+with second order difference penalty, i.e., \code{m_continuous = c(2, 2)},
+as default.}
+
+\item{k_continuous}{Integer specifying the number of B-spline basis functions
+in \eqn{L^2(\lambda)} (like the argument \code{k} for P-Spline smooth terms
+\code{bs = "ps"} in \code{\link[mgcv]{ti}}, etc.), before transformation
+to \eqn{L^2_0(\lambda)} (compare details). Note that the transformation reduces
+the basis number by 1. The basis \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} in the mixed
+Bayes Hilbert space \eqn{B^2(\mu)} will thus have
+\code{k_continuous - 1 + length(values_discrete)} elements. See also
+\code{\link[mgcv]{choose.k}} for more information on choosing this parameter.
 If missing (\code{NULL}) it is set to 10.}
 
-\item{sp_density_var}{Integer or vector specifying the smoothing parameter for the marginal
+\item{sp_y}{Integer or vector specifying the smoothing parameter for the marginal
 penalty matrix for \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} (anisotropic penalty; like
-the argument \code{sp} in \code{\link[mgcv]{ti}}, etc.). If a vector is submitted, all smoothing parameters
-in density direction are treated as fixed but with different values for the different partial effects. The
-order of parameters within this vector is the same as the order of partial effects as arguments of \code{dens_reg} with the firtst parameter corresponding to the intercept.
-It must be of the same length as the number of partial effects plus one.
-In the discrete case of only discrete values and a zero \code{penalty_discrete}, the smoothing
-parameter \code{sp_density_var} is set to zero in order to obtain an unpenalized
-model. If missing (\code{NULL}) or a negative value is supplied, the parameter
-will be estimated by \code{\link[mgcv]{gam}}. Any positive or zero value is
-treated as fixed. (see \code{mgcv})}
+the argument \code{sp} in \code{\link[mgcv]{ti}}, etc.). If a vector is submitted,
+its length must be the number of partial effects (including the intercept), with
+the \eqn{j}-th entry specifying the smoothing parameter for the \eqn{j}-th
+partial effect. The order of parameters within this vector corresponds to the
+intercept followed by the partial effects in the order as specified below
+(\code{group_specific_intercepts}, \code{linear_effects}, \code{smooth_effects},
+\code{varying_coefficients}, and \code{smooth_interactions}). Upenalized
+estimation is accomplished by setting \code{sp_y} to zero. If missing (\code{NULL})
+or a negative value is supplied, the parameter will be estimated by
+\code{\link[mgcv]{gam}} via the estimation method specified in \code{method}
+(with REML-estimation per default). Any positive or zero value is treated as
+fixed (see \code{\link[mgcv]{gam}}).}
+
+\item{method}{String characterizing the smoothing parameter estimation method
+as in \code{\link[mgcv]{gam}}. Defaults to \code{"REML"} (REML-estimation).}
 
 \item{penalty_discrete}{Integer or \code{NULL} giving the order of differences
 to be used for the penalty of the discrete component, with 0 corresponding to
 the identity matrix as penalty matrix (analogously to m[2] for the continuous
 component); Note that the order of differences must be smaller than the number
-of values in the discrete component, i.e., the length of values_discrete; if
-missing (\code{NULL}), in the mixed case, it is set to a zero matrix (corresponding
-to no penalization), while in the discrete case, it is set to a diagonal matrix
-(as in a ridge penalty). In the discrete case, please set the corresponding
-argument of sp in ti() to 0 to estimate an unpenalized model.}
+of values in the discrete component, i.e., the length of \code{values_discrete}.
+% In the discrete case, please set the corresponding argument of sp in ti() to 0 to estimate an unpenalized model.
+If missing (\code{NULL}), the discrete component is estimated unpenalized (in
+the mixed case, by setting the discrete component of the penalty matrix to zero
+- with the continuous component non-zero -, in the discrete case by setting
+the smoothing parameter to zero (with a diagonal penalty matrix) since due to
+technical reasons it is not possible to set the whole penalty matrix to zero).}
 
-\item{group_specific_intercepts}{Vector of the form \code{c("cov_1","cov_2",...)}
-of names of categorical variables included by \code{var_vec} for which
-covariate-specific intercepts \eqn{\beta_{cov_1},\ \beta_{cov_2},\ ...} are
-included in the model. If mising (\code{NULL}), no covariate-specific intercept
-is included.}
+\item{group_specific_intercepts}{Vector of the form \code{c("x_a", "x_b", ...)}
+of names of categorical covariates, i.e., \code{\link[base]{factor}} variables
+contained in \code{dta} for which group-specific intercepts \eqn{\beta_{x_a},
+\beta_{x_b}, ...} (one per category of the respective covariate) shall be
+estimated. For \code{\link[base]{ordered}} factors, the first level is used as reference category
+(see \code{\link[mgcv]{gam.models}} for more details).
+If missing (\code{NULL}), no group-specific intercept is included.}
 
-\item{linear_effects}{Vector of the form \code{c("cov_1","cov_2",...)} of names
-of numeric variables included by \code{var_vec} for which linear effects
-\eqn{\beta_{cov_1}\cdot cov_1,\ \beta_{cov_2}\cdot cov_2,\ ...} are included
-in the model. If mising (\code{NULL}), no linear is included.}
+\item{linear_effects}{Vector of the form \code{c("x_a", "x_b", ...)} of names
+of numeric covariates contained in \code{dta} for which linear effects
+\eqn{x_a \odot \beta_{x_a}, x_b \odot \beta_{x_b}, ...} % {x_a * \beta_{x_a}, x_b * \beta_{x_b}, ...}
+shall be estimated. If missing (\code{NULL}), no linear effect is included.}
 
-\item{flexible_effects}{List of (named) lists of the form
-\code{list(list(cov="cov_1",bs="basis_1", m=m_1,k=k_1,mc=mc1,by="by_1"),list(...),...)}.
-If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with \code{NULL} if it contains less than 6 elements.
-Each list
-is adding one flexible effect of the form \eqn{f_{by}(cov)} to the model with:
-\itemize{
-\item \code{cov}: Name of a numeric variable included in \code{var_vec}.
-\item \code{bs}: Character string specifying the type for the marginal
-basis in covariate direction. See \code{mgcv::smooth.terms} for details and
-full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
-\item \code{m}: Vector of two integers or \code{NULL} giving the order of the
-marginal spline basis \eqn{b_j} in covariate direction and the order of its
-penalty (see \code{mgcv}). If not specified or \code{m=NULL}, \code{m=c(2,2)} is used.
-\item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
-basis \eqn{b_j}. See \code{mgcv::choose.k} for more information. If not specified or \code{k=NULL}, \code{k=10} is used.
- \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
- \item \code{by}: Optional, name of a categorical variable included in
-\code{var_vec} specifying whether the flexible effect should be modeled
-specifically for each level of the by-covariate. If missing or \code{NULL},
-the flexible effect is not depending on the level of an additional covariate.
-} If mising (\code{NULL}), no flexible effect is included.}
-
-\item{varying_coefficients}{List of lists of the form
-\code{list(list(cov="covA_1", by="covB_1", bs="basis1", m=m1, k=k1, mc=mc1),...)}.
- If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with \code{NULL} if it contains less than 6 elements.
-Each list is adding
-one varying coefficient of the form \eqn{ cov_B*f(cov_A)} to the
+\item{smooth_effects}{List of (named) lists of the form
+\code{list(list(cov = "x_a", bs = bs_a, m = m_a, k = k_a, mc = mc_a, by = "x_b"), ...)}.
+If the lists are unnamed, the names are assigned in the order of the given
+elements. The list is filled with \code{NULL} if it contains less than 6 elements.
+Each list is adding one (group-specific) smooth effect of the form \eqn{g_{x_b}(x_a)} to the
 model with:
 \itemize{
-\item \code{cov}: Name of a numeric variable included in \code{var_vec}.
- \item \code{by}: Name of a numeric variable included in \code{var_vec}.
+\item \code{cov}: Name of a numeric covariate contained in \code{dta}.
 \item \code{bs}: Character string specifying the type for the marginal
-basis in covariate direction. See \code{mgcv::smooth.terms} for details and
-full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
+basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
+full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
+is used.
 \item \code{m}: Vector of two integers or \code{NULL} giving the order of the
-marginal spline basis \eqn{b_j} in covariate direction for the smooth effect
-and the order of its penalty. (see \code{mgcv}) If not specified or \code{m=NULL}, \code{m=c(2,2)} is used
+marginal spline basis \eqn{b_j} in covariate direction and the order of its
+penalty (as in \code{\link[mgcv]{ti}}). If not specified or \code{NULL},
+\code{c(2, 2)} is used.
 \item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
-basis \eqn{b_j} for the smooth effect. See \code{mgcv::choose.k} for more
-information. If not specified or \code{k=NULL}, \code{k=10} is used.
-}If mising (\code{NULL}), no varying coeffecient is included.
-\item \code{mc}: Logical indicating if the marginal in the direction of the first covariate should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.}
+basis \eqn{b_j} (as in \code{\link[mgcv]{ti}}). See \code{\link[mgcv]{choose.k}}
+for more information. If not specified or \code{NULL}, \code{10} is used.
+\item \code{mc}: Logical indicating if the marginal in covariate direction
+should have centering constraints applied. By default all marginals are
+constrained, i.e., \code{mc = TRUE}.
+\item \code{by}: Optional, name of a categorical covariate, i.e.,
+\code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+the smooth effect should be modeled specifically for each level of the
+\code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
+the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
+for more details). If missing or \code{NULL}, the smooth effect is not depending
+on the level of an additional covariate.
+}
+If missing (\code{NULL}), no (group-specific) smooth effect is included.}
 
-\item{flexible_interaction}{List of lists of the form
-\code{list(list(covs=c("covA_1","covB_1",...),bs=c("basisA_1","basisB_1",...), m=list(mA_1, mB_1,...), k=c(kA_1, kB_1,...), mc=c(mcA_1, mcB_1,...), by="by"),list(...),...)}.
-If the lists are unnamed, the names are assigned in the order of the given elements. The list is filled with vectors/lists of \code{NULL} if it contains less than 6 elements.
-Each list is specifying flexible interaction effect between at least two
-continuous covariates of the form \eqn{f(cov_A,cov_B,...)} in the model with:
+\item{varying_coefficients}{List of lists of the form
+\code{list(list(cov = "x_a", by = "x_b", bs = bs_a, m = m_a, k = k_a, mc = mc_a), ...)}.
+If the lists are unnamed, the names are assigned in the order of the given
+elements. The list is filled with \code{NULL} if it contains less than 6 elements.
+Each list is adding one varying coefficient of the form \eqn{x_b \odot g(x_a)}
+to the model with:
 \itemize{
-\item \code{covs}: Vector of names of numeric variables
-included in \code{var_vec}.
-\item \code{bs}:Vector of character strings specifying
-the type for the marginal bases in covariate direction. See
-\code{mgcv::smooth.terms} for details and full list. If not specified or \code{bs=NULL}, the penalized B-spline basis "ps" is used.
-\item\code{m}: List containing vectors of two integers or
-\code{NULL} giving the order of the marginal spline basis in direction of the respective covariate in \code{covs} for the smooth effect and the order of its penalty. (see \code{mgcv})
-If not specified or \code{m=NULL}, a list of \code{c(2,2)} is used.
+\item \code{cov}: Name of a numeric covariate contained in \code{dta}.
+\item \code{by}: Name of a numeric covariate contained in \code{dta}.
+\item \code{bs}: Character string specifying the type for the marginal
+basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
+full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
+is used.
+\item \code{m}: Vector of two integers or \code{NULL} giving the order of the
+marginal spline basis \eqn{b_j} in covariate direction and the order of its
+penalty (as in \code{\link[mgcv]{ti}}). If not specified or \code{NULL},
+\code{c(2, 2)} is used
+\item \code{k}: Integer or \code{NULL} giving the dimension of the marginal
+basis \eqn{b_j} (as in \code{\link[mgcv]{ti}}). See \code{\link[mgcv]{choose.k}}
+for more information. If not specified or \code{NULL}, \code{10} is used.
+\item \code{mc}: Logical indicating if the marginal in the direction of the
+first covariate should have centering constraints applied. By default all
+marginals are constrained, i.e., \code{mc = TRUE}.
+}
+If missing (\code{NULL}), no varying coeffecient is included.}
+
+\item{smooth_interactions}{List of lists of the form
+\code{list(list(covs = c("x_a", "x_b", ...), bs = c(bs_a, bs_b, ...),
+m = list(m_a, m_b, ...), k = c(k_a, k_b, ...), mc = c(mc_a, mc_b, ...), by = "x_by"),
+list(...), ...)}. If the lists are unnamed, the names are assigned in the order
+of the given elements. The list is filled with vectors/lists of \code{NULL}
+if it contains less than 6 elements. Each list is specifying a (group-specific)
+smooth interaction effect between at least two continuous covariates of the
+form \eqn{g_{x_by}(x_a, x_b, ...)} in the model with:
+\itemize{
+\item \code{covs}: Vector of names of numeric covariates contained in \code{dta}.
+\item \code{bs}: Vector of character strings specifying the types for each
+marginal basis of each covariate. See \code{\link[mgcv]{smooth.terms}} for
+details and full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
+is used.
+\item\code{m}: List containing vectors of two integers or \code{NULL} giving
+the order of the marginal spline basis in direction of the respective covariate
+in \code{covs} for the smooth effect and the order of its penalty (as in
+\code{\link[mgcv]{ti}}). If not specified or \code{NULL}, a list of
+\code{c(2, 2)} is used.
 \item \code{k}: Vector of integers or \code{NULL} giving the
-dimension of the marginal basis in direction of the respective covariate in \code{covs} for the smooth
-effect. See \code{mgcv::choose.k} for more information. If not specified or \code{k=NULL}, a vector specifying each parameter as \code{k=10} is used.
- \item \code{mc}: Logical indicating if the marginal in covariate direction should have centering constraints applied. By default all marginals are constrained, i.e., \code{mc=TRUE}.
-  \item \code{by}: Optional, name of a categorical variable included in
-\code{var_vec} specifying whether the flexible interaction effect should be modeled
-specifically for each level of the by-covariate. If \code{NULL},
-the flexible interaction effect is not depending on the level of an additional covariate.
-}}
+dimension of the marginal basis in direction of the respective covariate
+in \code{covs} for the smooth effect. See \code{\link[mgcv]{choose.k}} for
+more information. If not specified or \code{NULL}, a vector specifying each
+parameter as \code{10} is used.
+\item \code{mc}: Logical vector indicating if the marginals in covariate direction
+should have centering constraints applied. By default all marginals are
+constrained, i.e., \code{TRUE}.
+\item \code{by}: Optional, name of a categorical covariate, i.e.,
+\code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+the smooth interaction effect should be modeled specifically for each level of the
+\code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
+the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
+for more details). If missing or \code{NULL}, the smooth interaction effect
+is not depending on the level of an additional covariate.
+}
+If missing (\code{NULL}), no (group-specific) smooth interaction is included.}
 
-\item{effects}{Indicates if partial effects should be returned (\code{TRUE})
-or not (\code{FALSE}).}
+\item{effects}{Indicates if estimated partial effects should be returned
+(\code{TRUE}; default) or not (\code{FALSE}).}
 
-\item{already_formatted}{A logical indicating if the data in \code{dta} is already formatted as count data. If \code{already_formatted=TRUE}, the data have to have a column named "counts", an additional column with the name "weighted_counts" is optional.
-The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{density_var}.
-The bin width is computed automatically based on the observed continuous values unless an integer or a vector is submitted by the user via \code{bin_width} and/or \code{bin_number}. In these cases, the binning is based on the given bin number or width.}
-
-\item{...}{further arguments for passing on to \code{gam}}
+\item{...}{further arguments for passing on to \code{\link[mgcv]{gam}}.}
 }
 \value{
-The returned object is a \code{list}-object which is also an object
-of the sub-class \code{dens_reg_obj} with elements:
+The function returns an object of the class \code{dens_reg_obj}, which
+is a \code{\link[base]{list}} with elements:
 \itemize{
-\item \code{model}: \code{mgcv::gam}-object of the estimated model.
+\item \code{count_data}: \code{\link[data.table]{data.table}}-object containing
+the count data obtained by using \code{\link{preprocess}} for the given data
+\code{dta} and covariates, which is also an object of the sub-class
+\code{histogram_count_data}. See \code{?preprocess} for more information.
+\item \code{model}: \code{\link[mgcv]{gam}}-object of the estimated model.
 \item \code{model_matrix}: Model matrix of the model.
-\item \code{theta_hat}: Estimated coeffecient vector \eqn{\hat\theta}.
+\item \code{theta_hat}: Estimated coeffecient vector \eqn{\hat{\theta}}.
 \item \code{f_hat_clr}: Estimated conditional densities on clr-level
 \eqn{clr(\hat f)} for every covariate combination in the order of the respective
-group_id in \code{histo_data}.
-\item \code{f_hat}: Estimated conditional densities on clr-level \eqn{clr(\hat f)}
+\code{group_id} in \code{count_data}.
+\item \code{f_hat}: Estimated conditional densities on clr-level \eqn{clr(\hat{f})}
 for every covariate combination in the order of the respective group_id in
-\code{histo_data}.
-\item \code{histo_data}: \code{data.table}-object containing the histogram data
-resulting from the \code{preprocess}-function with the original data \code{dta}
-which is also an object of the sub-class \code{histogram_count_data}. See
-\code{?preprocess} for more information.
-\item \code{effects}: If \code{effects=TRUE}; List of lists. Each list gives
-one estimated partial effect. Both clr- and density-level are included.
+\code{count_data}.
+\item \code{effects}: Only contained, if \code{effects = TRUE}; List of lists.
+Each list gives one estimated partial effect. Both clr- and density-level are
+included.
 \item \code{params}: List of \code{domain_continuous, values_discrete} and
-\code{bin_number}.
+\code{bin_number} as given to the function.
 \item \code{predicted_effects}: List of lists (\code{group_specific_intercepts,
-flexible effects, linear_effects, varying_coefficient, flexible_interaction})
-collecting all modeled partial effects as specified in the function's parameters.
+smooth effects, linear_effects, varying_coefficient, smooth_interactions})
+collecting the specification of all partial effects as given to the function
+in the respective parameters.
 \item \code{ID_covCombi}: Data frame which gives an overview over the assignment
 of the unique covariate combinations to the group IDs.
 }
+Note that \code{plot}- and \code{predict}-methods for objects of class
+\code{dens_reg_obj} are available via \code{CondDensReg:::plot.dens_reg_obj}
+and \code{CondDensReg:::predict.dens_reg_obj}, however, they are not exported,
+since they are not tested/documented appropriately, yet.
 }
 \description{
-This function implements the approach by Maier et al. (2023) for fitting
+This function implements the approach by Maier et al. (2025b) for fitting
 structured additive regression models with densities in a mixed (continuous/
 discrete) Bayes Hilbert space
 \eqn{B^2(\mu) = B^2(\mathcal{Y}, \mathcal{A}, \mu)}{B^2(\mu) = B^2(Y, A, \mu)}
@@ -237,17 +317,18 @@ as response given scalar covariates \eqn{x_i},
 based on observations \eqn{y_i} from the conditional distributions given
 \eqn{x_i}, via a (penalized) maximum likelihood approach. The (penalized)
 log-likelihood function is approximated via the (penalized) log-likelihood of
-an appropriate poisson regression model, which is then fitted using
-\code{mgcv}'s \code{\link[mgcv]{gam}} with a new smooth for mixed densities.
+an appropriate poisson regression model, which (after constructing the count
+data appropriately) is then fitted using \code{mgcv}'s \code{\link[mgcv]{gam}}
+with a new smooth for mixed densities in \eqn{L^2_0(\mu)}.
 We briefly summarize the approach below in the details.
 % to enable proper description of the function.
-Please see Maier et al. (2023) for comprehensive discussion.
+Please see Maier et al. (2025b) for comprehensive description.
 }
 \details{
-The goal of \code{dens_reg} is to estimate the densities \eqn{f_{x_i}} of
+The function \code{dens_reg} estimates the densities \eqn{f_{x_i}} of
 conditional distributions of random variables \eqn{Y_i | x_i} from independent
 observations \eqn{(y_i, x_i)}, where \eqn{y_i} are realizations of \eqn{Y_i | x_i},
-and \eqn{x_i} is a vector of covariate observations, \eqn{i = 1,...,N}. The
+and \eqn{x_i} is a vector of covariate observations, \eqn{i = 1, ..., N}. The
 densities are considered as elements of a mixed Bayes Hilbert space
 \eqn{B^2(\mu) = B^2(\mathcal{Y}, \mathcal{A}, \mu)}{B^2(\mu) = B^2(Y, A, \mu)}
 (including continuous and discrete ones as special cases). The subset of the
@@ -255,62 +336,81 @@ domain \eqn{\mathcal{Y}}{Y} corresponding to the continuous part of the densitie
 is denoted with \eqn{I}, the one corresponding to the discrete part with
 \eqn{\mathcal{D}}{D}. The densities are modeled via a structured additive
 regression model
-\deqn{f_{x_i} = \bigoplus_{j=1}^J h_j (x_i)}
+\deqn{f_{x_i} = \bigoplus_{j = 1}^J h_j (x_i)}
 with partial effects \eqn{h_j (x_i) \in B^2(\mu)} depending on no, one, or
 several covariates \eqn{x_i}. Each partial effect is represented using a
 tensor product basis, consisting of an appropriate vector of basis functions
 \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} in \eqn{B^2(\mu)} over the domain of
 \eqn{B^2(\mu)}, and a vector of basis functions \eqn{b_{\mathcal{X}, j}}{b_{X, j}}
-over the respective covariates. The basis functions \eqn{b_{\mathcal{Y}}}{b_Y}
-are obtained by transforming a P-spline basis from \eqn{L^2(\mu)}
-to
-\eqn{L^2_0(\mu) := \{ f \in L^2(\mu) ~|~ \int_{\mathcal{T}} f \, \mathrm{d}\mu = 0\}}{L^2_0(\mu) := {f \in L^2(\mu) | \int_T f d\mu = 0}}
-and then applying the inverse centered log-ratio (clr) transformation (the
-clr transformation is an isometric isomorphism, allowing to consider densities
-in \eqn{B^2(\mu)} equivalently in \eqn{L^2_0(\mu)}). See appendix D of Maier
-et al. (2021) for details on the transformation from \eqn{L^2(\mu)} to
-\eqn{L^2_0(\mu)}. The choice of \eqn{b_{\mathcal{X}, j}}{b_{X, j}} determines
-the type of the partial effect (e.g., linear or smooth for a continuous covariate).
-Penalization is also possible.
+over the respective covariates.
+To obtain basis functions \eqn{b_{\mathcal{Y}}}{b_Y} consider the orthogonal
+decomposition of the mixed Bayes Hilbert space \eqn{B^2(\mu)} into a discrete
+Bayes Hilbert space \eqn{B^2(\delta^\bullet)} and a continuous Bayes Hilbert
+space \eqn{B^2(\lambda)} developed in Section 3.4 of Maier et al. (2025a).
+Note that for the domain of the discrete Bayes Hilbert space, the discrete part
+\eqn{\mathcal{D}}{D} has to be extended by an additional arbitrary discrete value
+(for the discrete summary of the continuous part).
+We construct basis functions in both these spaces by transforming appropriate
+basis functions in the corresponding (unconstrained) \eqn{L^2} spaces (more
+precisely, indicator functions with optional difference penalty for the discrete
+and a P-spline basis for the continuous Bayes Hilbert space), to the respective
+\eqn{L^2_0} spaces, i.e., the subspaces of \eqn{L^2} containing only functions
+that integrate to zero.
+% \eqn{L^2_0(\mu) : =  \{ f \in L^2(\mu) ~|~ \int_{\mathcal{T}} f \, \mathrm{d}\mu = 0\}}{L^2_0(\mu) : =  {f \in L^2(\mu) | \int_T f d\mu = 0}}
+See appendix D of Maier et al. (2025a) for details on this transformation.
+Applying the inverse centered log-ratio (clr) transformation (which is an
+isometric isomorphism, allowing to consider densities in some \eqn{B^2} space
+equivalently in the respective \eqn{L^2_0} space) yields one basis in
+\eqn{B^2(\delta^\bullet)} and one in \eqn{B^2(\lambda)}. The basis in the actually
+considered mixed Bayes Hilbert space \eqn{B^2(\mu)} is then obtained by
+applying the respective embeddings to these two bases (compare Section 3.4 of
+Maier et al. (2025a) and Section 2.2 of Maier et al. (2025b)).
+The choice of \eqn{b_{\mathcal{X}, j}}{b_{X, j}} determines
+the type of the partial effect, e.g., linear or smooth for a continuous covariate.
+For smooth effects, the same marginal bases as in \code{\link[mgcv]{gam}}
+can be used. In particular, penalization is also possible.
 The resulting log-likelihood is then approximated by the log-likelihood of a
 corresponding multinomial model, which can equivalently be estimated by a
-poisson model. The data for these models is obtained from the original
-observations \eqn{y_1,...,y_N} by combining all observations of the same
+Poisson model. The data for these models is obtained from the original
+observations \eqn{y_1, ..., y_N} by combining all observations of the same
 conditional distribution into a vector of counts via a histogram on the
 continuous part of the domain of the densities and counts on the discrete
-part of the domain. For details, see Maier et al. (2023).
-\code{dens_reg} performs the transformation into appropriate count data and
-estimates the corresponding poisson model. Furthermore, the resulting densities on
-pdf- and clr-level as well as the estimated partial effects on both levels are
-calculated.
+part of the domain. For details, see Maier et al. (2025b).
+\code{dens_reg} constructs the respective count data from the individual
+observations and estimates the corresponding Poisson model. Furthermore, the
+resulting densities on pdf- and clr-level as well as the estimated partial
+effects on both levels are calculated.
 }
 \examples{
-\donttest{# for further information on the parameters of the preprocessing step
-# see ?preprocess
+\donttest{
+### Note that the following simulated data are only to illustrate
+### function usage and do not possess significant covariate effects
 
-library(dplyr)
+# for further information on the parameters of the preprocessing step see ?preprocess
 
-# create data (mixed)
+# create data for the mixed case
+set.seed(101)
 
 dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
                   covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
                   covariate2 = sample(c("c", "d"), 150, replace = TRUE),
                   covariate3 = rep(rnorm(n = 15), 10),
                   covariate4 = rep(rnorm(n = 10), 15),
-                  covariate5=rep(rnorm(n = 10), 15), sample_weights = runif(150, 0, 2))
-dta[which(dta$obs_density == 2),]$obs_density <-rbeta(length(which(dta$obs_density == 2)), shape1 = 3, shape2 = 3)
+                  covariate5 = rep(rnorm(n = 10), 15), sample_weights = runif (150, 0, 2))
+dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density==  2)),
+                                                       shape1 = 3, shape2 = 3)
 dta$covariate1 <- ordered(dta$covariate1)
 dta$covariate2 <- ordered(dta$covariate2)
 
 # create discrete data
 
-dta_dis <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45,0.3)),
+dta_dis <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.25, 0.45, 0.3)),
                       covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
                       covariate2 = sample(c("c", "d"), 150, replace = TRUE),
                       covariate3 = rep(rnorm(n = 15), 10),
                       covariate4 = rep(rnorm(n = 10), 15),
-                      covariate5=rep(rnorm(n = 10), 15),
-                      sample_weights = runif(150, 0, 2))
+                      covariate5 = rep(rnorm(n = 10), 15),
+                      sample_weights = runif (150, 0, 2))
 dta_dis$covariate1 <- ordered(dta_dis$covariate1)
 dta_dis$covariate2 <- ordered(dta_dis$covariate2)
 
@@ -320,40 +420,53 @@ dta_dis$covariate2 <- ordered(dta_dis$covariate2)
 group_specific_intercepts <- c("covariate1", "covariate2")
 ## linear effects
 linear_effects <- c("covariate4")
-## flexible effects
-flexible_effects <-list(list(cov="covariate3", bs="ps", m=c(2, 2), k=4), list(cov="covariate3", bs="ps", m=c(2, 2), k=4, mc=FALSE, by="covariate1"))
+## smooth effects
+smooth_effects <- list(list(cov = "covariate3", bs = "ps", m = c(2, 2), k = 4),
+                       list(cov = "covariate3", bs = "ps", m = c(2, 2), k = 4,
+                            mc = FALSE, by = "covariate1"))
 ## varying coefficient
-fvc <-list(list(cov="covariate3", by="covariate4", bs="ps", m=c(2, 2) , k=4))
-## flexible interaction
-flex_inter <-list(list(covs=c("covariate3", "covariate4","covariate5"), bs=c("ps", "ps","ps"), m=list( c(2, 2), c(2, 2), c(2, 2)), k=c( 4, 4,5), mc=list(TRUE, FALSE, TRUE), by=NULL))
+varying_coef <- list(list(cov = "covariate3", by = "covariate4", bs = "ps", m = c(2, 2) , k = 4))
+## smooth interaction
+smooth_inter <- list(list(covs = c("covariate3", "covariate4", "covariate5"),
+                          bs = c("ps", "ps", "ps"),
+                          m = list( c(2, 2), c(2, 2), c(2, 2)), k = c( 4, 4, 5),
+                          mc = c(TRUE, FALSE, TRUE), by = NULL))
 
 # fit models (warning: calculation may take a few minutes)
 
 ## fit model for the mixed case with group specific intercepts and linear effects
 ### use fixed smoothing parameters in density direction and calculate also the partial effects
 
-m_mixed <- dens_reg(dta = dta, var_vec = c(2:6), density_var = 1, m_density_var = c(2, 2),
-  k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
-  linear_effects = linear_effects, effects = TRUE, sp_density_var=c(1,3,5,0.5))
+m_mixed <- dens_reg(dta = dta, y = 1, m_continuous = c(2, 2),
+  k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
+  linear_effects = linear_effects, effects = TRUE, sp_y = c(1, 3, 5, 0.5))
 
-## fit model for the discrete case with flexible effects and flexible interaction
+## fit model for the discrete case with smooth effects and smooth interaction
 ### do not calculate effects
 
 m_dis <- dens_reg(
-  dta = dta_dis, var_vec = c(2:6), density_var = 1, values_discrete = c(0, 1,2),
-  weights_discrete = c(1,1,1), domain_continuous = FALSE, m_density_var = c(2, 2),
-  k_density_var = 4, group_specific_intercepts = group_specific_intercepts,
-  flexible_effects = flexible_effects, flexible_interaction = flex_inter, effects = FALSE)
+  dta = dta_dis, y = 1, values_discrete = c(0, 1, 2),
+  weights_discrete = c(1, 1, 1), domain_continuous = FALSE, m_continuous = c(2, 2),
+  k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
+  smooth_effects = smooth_effects, smooth_interactions = smooth_inter, effects = FALSE)
 
 # fit model for the continuous case with a functional varying coeffecient
 
-m_cont <- dens_reg(dta = dta\%>\%filter(obs_density!=0&obs_density!=1),
-  var_vec = c(2:6), density_var = 1, values_discrete = FALSE, m_density_var = c(2, 2),
-  k_density_var = 12, varying_coefficients = fvc, effects = TRUE)
-
-
+m_cont <- dens_reg(dta = dta[which(!(dta$obs_density \%in\% c(0, 1))), ],
+  y = 1, values_discrete = FALSE, m_continuous = c(2, 2),
+  k_continuous = 12, varying_coefficients = varying_coef, effects = TRUE)
 }
+
 }
 \references{
-Maier, E. M., Fottner, A., Stöcker, A., Okhrin, Y., & Greven, S. (2023). Conditional density regression for individual-level data.
+Maier, E.-M., Fottner, A., Stoecker, A., Okhrin, Y., & Greven, S. (2025b):
+Conditional density regression for individual-level data.
+arXiv preprint arXiv:XXXX.XXXXX.
+
+Maier, E.-M., Stoecker, A., Fitzenberger, B., Greven, S. (2025a):
+Additive Density-on-Scalar Regression in Bayes Hilbert Spaces with an Application to Gender Economics.
+Annals of Applied Statistics, 19(1), ???-???.
+}
+\author{
+Lea Runge, Eva-Maria Maier
 }

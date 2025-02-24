@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(preprocessing)
+library(CondDensReg)
 
-test_check("preprocessing")
+test_check("CondDensReg")

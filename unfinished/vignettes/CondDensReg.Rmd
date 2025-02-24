@@ -38,39 +38,35 @@ data("data_age_birth", package = "CondDensReg")
 ```
 
 ## Preprocess the data into count data
-As we already have the data formatted as count data (otherwise we would have data which contains every single birth as individual observations as rows), we preprocess the data in order to select the desired variables and add a unique group ID as well as calculate the needed parameters for the later model. The goal of our model is to model the age of the mother in dependence of her marital status and the year, i.e. the variable "sex" is no longer needed. We use the argument <tt>already_formatted=TRUE</tt> and treat the age of the mother as continuous with bin length one.
+As we already have the data formatted as count data (otherwise we would have data 
+which contains every single birth as individual observations as rows), we preprocess
+the data in order to select the desired variables and add a unique group ID as 
+well as calculate the needed parameters for the later model. The goal of our model 
+is to model the age of the mother in dependence of her marital status and the year, 
+i.e. the variable "sex" is no longer needed. We use the argument <tt>already_formatted=TRUE</tt> 
+and treat the age of the mother as continuous with bin length one.
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-dta_pre<-preprocess(dta=data_age_birth, 
-           var_vec = c("year","marital_status"), 
-           density_var = "age", 
-           values_discrete = FALSE,
-           domain_continuous = c(15,50),
-           already_formatted = TRUE)
-
-
+dta_pre <- preprocess(dta=data_age_birth, var_vec = c("year", "marital_status"), 
+                      y = "age", counts = "counts", values_discrete = FALSE,
+                      domain_continuous = c(15, 50))
 ```
+
 ## Plot preprocessed data
+<!-- ```{r, warning=FALSE, message=FALSE, echo=TRUE} -->
+<!-- library(dplyr) -->
 
-```{r, warning=FALSE, message=FALSE, echo=TRUE}
-library(dplyr)
 
-
-```
+<!-- ``` -->
 
 ## Estimate the conditional densities
 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
-model_age<-dens_reg(dta=data_age_birth,
-           var_vec = c("year","marital_status"),
-           density_var = "age",
-           values_discrete = FALSE,
-           domain_continuous = c(15,50),
-           already_formatted = TRUE,
-           group_specific_intercepts = c("marital_status"),
-           flexible_effects=list(list(cov="year"),list(cov="year", by="marital_status")),
-           effects=FALSE)
-
-
+model_age <- dens_reg(dta = data_age_birth, y = "age", counts = "counts",
+                      values_discrete = FALSE, domain_continuous = c(15,50),
+                      group_specific_intercepts = c("marital_status"),
+                      flexible_effects = list(list(cov = "year"),
+                                              list(cov = "year", by = "marital_status")),
+                      effects=FALSE)
 ```
 
 ## Plot different aspects of the estimated model

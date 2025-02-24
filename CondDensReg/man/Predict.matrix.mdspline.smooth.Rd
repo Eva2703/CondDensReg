@@ -14,7 +14,7 @@
 evaluated. Exact requirements are as for \code{\link[mgcv]{smooth.construct}} and \code{smooth.construct2}}
 }
 \value{
-A matrix mapping the coeffients for the smooth term to its values at
+A matrix mapping the coefficients for the smooth term to its values at
 the supplied data values.
 }
 \description{
@@ -29,9 +29,93 @@ predict from a fitted \code{\link[mgcv]{gam}} model. See \code{\link[mgcv]{Predi
 for more details, or \code{\link{smooth.construct.md.smooth.spec}} for details
 on the mixed density smooth \code{"md"}.
 }
+\examples{
+\donttest{
+### create data
+set.seed(101)
+
+N <- 100
+dta <- data.frame(covariate1 = sample(c("a", "b", "c"), N, replace = TRUE),
+                  covariate2 = rnorm(n = N))
+dta$obs_density <- sapply(seq_len(N),
+                          function(i) {
+                            a_0 <- ifelse(dta$covariate1[i] == "a", 0.1,
+                                          ifelse(dta$covariate1[i] == "b", 0.2, 0.3))
+                            p_0 <- a_0 * sin(dta$covariate2[i]) + a_0 + 0.05
+                            a_1 <- ifelse(dta$covariate1[i] == "a", 0.25,
+                                          ifelse(dta$covariate1[i] == "b", 0.15, 0.05))
+                            p_1 <- a_1 * cos(dta$covariate2[i]) + a_1 + 0.1
+                            sample(0:2, 1, prob = c(p_0, p_1, 1 - p_0 - p_1))
+                          })
+
+dta$covariate1 <- ordered(dta$covariate1)
+
+dta_mixed <- dta
+ind_cont <- which(dta_mixed$obs_density == 2)
+dta_mixed[ind_cont, ]$obs_density <-
+  sapply(seq_along(ind_cont), function(i)
+    rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
+          shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
+n_bins <- 20
+dta_mixed <- preprocess(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+                        bin_number = n_bins, values_discrete = c(0, 1),
+                        domain_continuous = c(0, 1))
+
+### fit model
+m_mixed <- gam(counts ~
+                 # no scalar global intercept (we add a density-intercept instead)
+                 - 1 +
+                 # intercept (corresponding to reference covariate1 = "a")
+                 ti(obs_density, bs = "md", m = list(c(2, 2)), k = 8,
+                    mc = FALSE, np = FALSE) +
+                 # group specific intercept for leveles "b" and "c" of covariate2
+                 ti(obs_density, bs = "md", m = list(c(2, 2)), k = 8,
+                    mc = FALSE, np = FALSE, by = covariate1) +
+                 # smooth effect of covariate2 (modeled via P-splines)
+                 ti(covariate2, obs_density, bs = c("ps", "md"),
+                    m = list(c(2, 2), c(2, 2)), k = c(8, 8), mc = c(TRUE, FALSE),
+                    np = FALSE) +
+                 # intercepts per covariate combination (modeling absolute
+                 # counts for poisson regression)
+                 as.factor(group_id) +
+                 # offsets: log(Delta) accounting for bin width, gam_offsets
+                 # for weighted observations
+                 offset(log(Delta)),
+               family = poisson(), method = "REML", data = dta_mixed)
+
+### Functions using S3 Predict.matrix-method for class 'mdspline.smooth' are, e.g.,
+### model.matrix and predict
+
+# Using model.matrix (and internally Predict.matrix.mdspline.smooth) to extract
+# design matrix and construct estimated densities thereof
+X <- model.matrix(m_mixed)
+# The design matrix includes intercepts per covariate combination modeling the
+# absolute counts for the Poisson model, which are not of interest on density-level.
+# Thus, we remove them.
+intercepts <- which(grepl("group_id", colnames(X)))
+X <- X[, -intercepts]
+theta_hat <- m_mixed$coefficients[-intercepts]
+# compute estimated conditional clr-transformed densities
+f_hat_clr <- matrix(c(X \%*\% theta_hat), nrow = length(unique(dta_mixed$obs_density)))
+f_hat <- apply(f_hat_clr, 2,
+               FDboost::clr, w = c(1, rep(1/n_bins, n_bins), 1), inverse = TRUE)
+t <- unique(dta_mixed$obs_density)
+matplot(t[2:(length(t) - 1)], f_hat[2:(length(t) - 1), ], type = "l",
+        col = rainbow(ncol(f_hat)), lty = rep(1:5, ceiling(ncol(f_hat) / 5)),
+        ylim = range(f_hat))
+matpoints(t[c(1, length(t))], f_hat[c(1, length(t)), ],
+          col = rainbow(ncol(f_hat)), pch = 1)
+
+# Using predict (and internally Predict.matrix.mdspline.smooth) to extract
+# estimated partial effects
+pred_terms <- predict(m_mixed, type = "terms")
+}
+
+}
 \references{
-Maier, E. M., Fottner, A., Stoecker, A., Okhrin, Y., & Greven, S. (2023):
+Maier, E.-M., Fottner, A., Stoecker, A., Okhrin, Y., & Greven, S. (2025b):
 Conditional density regression for individual-level data.
+arXiv preprint arXiv:XXXX.XXXXX.
 }
 \author{
 Eva-Maria Maier, Alexander Fottner

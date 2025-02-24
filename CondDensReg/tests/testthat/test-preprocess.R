@@ -1,4 +1,4 @@
-library(testthat)
+# library(testthat)
 
 # used to break weighted counts into weighted samples
 break_sum <- function(summ, n) {
@@ -99,9 +99,9 @@ test_that("Scenario A", {
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
     preprocess(
-      original,
+      dta = original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_width = interval_widths ,
       values_discrete = discrete_values,
@@ -208,7 +208,7 @@ test_that("Scenario B", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_number = bin_number,
       values_discrete = discrete_values,
@@ -299,7 +299,7 @@ test_that("Scenario C", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_number = bin_number,
       values_discrete = FALSE,
@@ -310,7 +310,7 @@ test_that("Scenario C", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_width = interval_width,
       values_discrete = FALSE,
@@ -321,7 +321,7 @@ test_that("Scenario C", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_number = bin_number,
       bin_width = interval_width,
@@ -421,7 +421,7 @@ test_that("Scenario D", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       values_discrete = discrete_values,
       weights_discrete = weights_discrete ,
@@ -530,7 +530,7 @@ test_that("Scenario E", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       bin_width = interval_widths,
       values_discrete = discrete_values,
       weights_discrete = weights_discrete ,
@@ -633,7 +633,7 @@ test_that("Scenario F", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       sample_weights = 4,
       bin_width = interval_widths ,
       values_discrete = discrete_values,
@@ -705,7 +705,7 @@ test_that("Szenatio G", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       bin_width = 0.5 ,
       values_discrete = c(0, 0.25, 1)
     )
@@ -729,7 +729,7 @@ test_that("Szenatio G", {
     preprocess(
       original,
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       bin_width = 0.5 ,
       values_discrete = c(0, 0.25, 1)
     )
@@ -747,31 +747,31 @@ test_that("Errors", {
     preprocess(
       "hhha",
       var_vec = c(2:3),
-      density_var = 1,
+      y = 1,
       bin_width = 0.01 ,
       values_discrete = discrete_values,
       domain_continuous = continous_domain
     )
   )
-  # invalid type of density_var
+  # invalid type of y
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = FALSE,
+    y = FALSE,
     bin_width = 0.01
   ))
   # invalid type of var_vec
   expect_error(preprocess(
     dt,
     var_vec = FALSE,
-    density_var = 3,
+    y = 3,
     bin_width = 0.01
   ))
   # invalid type of sample_weights
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = 3,
+    y = 3,
     sample_weights = FALSE,
     bin_width = 0.01
   ))
@@ -779,21 +779,21 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = 3,
+    y = 3,
     bin_width = FALSE
   ))
   # invalid type of bin_number
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = 3,
+    y = 3,
     bin_number = FALSE
   ))
   # invalid type of values_discrete
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = 3,
+    y = 3,
     bin_number = 10,
     values_discrete = "hhh"
   ))
@@ -802,7 +802,7 @@ test_that("Errors", {
     preprocess(
       dt,
       var_vec = c(1, 2),
-      density_var = 3,
+      y = 3,
       bin_number = 10,
       domain_continuous = "hhh"
     )
@@ -811,7 +811,7 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = c(1, 2),
-    density_var = 3,
+    y = 3,
     bin_number = 10,
     weights_discrete =  "hhh"
   ))
@@ -819,21 +819,21 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = c("nichtDrin"),
-    density_var = 3,
+    y = 3,
     bin_number = 10
   ))
-  # invalid column name in density_var
+  # invalid column name in y
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = c("nichtDrin"),
+    y = c("nichtDrin"),
     bin_number = 10
   ))
   # invalid column name in sample_weights
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     sample_weights = c("nichtDrin"),
     bin_number = 10
   ))
@@ -842,7 +842,7 @@ test_that("Errors", {
     preprocess(
       dt,
       var_vec = 1,
-      density_var = 2,
+      y = 2,
       bin_number = 10,
       values_discrete = FALSE,
       domain_continuous = FALSE
@@ -852,7 +852,7 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     bin_number = 10,
     bin_width = c(22, 2)
   ))
@@ -860,7 +860,7 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     bin_number = 10,
     bin_width = 22
   ))
@@ -868,21 +868,21 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = 5,
-    density_var = 3,
+    y = 3,
     bin_number = 10
   ))
-  # column index of density_var out of range
+  # column index of y out of range
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 5,
+    y = 5,
     bin_number = 10
   ))
   # column index of sample_weights of range
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     sample_weights = 5,
     bin_number = 10
   ))
@@ -891,7 +891,7 @@ test_that("Errors", {
     preprocess(
       dt,
       var_vec = 1,
-      density_var = 2,
+      y = 2,
       values_discrete = c(0, 1),
       weights_discrete = c(1, 2, 3)
     )
@@ -900,28 +900,28 @@ test_that("Errors", {
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     values_discrete = c(0, 10)
   ))
   # values of response out of continuous_domain range (data frame)
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
    domain_continuous = c(0, 1)
   ))
   # bin_width incompatible with continuous_domain
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     bin_width  = c(19, 10, 10, 10)
   ))
   # non-positive weights_discrete
   expect_error(preprocess(
     dt,
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     weights_discrete = -20,
     domain_continuous = c(0,10)
   ))
@@ -929,7 +929,7 @@ test_that("Errors", {
   expect_error(preprocess(
     as.data.table(dt),
     var_vec = 1,
-    density_var = 2,
+    y = 2,
     domain_continuous = c(0,1)
   ))
 })

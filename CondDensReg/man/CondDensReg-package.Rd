@@ -2,8 +2,8 @@
 % Please edit documentation in R/CondDensReg-package.R
 \docType{package}
 \name{CondDensReg-package}
+\alias{CondDensReg}
 \alias{CondDensReg-package}
-\alias{_PACKAGE}
 \alias{CondDensReg_package}
 \alias{package-CondDensReg}
 \title{CondDensReg: Conditional density regression for individual-level data}

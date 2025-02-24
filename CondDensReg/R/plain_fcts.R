@@ -1,6 +1,3 @@
-
-
-
 ################################################################################
 ######################## Functions to get model effects ########################
 ################################################################################
@@ -50,22 +47,18 @@ get_single_effects <- function(pred_terms, positions, G = 400) {
 # Return:
 # list of vectors named with the respective effect
 
-get_smooth_effects <-
-  function(pred_terms,
-           positions,
-           G = 400,
-           cols_in_origData,
-           origData) {
-    estimated_effects = list()
+get_smooth_effects <- function(pred_terms, positions, G = 400, cols_in_origData,
+                               origData) {
+    estimated_effects <- list()
     if (is.list(cols_in_origData)) {
       j <- 1
       for (i in c(1:length(cols_in_origData))) {
         if (length(cols_in_origData[[i]]) == 1) {
           effect <- matrix(pred_terms[, positions[j]], nrow = G)
           groupID_index <-
-            unique(origData %>% select(group_id, cols_in_origData[[i]]))
+            unique(origData %>% dplyr::select(group_id, cols_in_origData[[i]]))
           groupID_index$ind <- c(1:ncol(effect))
-          uniq_ind <- unique(groupID_index %>% select(2, ind))
+          uniq_ind <- unique(groupID_index %>% dplyr::select(2, ind))
           uniq_ind <- uniq_ind[!duplicated(uniq_ind[, 1]), ]
           uniq_ind <- uniq_ind[order(uniq_ind[, 1]), ]
           effect <- effect[, uniq_ind$ind]
@@ -73,16 +66,16 @@ get_smooth_effects <-
           j <- j + 1
         }
         if (length(cols_in_origData[[i]]) == 2) {
-          n_levels <- nrow(unique(origData %>% select(cols_in_origData[[i]][2])))
+          n_levels <- nrow(unique(origData %>% dplyr::select(cols_in_origData[[i]][2])))
           for (k in (2:n_levels)) {
             x <- cols_in_origData[[i]][2]
-            lev <- origData %>% select(all_of(x)) %>% sapply(levels)
+            lev <- origData %>% dplyr::select(all_of(x)) %>% sapply(levels)
             effect <- matrix(pred_terms[, positions[j]], nrow = G)
             groupID_index <-
-              unique(origData %>% select(group_id, cols_in_origData[[i]][1], cols_in_origData[[i]][2]))
+              unique(origData %>% dplyr::select(group_id, cols_in_origData[[i]][1], cols_in_origData[[i]][2]))
             groupID_index$ind <- c(1:ncol(effect))
-            groupID_index <- groupID_index %>% filter(.[[3]] == lev[k])
-            uniq_ind <- unique(groupID_index %>% select(2, ind))
+            groupID_index <- groupID_index %>% dplyr::filter(.[[3]] == lev[k])
+            uniq_ind <- unique(groupID_index %>% dplyr::select(2, ind))
             uniq_ind <- uniq_ind[!duplicated(uniq_ind[, 1]), ]
             uniq_ind <- uniq_ind[order(uniq_ind[, 1]), ]
             effect <- effect[, uniq_ind$ind]
@@ -94,23 +87,23 @@ get_smooth_effects <-
           if (cols_in_origData[[i]][3] == "cont")
           {
             n_levels <-
-              nrow(unique(origData %>% select(
+              nrow(unique(origData %>% dplyr::select(
                 as.numeric(cols_in_origData[[i]][2])
               )))
             x <- as.numeric(cols_in_origData[[i]][2])
-            lev <- origData %>% select(all_of(x)) %>% sapply(unique)
+            lev <- origData %>% dplyr::select(all_of(x)) %>% sapply(unique)
             effect <- matrix(pred_terms[, positions[j]], nrow = G)
             to_select <- c()
             for (k in (1:n_levels)) {
               groupID_index <-
-                unique(origData %>% select(
+                unique(origData %>% dplyr::select(
                   group_id,
                   as.numeric(cols_in_origData[[i]][1]),
                   as.numeric(cols_in_origData[[i]][2])
                 ))
               groupID_index$ind <- c(1:ncol(effect))
-              groupID_index <- groupID_index %>% filter(.[[3]] == lev[k])
-              uniq_ind <- unique(groupID_index %>% select(2, ind))
+              groupID_index <- groupID_index %>% dplyr::filter(.[[3]] == lev[k])
+              uniq_ind <- unique(groupID_index %>% dplyr::select(2, ind))
               uniq_ind <- uniq_ind[!duplicated(uniq_ind[, 1]), ]
               uniq_ind <- uniq_ind[order(uniq_ind[, 1]), ]
               to_select <- append(to_select, uniq_ind$ind)
@@ -139,16 +132,16 @@ get_smooth_effects <-
             j <- j + 1
             }
             else{
-              n_levels <- nrow(unique(origData %>% select(as.numeric(cols_in_origData[[i]][length(cols_in_origData[[i]])-1]))))
+              n_levels <- nrow(unique(origData %>% dplyr::select(as.numeric(cols_in_origData[[i]][length(cols_in_origData[[i]])-1]))))
               for (k in (2:n_levels)) {
 
                 x <- as.numeric(cols_in_origData[[i]][length(cols_in_origData[[i]])-1])
-                lev <- origData %>% select(all_of(x)) %>% sapply(levels)
+                lev <- origData %>% dplyr::select(all_of(x)) %>% sapply(levels)
                 effect <- matrix(pred_terms[, positions[j]], nrow = G)
                 groupID_index <-
-                  unique(origData %>% select(group_id, as.numeric(cols_in_origData[[i]][1:(length(cols_in_origData[[i]])-1)])))
+                  unique(origData %>% dplyr::select(group_id, as.numeric(cols_in_origData[[i]][1:(length(cols_in_origData[[i]])-1)])))
                 groupID_index$ind <- c(1:ncol(effect))
-                groupID_index <- groupID_index %>% filter(.[[length(cols_in_origData[[i]])]] == lev[k])
+                groupID_index <- groupID_index %>% dplyr::filter(.[[length(cols_in_origData[[i]])]] == lev[k])
                 to_select <- c()
                 for (covCol in rev(2:(length(cols_in_origData[[i]]) -
                                   1))) {
@@ -166,14 +159,13 @@ get_smooth_effects <-
           }
         }
       }
-    }
-    else{
+    } else {
       for (i in c(1:length(positions))) {
         effect <- matrix(pred_terms[, positions[i]], nrow = G)
         groupID_index <-
-          unique(origData %>% select(group_id, cols_in_origData[i]))
+          unique(origData %>% dplyr::select(group_id, cols_in_origData[i]))
         groupID_index$ind <- c(1:ncol(effect))
-        uniq_ind <- unique(groupID_index %>% select(2, ind))
+        uniq_ind <- unique(groupID_index %>% dplyr::select(2, ind))
         uniq_ind <- uniq_ind[!duplicated(uniq_ind[, 1]), ]
         uniq_ind <- uniq_ind[order(uniq_ind[, 1]), ]
         effect <- effect[, uniq_ind$ind]
@@ -191,7 +183,7 @@ get_smooth_effects <-
 # model: gam model object
 # pred_terms: optional if already predicted
 # G: number of bins for continuous component
-# positions_singles: column positions of the group specificintercepts of interest in pred_terms
+# positions_singles: column positions of the group-specific intercepts of interest in pred_terms
 # positions_smooths: column positions of the smooth effects of interest in pred_terms
 # smooth_cols: vector column numbers in origData of the in the smooth effects included covariates,
 #                   for interaction effects the last element of the vector is "inter"
@@ -219,7 +211,7 @@ get_estimated_model_effects <-
            weights_discrete = FALSE) {
     # Package to fit functional regression models
     if (is.null(pred_terms)) {
-      pred_terms <- predict(model, type = "terms")
+      pred_terms <- stats::predict(model, type = "terms")
     }
     if (isFALSE(values_discrete)) {
       values_discrete <- NULL
@@ -388,31 +380,35 @@ get_estimated_model_effects <-
 
 
 
-
-# PLOT FOR CONTINUOUS MODELS
-# plot_densities is used to plot response densities and predictions (Bayes- and
-# clr-level) for our model.
-# Arguments:
-# dens_matrix: matrix with each column containing the density values of one covariable combination
-# pdf: boolean value indicating if the plot shall be saved (as pdf)
-# name, width, height, path: indicating the name (with the respective path),
-#   width and height of the file, if pdf = TRUE;
-#   if NULL, name is created automatically out of the name of the matrix given to
-#   dens_matrix
-# color, ylim, lty, main, ylab: specify the color gradient (each year corresponds
-#   to one color), ylim, the line type, the main, and the y-axis limits of the plot
-# G: position of the grid points, where the densities are evaluated
-# domain_continuous
-# breaks_x, breaks_y
-# xlab, ylab: names for x and y axis
-# single: boolean if all curves should be plotted in one plot
-# axes, axis_labels: if single=FALSE, should every plot have its own x-axis and label
-# breaks_x, breaks_y: breaks for the axes
-# legend_names: names for the different levels in the legend
-# legend_title: legend title
-# monochrome: boolean if all curves should be plotted in the same color if single=TRUE
-# ncol: number of columns if single=FALSE for the plot grid
-# ...: Further arguments passed to matplot/plot (e.g. las, etc.)
+#' PLOT FOR CONTINUOUS MODELS
+#'
+#' plot_densities is used to plot response densities and predictions (Bayes- and
+#' clr-level) for our model.
+#'
+#' @noRd
+#'
+#' @encoding UTF-8
+#'
+#' @param dens_matrix matrix with each column containing the density values of one covariable combination
+#' @param pdf boolean value indicating if the plot shall be saved (as pdf)
+#' @param name, width, height, path indicating the name (with the respective path),
+#'   width and height of the file, if pdf = TRUE;
+#'   if NULL, name is created automatically out of the name of the matrix given to
+#'   dens_matrix
+#' @param color, ylim, lty, main, ylab specify the color gradient (each year corresponds
+#'   to one color), ylim, the line type, the main, and the y-axis limits of the plot
+#' @param G position of the grid points, where the densities are evaluated
+#' domain_continuous
+#' @param breaks_x, breaks_y
+#' @param xlab, ylab names for x and y axis
+#' @param single boolean if all curves should be plotted in one plot
+#' @param axes, axis_labels if single=FALSE, should every plot have its own x-axis and label
+#' @param breaks_x, breaks_y breaks for the axes
+#' @param legend_names names for the different levels in the legend
+#' @param legend_title legend title
+#' @param monochrome boolean if all curves should be plotted in the same color if single=TRUE
+#' @param ncol number of columns if single=FALSE for the plot grid
+#' @param ... Further arguments passed to matplot/plot (e.g. las, etc.)
 
 plot_densities <- function(dens_matrix,
                            pdf = FALSE,
@@ -870,7 +866,7 @@ plot_histo_and_dens <- function(dta,
                       main = main,
                       automatic_main = automatic_main,
                       case = "continuous")
-  lines(t, dens, col = "red")
+  graphics::lines(t, dens, col = "red")
 }
 
 
@@ -914,8 +910,8 @@ plot_histo_and_dens_mixed <- function(dta,
         ylim = c(0, max(dta$height, dens)),
         xaxt = "n"
       )
-    lines(t[-discrete_ind], dens[-discrete_ind], col = "blue")
-    points(
+    graphics::lines(t[-discrete_ind], dens[-discrete_ind], col = "blue")
+    graphics::points(
       t[discrete_ind],
       y = dens[discrete_ind],
       type = "p",
@@ -943,8 +939,8 @@ plot_histo_and_dens_mixed <- function(dta,
         ylim = c(0, max(dta$height, dens)),
         xaxt = "n"
       )
-    lines(t[-discrete_ind], dens[-discrete_ind], col = "blue")
-    points(
+    graphics::lines(t[-discrete_ind], dens[-discrete_ind], col = "blue")
+    graphics::points(
       t[discrete_ind],
       y = dens[discrete_ind],
       type = "p",
@@ -985,7 +981,7 @@ plot_histo_and_dens_discrete <- function(dta,
         xaxt = "n",
         case = "discrete"
       )
-    points(
+    graphics::points(
       t,
       y = dens,
       type = "p",
@@ -1007,7 +1003,7 @@ plot_histo_and_dens_discrete <- function(dta,
         xaxt = "n",
         case = "discrete"
       )
-    points(
+    graphics::points(
       t,
       y = dens,
       type = "p",
@@ -1025,7 +1021,7 @@ interactive_histo_and_dens <- function(dta, dens, G, domain, ...)
 {
   manipulate(
     plot_histo_and_dens(
-      dta %>% filter(group_id == k),
+      dta %>% dplyr::filter(group_id == k),
       dens[, k],
       automatic_main = FALSE,
       main = paste("Group-ID", k),
@@ -1047,7 +1043,7 @@ interactive_histo_and_dens_mixed <-
   {
     manipulate(
       plot_histo_and_dens_mixed(
-        dta %>% filter(group_id == k),
+        dta %>% dplyr::filter(group_id == k),
         dens[, k],
         automatic_main = FALSE,
         main = paste("Group-ID", k),
@@ -1070,7 +1066,7 @@ interactive_histo_and_dens_discrete <-
   {
     manipulate(
       plot_histo_and_dens_discrete(
-        dta %>% filter(group_id == k),
+        dta %>% dplyr::filter(group_id == k),
         dens[, k],
         automatic_main = FALSE,
         main = paste("Group-ID", k),
