@@ -277,7 +277,7 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
     }
     discrete_dim <- 0
     design_discrete <- Z_discrete <- D_discrete <- NULL
-  } else if (!continuous) {
+  } else if (!continuous) { # discrete case
     if (any(!(x %in% t_discrete))) {
       stop("Given domain (which is discrete) does not include all observations!")
     }
@@ -446,10 +446,10 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
   }
 
   object$S <- list(S)
-  object$rank <- ifelse(is.null(object$xt$penalty_discrete), cont_dim - m[2],
-                        ifelse(object$xt$penalty_discrete == 0,
-                               cont_dim - m[2] + discrete_dim - 1, # we loose one dimension when applying constraint
-                               cont_dim - m[2] + discrete_dim - object$xt$penalty_discrete))
+  object$rank <- Matrix::rankMatrix(S)[1]
+  if (length(object$S) != 1) {
+    warning("Length of penalties does not match length of marginals (which should be one)")
+  }
   object$null.space.dim <- ifelse(is.null(object$xt$penalty_discrete), m[2],
                                   m[2] + object$xt$penalty_discrete)
   if (continuous) {
