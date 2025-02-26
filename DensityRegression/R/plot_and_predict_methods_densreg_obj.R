@@ -1,8 +1,8 @@
 #' Plot function for conditional density regression models
 #'
-#' \code{plot.dens_reg_obj} is the default plot method for data of the class \code{dens_reg_obj}.
+#' \code{plot.densreg_obj} is the default plot method for data of the class \code{densreg_obj}.
 #' @encoding UTF-8
-#' @param x \code{dens_reg_obj}-object, i.e. the output of the \code{dens_reg}-function.
+#' @param x \code{densreg_obj}-object, i.e. the output of the \code{densreg}-function.
 #' @param type "histo" or "effects": If \code{type = "histo"}, the underlying
 #' histogram and the estimated conditional density is plotted for each unique
 #' covariate combination. If \code{type = "effects"} the different partial effects
@@ -22,7 +22,7 @@
 #' for the first, middle and last row are displayed.
 #' @param pick_sites Vector of integers from 1 to 6. Indicates for \code{type = "effects"}
 #' if only certain effects should be plotted. Number corresponds to the order of
-#' the different effect types in the argument of \code{dens_reg}. If missing
+#' the different effect types in the argument of \code{densreg}. If missing
 #' (\code{NULL}) all included effects are plotted.
 #' @param predict If plots for certain covariate values are desired, \code{predict}
 #' has to be a data frame with new data in form of a data table with columns named
@@ -36,9 +36,9 @@
 #' @return Plot(s) as specified.
 #' @examples
 #'
-#' \donttest{# please run the examples of dens_reg to estimate the needed models
+#' \donttest{# please run the examples of densreg to estimate the needed models
 #'
-#' example("dens_reg")
+#' example("densreg")
 #'
 #' #' # create new data for predict
 #'
@@ -81,7 +81,7 @@
 #'
 #' @noRd
 
-plot.dens_reg_obj <- function(x, type = "histo", interactive = FALSE,
+plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                               level = "pdf", display_all = TRUE, pick_sites = FALSE,
                               predict = NULL, terms = NULL, ...) {
   obj <- x
@@ -2740,9 +2740,9 @@ plot.dens_reg_obj <- function(x, type = "histo", interactive = FALSE,
 
 #' Predict function for conditonal density regression models
 #'
-#' \code{predict.dens_reg_obj} is the default predict method for data of the class \code{dens_reg_obj}.
+#' \code{predict.densreg_obj} is the default predict method for data of the class \code{densreg_obj}.
 
-#' @param object \code{dens_reg_obj}-object, i.e. the output of the \code{dens_reg}-function.
+#' @param object \code{densreg_obj}-object, i.e. the output of the \code{densreg}-function.
 #' @param new_data New data in form of a data table with columns named as the relevant covariates for the terms which should be predicted. In each row, the user can specify a value of the respective covariate. If not specyfied (\code{NULL}) the values of the original data set (see object$count_data) are used for the predictions.
 #' @param which Only terms (or their index number) named in this array will be predicted. Covariates only needed for these terms have to be given in \code{new_data}. If \code{which} and \code{exclude} are given, \code{exclude} will be used.
 #' @param exclude Terms (or their index number) named in this array will not be predicted. Covariates only needed for terms which are excluded do not have to be given in \code{new_data}. If \code{which} and \code{exclude} are given, \code{exclude} will be used.
@@ -2753,9 +2753,9 @@ plot.dens_reg_obj <- function(x, type = "histo", interactive = FALSE,
 #'A matrix with columns for the different covariate combinations if \code{type = "pdf"} or \code{ = "clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
 #' @examples
 #'
-#' \donttest{# please run the examples of dens_reg to estimate the needed models
+#' \donttest{# please run the examples of densreg to estimate the needed models
 #'
-#' example("dens_reg")
+#' example("densreg")
 #'
 #' # see names of the models' terms
 #' sapply(m_mixed$model$smooth, "[[",  "label")
@@ -2787,7 +2787,7 @@ plot.dens_reg_obj <- function(x, type = "histo", interactive = FALSE,
 #' }
 #'
 #' @noRd
-predict.dens_reg_obj <-
+predict.densreg_obj <-
   function(object,
            new_data = NULL,
            which = NULL,

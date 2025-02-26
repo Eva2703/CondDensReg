@@ -4,7 +4,7 @@
 .Ruserdata
 SOEP_model_with_densReg.R
 data_prep.R
-dens_reg_script.R
+densreg_script.R
 income_share_data.rds
 run_examples.R
 try_new_preprocess.R

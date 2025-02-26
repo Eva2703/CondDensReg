@@ -2,12 +2,12 @@
 #'
 #' \code{\link{plot_single_histo}} can display the resulting
 #' histogram or bar plot of a subset of data which was prepared by
-#' \code{\link{preprocess}} which contains a vector of (weighted)
+#' \code{\link{data2counts}} which contains a vector of (weighted)
 #' counts via a histogram on \eqn{I\setminus D} and (weighted) counts on \eqn{D}
 #' where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of
 #' discrete values. It is meant to take only one group, i.e., one of the different
 #' covariate combinations, into account. If no sample weights were included in the
-#' data in the \code{\link{preprocess}}-step, the unweighted counts
+#' data in the \code{\link{data2counts}}-step, the unweighted counts
 #' are used instead of weighted counts.
 #'
 #' @encoding UTF-8
@@ -16,7 +16,7 @@
 #' @importFrom Rdpack reprompt
 #' @param dta \code{data.table}-object which is an object of the sub-class
 #' \code{histogram_count_data}, i.e., the output of the
-#' \code{\link{preprocess}}-function. Subset in such a way, that
+#' \code{\link{data2counts}}-function. Subset in such a way, that
 #' only one covariate combination, i.e. one \code{group_id} is contained.
 #' @param case Plotting case as a \code{character}-object: can be specified as
 #' "all", "continuous" or "discrete". Determines the components of the data which
@@ -24,7 +24,7 @@
 #' plots the bins displaying data of the continuous domain \eqn{I} and "discrete"
 #' shows only bins displaying the counts of the respective discrete values in \eqn{D}.
 #' Please note that the plotting case is not the same as the specification of the
-#' case in \code{\link{preprocess}} where the bins and discrete values
+#' case in \code{\link{data2counts}} where the bins and discrete values
 #' are defined. If the case is not "all" and \code{hist} is TRUE, the sum of the
 #' areas under the bins and the discrete bars is not one. If missing (\code{NULL}),
 #' the default is "all".
@@ -89,7 +89,7 @@
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains.
 #'
-#' histo_data <- preprocess(
+#' histo_data <- data2counts(
 #' dta,
 #' var_vec = c("covariate1", "covariate2"),
 #' y = "obs_density",
@@ -143,7 +143,7 @@ plot_single_histo <- function(dta, case = "all", abs = FALSE, main = NULL,
   # initialize important variables
   n_bins <- sum((!dta$discrete))
   x_values_discrete <- NULL
-  # if preprocess was not weighted, dta has no column "weighted_counts"
+  # if data2counts was not weighted, dta has no column "weighted_counts"
   # find names and values of response variable and covariate columns for both cases
   if ("weighted_counts" %in% colnames(dta)) {
     values_discrete <- distinct(dta[dta$discrete, 3])
@@ -681,7 +681,7 @@ plot_single_histo <- function(dta, case = "all", abs = FALSE, main = NULL,
 #' @import cowplot
 #' @import grid
 #' @param dta \code{data.table}-object which is also an object of the sub-class
-#' \code{histogram_count_data}, i.e., the output of the \code{\link{preprocess}}-function.
+#' \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function.
 #' Subset in such a way, that only one covariate combination, i.e. one \code{group_id}
 #' is contained.
 #' @param selected_groups Numeric vector of \code{group_id}s for which the respective
@@ -699,7 +699,7 @@ plot_single_histo <- function(dta, case = "all", abs = FALSE, main = NULL,
 #' plots the bins displaying data of the continuous domain \eqn{I} and "discrete"
 #' shows only bins displaying the counts of the respective discrete values in \eqn{D}.
 #' Please note that the plotting case is not the same as the specification of the
-#' case in \code{\link{preprocess}} where the bins and discrete values are defined.
+#' case in \code{\link{data2counts}} where the bins and discrete values are defined.
 #' If the case is not "all" and \code{hist} is TRUE, the sum of the areas under the
 #' bins and the discrete bars is not one. If missing (\code{NULL}), the default is "all".
 #' @param abs \code{logical} which determines if the resulting plot shows the absolute,
@@ -781,7 +781,7 @@ plot_single_histo <- function(dta, case = "all", abs = FALSE, main = NULL,
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains.
 #'
-#' histo_data <- preprocess(
+#' histo_data <- data2counts(
 #' dta,
 #' var_vec = c("covariate1", "covariate2"),
 #' y = "obs_density",
@@ -934,16 +934,16 @@ save_plots <- function(dta, selected_groups = unique(dta$group_id), single = TRU
 
 #' Interactive application for plots for all covariate combinations
 #'
-#' \code{interactive_plots} creates for all groups, i.e., all different covariate combinations considered in the data, a plot based on  \code{\link{plot_single_histo}} and integrates them in an interactive application where the user can select a \code{group_id} with a slider. All specified parameters will be passed to \code{\link{plot_single_histo}}. \code{interactive_plots} is also used as default plotting method for data of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{preprocess}}-function.
+#' \code{interactive_plots} creates for all groups, i.e., all different covariate combinations considered in the data, a plot based on  \code{\link{plot_single_histo}} and integrates them in an interactive application where the user can select a \code{group_id} with a slider. All specified parameters will be passed to \code{\link{plot_single_histo}}. \code{interactive_plots} is also used as default plotting method for data of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function.
 #' @encoding UTF-8
 #' @importFrom dplyr "%>%" arrange mutate filter select distinct
 #' @import data.table
 #' @import stringr
 #' @import manipulate
 #' @importFrom Rdpack reprompt
-#' @param dta \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{preprocess}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
+#' @param dta \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
 #' @param selected_groups Numeric vector of \code{group_id}s for which the respective plots will be created and included in the interactive plot. If missing (\code{NULL}) plots of all groups within the range of the minimum and maximum \code{group_id} will be included.
-#' @param case Plotting case as a \code{character}-object: can be specified as "all", "continuous" or "discrete". Determines the components of the data which will be plotted: "all" leads to a plot of the complete data, "continuous" only plots the bins displaying data of the continuous domain \eqn{I} and "discrete" shows only bins displaying the counts of the respective discrete values in \eqn{D}. Please note that the plotting case is not the same as the specification of the case in \code{\link{preprocess}} where the bins and discrete values are defined. If the case is not "all" and \code{hist} is TRUE, the sum of the areas under the bins and the discrete bars is not one. If missing (\code{NULL}), the default is "all".
+#' @param case Plotting case as a \code{character}-object: can be specified as "all", "continuous" or "discrete". Determines the components of the data which will be plotted: "all" leads to a plot of the complete data, "continuous" only plots the bins displaying data of the continuous domain \eqn{I} and "discrete" shows only bins displaying the counts of the respective discrete values in \eqn{D}. Please note that the plotting case is not the same as the specification of the case in \code{\link{data2counts}} where the bins and discrete values are defined. If the case is not "all" and \code{hist} is TRUE, the sum of the areas under the bins and the discrete bars is not one. If missing (\code{NULL}), the default is "all".
 #' @param abs \code{logical} which determines if the resulting plot shows the absolute, (weighted) counts (\code{abs=TRUE}) or the relative frequencies of the weighed counts (\code{abs=FALSE}). If missing (\code{NULL}), the default is \code{FALSE}.
 #' @param main Optional \code{character} passing a user-defined main title for the resulting plot. If missing (\code{NULL}), the main will be generated automatically, see also \code{automatic_main}.
 #' @param automatic_main \code{logical} determining the automatic generation of a main title for the plot which contains the number of bins, the plot case defined by \code{case}, the values of the respective covariate combination and the group_id. If \code{TRUE} and a user-defined \code{main} is passed, the automatic main is overwriting the passed main. If missing (\code{NULL}), the default is \code{TRUE}.
@@ -974,7 +974,7 @@ save_plots <- function(dta, selected_groups = unique(dta$group_id), single = TRU
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains.
 #'
-#' histo_data <- preprocess(
+#' histo_data <- data2counts(
 #' dta,
 #' var_vec = c("covariate1", "covariate2"),
 #' y = "obs_density",
@@ -1046,7 +1046,7 @@ interactive_plots <- function(dta, selected_groups = unique(dta$group_id), case 
 #'
 #' \code{plot.histogram_count_data} is the default plot method for data of the class \code{histogram_count_data}. It is using the function \code{interactive_plots} with its default parameters, i.e. it is creating an interactive plot of the frequencies of the respective (weighted) counts with histograms on \eqn{I\setminus D} and of the counts on \eqn{D} with simple bars where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of discrete values.. In the plot the areas under the bins and the height of discrete bars times the respective weight of the discrete dirac measure sum up to one.
 #' @encoding UTF-8
-#' @param x \code{data.table}-object which is an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{preprocess}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
+#' @param x \code{data.table}-object which is an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
 #' @param ... Further parameters passed to \code{interactive_plots}.
 #' @return Interactive plot displaying all histograms for the contained groups where the respective \code{group_id} is selectable with a slider. The display of mixed case count (histogram) data is as considered in the work of Maier et al. (2025b).
 #'
@@ -1076,7 +1076,7 @@ interactive_plots <- function(dta, selected_groups = unique(dta$group_id), case 
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains.
 #'
-#' histo_data <- preprocess(
+#' histo_data <- data2counts(
 #' dta,
 #' var_vec = c("covariate1", "covariate2"),
 #' y = "obs_density",

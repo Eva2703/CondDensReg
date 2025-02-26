@@ -8,18 +8,18 @@
 #' based on observations \eqn{y_i} from the conditional distributions given
 #' \eqn{x_i}, via a (penalized) maximum likelihood approach. The (penalized)
 #' log-likelihood function is approximated via the (penalized) log-likelihood of
-#' an appropriate poisson regression model, which (after constructing the count
-#' data appropriately) is then fitted using \code{mgcv}'s \code{\link[mgcv]{gam}}
-#' with a new smooth for mixed densities in \eqn{L^2_0(\mu)}.
-#' We briefly summarize the approach below in the details.
-#' % to enable proper description of the function.
+#' an appropriate poisson regression model, which - after constructing the count
+#' data appropriately via \code{\link{data2counts}} - is fitted using
+#' \code{mgcv}'s \code{\link[mgcv]{gam}} with a new smooth term \code{bs="md"}
+#' (see \code{\link{smooth.construct.md.smooth.spec}}) for mixed densities in
+#' \eqn{L^2_0(\mu)}. We briefly summarize the approach below in the details.
 #' Please see Maier et al. (2025b) for comprehensive description.
 #'
-#' The function \code{dens_reg} estimates the densities \eqn{f_{x_i}} of
-#' conditional distributions of random variables \eqn{Y_i | x_i} from independent
-#' observations \eqn{(y_i, x_i)}, where \eqn{y_i} are realizations of \eqn{Y_i | x_i},
-#' and \eqn{x_i} is a vector of covariate observations, \eqn{i = 1, ..., N}. The
-#' densities are considered as elements of a mixed Bayes Hilbert space
+#' The function \code{densreg} estimates the densities \eqn{f_{x_i}} of
+#' conditional distributions of random variables \eqn{Y_i ~|~ x_i}{Y_i | x_i}
+#' from independent observations \eqn{(y_i, x_i)}, where \eqn{y_i} are realizations
+#' of \eqn{Y_i ~|~ x_i}{Y_i | x_i}, and \eqn{x_i} is a vector of covariate observations,
+#' \eqn{i = 1, ..., N}. The densities are considered as elements of a mixed Bayes Hilbert space
 #' \eqn{B^2(\mu) = B^2(\mathcal{Y}, \mathcal{A}, \mu)}{B^2(\mu) = B^2(Y, A, \mu)}
 #' (including continuous and discrete ones as special cases). The subset of the
 #' domain \eqn{\mathcal{Y}}{Y} corresponding to the continuous part of the densities
@@ -30,7 +30,7 @@
 #' with partial effects \eqn{h_j (x_i) \in B^2(\mu)} depending on no, one, or
 #' several covariates \eqn{x_i}. Each partial effect is represented using a
 #' tensor product basis, consisting of an appropriate vector of basis functions
-#' \eqn{b_{\mathcal{Y}}{b_Y}}{b_Y} in \eqn{B^2(\mu)} over the domain of
+#' \eqn{b_{\mathcal{Y}}{b_Y}} in \eqn{B^2(\mu)} over the domain of
 #' \eqn{B^2(\mu)}, and a vector of basis functions \eqn{b_{\mathcal{X}, j}}{b_{X, j}}
 #' over the respective covariates.
 #' To obtain basis functions \eqn{b_{\mathcal{Y}}}{b_Y} consider the orthogonal
@@ -63,13 +63,14 @@
 #' corresponding multinomial model, which can equivalently be estimated by a
 #' Poisson model. The data for these models is obtained from the original
 #' observations \eqn{y_1, ..., y_N} by combining all observations of the same
-#' conditional distribution into a vector of counts via a histogram on the
+#' conditional distribution (i.e., all observations sharing identical
+#' values in all covariates) into a vector of counts via a histogram on the
 #' continuous part of the domain of the densities and counts on the discrete
 #' part of the domain. For details, see Maier et al. (2025b).
-#' \code{dens_reg} constructs the respective count data from the individual
-#' observations and estimates the corresponding Poisson model. Furthermore, the
-#' resulting densities on pdf- and clr-level as well as the estimated partial
-#' effects on both levels are calculated.
+#' \code{densreg} calls \code{\link{data2counts}} to constructs the respective
+#' count data from the individual observations and estimates the corresponding
+#' Poisson model. Furthermore, the resulting densities on pdf- and clr-level as
+#' well as the estimated partial effects on both levels are calculated.
 #'
 #' @encoding UTF-8
 #'
@@ -304,13 +305,13 @@
 #' @param ...  further arguments for passing on to \code{\link[mgcv]{gam}}.
 #'
 #'
-#' @return The function returns an object of the class \code{dens_reg_obj}, which
+#' @return The function returns an object of the class \code{densreg_obj}, which
 #' is a \code{\link[base]{list}} with elements:
 #' \itemize{
 #' \item \code{count_data}: \code{\link[data.table]{data.table}}-object containing
-#' the count data obtained by using \code{\link{preprocess}} for the given data
+#' the count data obtained by using \code{\link{data2counts}} for the given data
 #' \code{dta} and covariates, which is also an object of the sub-class
-#' \code{histogram_count_data}. See \code{?preprocess} for more information.
+#' \code{histogram_count_data}. See \code{\link{data2counts}} for more information.
 #' \item \code{model}: \code{\link[mgcv]{gam}}-object of the estimated model.
 #' \item \code{model_matrix}: Model matrix of the model.
 #' \item \code{theta_hat}: Estimated coeffecient vector \eqn{\hat{\theta}}.
@@ -333,8 +334,8 @@
 #' of the unique covariate combinations to the group IDs.
 #' }
 #' Note that \code{plot}- and \code{predict}-methods for objects of class
-#' \code{dens_reg_obj} are available via \code{CondDensReg:::plot.dens_reg_obj}
-#' and \code{CondDensReg:::predict.dens_reg_obj}, however, they are not exported,
+#' \code{densreg_obj} are available via \code{DensityRegression:::plot.densreg_obj}
+#' and \code{DensityRegression:::predict.densreg_obj}, however, they are not exported,
 #' since they are not tested/documented appropriately, yet.
 #'
 #' @author Lea Runge, Eva-Maria Maier
@@ -353,7 +354,7 @@
 #' ### Note that the following simulated data are only to illustrate
 #' ### function usage and do not possess significant covariate effects
 #'
-#' # for further information on the parameters of the preprocessing step see ?preprocess
+#' # for further information on the parameters of the preprocessing step see ?data2counts
 #'
 #' # create data for the mixed case
 #' set.seed(101)
@@ -404,14 +405,14 @@
 #' ## fit model for the mixed case with group specific intercepts and linear effects
 #' ### use fixed smoothing parameters in density direction and calculate also the partial effects
 #'
-#' m_mixed <- dens_reg(dta = dta, y = 1, m_continuous = c(2, 2),
+#' m_mixed <- densreg(dta = dta, y = 1, m_continuous = c(2, 2),
 #'   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
 #'   linear_effects = linear_effects, effects = TRUE, sp_y = c(1, 3, 5, 0.5))
 #'
 #' ## fit model for the discrete case with smooth effects and smooth interaction
 #' ### do not calculate effects
 #'
-#' m_dis <- dens_reg(
+#' m_dis <- densreg(
 #'   dta = dta_dis, y = 1, values_discrete = c(0, 1, 2),
 #'   weights_discrete = c(1, 1, 1), domain_continuous = FALSE, m_continuous = c(2, 2),
 #'   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
@@ -419,7 +420,7 @@
 #'
 #' # fit model for the continuous case with a functional varying coeffecient
 #'
-#' m_cont <- dens_reg(dta = dta[which(!(dta$obs_density %in% c(0, 1))), ],
+#' m_cont <- densreg(dta = dta[which(!(dta$obs_density %in% c(0, 1))), ],
 #'   y = 1, values_discrete = FALSE, m_continuous = c(2, 2),
 #'   k_continuous = 12, varying_coefficients = varying_coef, effects = TRUE)
 #' }
@@ -427,7 +428,7 @@
 #' @export
 
 
-dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
+densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
                      weighted_counts = NULL, values_discrete = c(0, 1),
                      weights_discrete = 1, domain_continuous = c(0, 1),
                      bin_number = NULL, bin_width = NULL, m_continuous = c(2, 2),
@@ -477,7 +478,7 @@ dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
     y <- setdiff(names(dta), c(var_vec, sample_weights, counts, weighted_counts))
   }
   stopifnot("y must be one variable contained in dta. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
-  dta_est <- preprocess(dta = dta, var_vec = var_vec, y = y,
+  dta_est <- data2counts(dta = dta, var_vec = var_vec, y = y,
                         sample_weights = sample_weights, counts = counts,
                         weighted_counts = weighted_counts, bin_width = bin_width,
                         bin_number = bin_number, values_discrete = values_discrete,
@@ -485,7 +486,7 @@ dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
   cov_combi_id <- unique(subset(dta_est, TRUE,
                                 names(dta_est) %in% c(var_vec, sample_weights)))
 
-  checking_dens_reg_1(m_continuous, k_continuous, sp_y, penalty_discrete,
+  checking_densreg_1(m_continuous, k_continuous, sp_y, penalty_discrete,
                       effects, dta)
 
   if (is.numeric(y)) {
@@ -822,7 +823,7 @@ dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
       j <- j+1
     }
   }
-  checking_dens_reg_2(group_specific_intercepts, linear_effects, smooth_effects,
+  checking_densreg_2(group_specific_intercepts, linear_effects, smooth_effects,
                       varying_coefficients, smooth_interactions, dta)
 
   f <- paste0(f_main, f_intercepts, f_flexibles, f_linear, f_function_var_coef,
@@ -960,7 +961,7 @@ dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
       ),
       ID_covCombi = cov_combi_id
     )
-    attr(result, "class") <- c("dens_reg_obj", class(result))
+    attr(result, "class") <- c("densreg_obj", class(result))
     return(result)
   } else {
     pred_terms = stats::predict(m, type = "terms")
@@ -1047,21 +1048,22 @@ dens_reg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
         ),
         ID_covCombi = cov_combi_id
       )
-    attr(result, "class") <- c("dens_reg_obj", class(result))
+    attr(result, "class") <- c("densreg_obj", class(result))
     return(result)
   }
 }
 
-#' Check for validity of parameters of \code{\link{dens_reg}}
+#' Check for validity of parameters of \code{\link{densreg}}
 #'
-#' These functions check validity of parameters for \code{\link{dens_reg}}.
+#' These functions check validity of parameters for \code{\link{densreg}}.
 #' Returns an error if any parameters requirement is violated.
+#'
 #' @encoding UTF-8
 #' @import data.table
 #' @noRd
 #'
-#' @inheritParams dens_reg
-checking_dens_reg_1 <- function(m_continuous, k_continuous, sp_y, penalty_discrete,
+#' @inheritParams densreg
+checking_densreg_1 <- function(m_continuous, k_continuous, sp_y, penalty_discrete,
                                 effects, dta) {
 
     # check gam-parameters
@@ -1091,7 +1093,7 @@ checking_dens_reg_1 <- function(m_continuous, k_continuous, sp_y, penalty_discre
 }
 
 
-#' Checks used for parameter checks of \code{\link{dens_reg}}
+#' Checks used for parameter checks of \code{\link{densreg}}
 #'
 #' These functions check if an object is of a specific type.
 #'
@@ -1114,8 +1116,8 @@ check_integer_or_null <- function(x) {
            (is.numeric(x) && length(x) == 1 && x == floor(x)))
 }
 
-#' @describeIn checking_dens_reg_1 Check for validity of parameters of \code{\link{dens_reg}}
-checking_dens_reg_2 <- function(group_specific_intercepts, linear_effects,
+#' @describeIn checking_densreg_1 Check for validity of parameters of \code{\link{densreg}}
+checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
                                 smooth_effects, varying_coefficients,
                                 smooth_interactions, dta) {
 

@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(CondDensReg)
+library(DensityRegression)
 
-test_check("CondDensReg")
+test_check("DensityRegression")

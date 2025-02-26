@@ -1,11 +1,16 @@
 #' From observations to a vector of observed (histogram) counts
 #'
-#' \code{preprocess} prepares data containing the original observations \eqn{y_i}
-#' appropriately to be used in Poisson models by combining all observations of
-#' the same conditional distribution (i.e., all observations sharing identical
-#' values in all covariates) into a vector of counts via a histogram on
-#' \eqn{I\setminus D} and counts on \eqn{D} where \eqn{I} is the interval of the
-#' continuous domain and \eqn{D} the set of discrete values.
+#' \code{data2counts} prepares data containing the individual response observations
+#' \eqn{y_i} appropriately to be used in \code{\link[mgcv]{gam}} Poisson models
+#' by combining all observations of the same conditional distribution (i.e., all
+#' observations sharing identical values in all covariates) into a vector of counts
+#' via a histogram on \eqn{I\setminus D} and counts on \eqn{D} where \eqn{I} is
+#' the interval of the continuous domain and \eqn{D} the set of discrete values.
+#' the discrete component of the underlying mixed (continuous/discrete)
+#' Bayes Hilbert space \eqn{B^2(\mu) = B^2(\mathcal{Y}, \mathcal{A}, \mu)}{B^2(\mu) = B^2(Y, A, \mu)}.
+#' We briefly summarize the approach below in the details. Please see Section 2.3
+#' in Maier et al. (2025b) for comprehensive description.
+#'
 #' @encoding UTF-8
 #' @importFrom dplyr "%>%" arrange mutate summarise group_by ungroup cur_group_id across
 #' @import data.table
@@ -21,48 +26,8 @@
 #' if there is a unique column of \code{dta} not specified in \code{var_vec},
 #' \code{sample_weights}, \code{counts}, and \code{weighted_counts} (see below),
 #' this unique column is used.
-#' % @param dta Data of type \code{data.frame} or \code{data.table} with observations
-#' % of the density variable and covariates as well as optional sampling weights for
-#' % each observation.
-#' % @param sample_weights Variable of \code{dta} which contains a sample weight for
-#' % each observation. Variable name as string or numeric column position of the
-#' % variable in \code{dta}. If missing (\code{NULL}), no sample weights are included
-#' % per default.
-#' % @param bin_width Width of histogram bins partitioning the continuous domain \eqn{I}.
-#' % Scalar for equidistant bins or vector with different increments. The union of
-#' % the resulting bins must exactly match the domain of the continuous component.
-#' % Alternative to \code{bin_number}.
-#' % @param bin_number Number of equidistant histogram bins partitioning the continuous
-#' % domain \eqn{I}. Alternative to \code{bin_width}. If \code{bin_number} and
-#' % \code{bin_width} are both given and the two values are not compatible, an error
-#' % is returned. If neither parameter is specified, \code{bin_number=100} is used
-#' % as default.
-#' % @param values_discrete Vector of values in the domain of the density that have
-#' % positive probability mass (dirac measure). Defaults to missing (\code{NULL}) in
-#' % which case it is set to \code{c(0, 1)}. Can also be set to be \code{FALSE} in
-#' % which case the discrete component is considered to be empty, i.e., the Lebesgue
-#' % measure is used as reference measure.
-#' % @param weights_discrete Vector of weights for the dirac measures corresponding
-#' % to values_discrete. If missing (\code{NULL}) it is set to 1 in all components
-#' % as default. Can be a scalar for equal weights for all discrete values or a vector
-#' % with specific weights for each corresponding discrete value.
-#' % @param domain_continuous An interval (i.e., a vector of length 2) specifying
-#' % the domain of the continuous component of the density. If missing (\code{NULL})
-#' % it is set to \code{c(0, 1)} as default. Can also be set to be \code{FALSE}
-#' % in which case the continuous component is considered to be empty, i.e., a sum
-#' % of dirac measures is used as reference measure.
-#' % @param already_formatted A logical indicating if the data in \code{dta} is
-#' % already formatted as count data. If \code{already_formatted=TRUE}, the data have
-#' % to have a column named "counts", an additional column with the name "weighted_counts"
-#' % is optional.
-#' % The relevant variables used for further aggregation are submitted via \code{var_vec},
-#' % the relevant column of the observed density via \code{y}.
-#' % The bin width is computed automatically based on the observed continuous values
-#' % unless an integer or a vector is submitted by the user via \code{bin_width}
-#' % and/or \code{bin_number}. In these cases, the binning is based on the given
-#' % bin number or width.
-#' .
-#' @inheritParams dens_reg
+#'
+#' @inheritParams densreg
 #'
 #' @return The function returns an object of the class \code{histogram_count_data},
 #' which is a \code{\link[data.table]{data.table}} with columns:
@@ -95,13 +60,14 @@
 #' is a discrete value in \eqn{D}.
 #' }
 #' Note that a \code{plot}-method for objects of class \code{histogram_count_data}
-#' is available via \code{CondDensReg:::histogram_count_data}, however, it is
+#' is available via \code{DensityRegression:::histogram_count_data}, however, it is
 #' not exported, since it is not tested/documented appropriately, yet.
 #'
 #' @author Lea Runge, Eva-Maria Maier
 #'
-#' @examples
+#' @seealso \code{\link{densreg}}
 #'
+#' @examples
 #' set.seed(101)
 #'
 #' # create data where 0 and 1 are the discrete observations, values
@@ -121,15 +87,15 @@
 #' # of continuous and discrete domains. The following function calls are
 #' # equivalent:
 #'
-#' preprocess(dta, var_vec = c("covariate1", "covariate2"), y = "obs_density",
+#' data2counts(dta, var_vec = c("covariate1", "covariate2"), y = "obs_density",
 #'            sample_weights = "sample_weights", bin_number = 10)
-#' preprocess(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
+#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
 #'
 #' # Use the vector bin_width to define non-equidistant bins and
 #' # specify with values_discrete and weights_discrete discrete values
 #' # and weights besides the default (0,1) and weight 1:
 #'
-#' preprocess(dta, var_vec = c(2, 3), y = 1, sample_weights = 4,
+#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4,
 #'            bin_width = c(0.1, 0.5, 0.4), values_discrete = c(0, 1),
 #'            weights_discrete = c(0.5, 2))
 #'
@@ -137,7 +103,7 @@
 #' # purely continous setting (note that now the observations at 0 and 1 are
 #' # counted towards the outer bins):
 #'
-#' preprocess(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
+#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
 #'            values_discrete = FALSE)
 #'
 #' # filter data set for only observations valued in discrete domain
@@ -147,16 +113,16 @@
 #' # The use of "domain_continuous=FALSE" refers to histogram data in a
 #' # purely discrete setting:
 #'
-#' preprocess(dta_discrete, var_vec = c(2, 3), y = 1, sample_weights = 4,
+#' data2counts(dta_discrete, var_vec = c(2, 3), y = 1, sample_weights = 4,
 #'            bin_width = 0.1, values_discrete = c(0, 1),
 #'            weights_discrete = c(0.5, 2), domain_continuous  = FALSE)
 #'
-#' # use the optional argument counts to "preprocess" already preprocessed
+#' # use the optional argument counts to "data2counts" already preprocessed
 #' # data and select only one of two variables for the grouping
 #' dta_discrete <- unique(dta_discrete[, 1:3])
 #' dta_discrete$counts <- sample(0:10, nrow(dta_discrete), replace = TRUE)
 #'
-#' preprocess(dta_discrete, var_vec = "covariate1", y = "obs_density",
+#' data2counts(dta_discrete, var_vec = "covariate1", y = "obs_density",
 #'            counts = "counts", bin_width = 0.1, values_discrete = c(0, 1),
 #'            weights_discrete = c(0.5, 2), domain_continuous  = FALSE)
 #'
@@ -167,13 +133,13 @@
 #' Conditional density regression for individual-level data.
 #' arXiv preprint arXiv:XXXX.XXXXX.
 
-preprocess <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = NULL,
+data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = NULL,
                        weighted_counts = NULL, bin_width = NULL,
                        bin_number = NULL, values_discrete = c(0, 1),
                        weights_discrete = 1, domain_continuous = c(0, 1)) { # already_formatted=FALSE
   if (is.null(counts)) {
     # check for invalid arguments
-    checking_preprocess_1(dta, var_vec, sample_weights, bin_width, bin_number,
+    checking_data2counts_1(dta, var_vec, sample_weights, bin_width, bin_number,
              values_discrete, weights_discrete, domain_continuous)
     # convert to standardised format and convert given indice vectors into column name vecors
     if ("response" %in% colnames(dta)) {
@@ -198,7 +164,7 @@ preprocess <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = N
       y <- setdiff(names(dta), c(var_vec, sample_weights, counts, weighted_counts))
     }
     stopifnot("y must be one variable contained in dta. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
-    checking_preprocess_2(dta, y, domain_continuous)
+    checking_data2counts_2(dta, y, domain_continuous)
     if (is.numeric(y)) {
       y <- colnames(dta)[y]
     }
@@ -610,9 +576,9 @@ preprocess <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = N
 }
 ################################################################################
 
-#' Check for validity of parameters of \code{\link{preprocess}}
+#' Check for validity of parameters of \code{\link{data2counts}}
 #'
-#' These functions check validity of parameters for \code{\link{preprocess}}.
+#' These functions check validity of parameters for \code{\link{data2counts}}.
 #' Returns an error if any parameters requirement is violated.
 #'
 #' @noRd
@@ -622,9 +588,9 @@ preprocess <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = N
 #' @import data.table
 #' @importFrom Rdpack reprompt
 #'
-#' @inheritParams preprocess
+#' @inheritParams data2counts
 
-checking_preprocess_1 <- function(dta, var_vec, # y,
+checking_data2counts_1 <- function(dta, var_vec, # y,
                         sample_weights, bin_width, bin_number,
                         values_discrete, weights_discrete, domain_continuous) {
 
@@ -741,8 +707,8 @@ checking_preprocess_1 <- function(dta, var_vec, # y,
   }
 }
 
-#' @describeIn checking_preprocess_1 Further parameter checks for \code{\link{preprocess}}
-checking_preprocess_2 <- function(dta, y, domain_continuous) {
+#' @describeIn checking_data2counts_1 Further parameter checks for \code{\link{data2counts}}
+checking_data2counts_2 <- function(dta, y, domain_continuous) {
   if (!is.numeric(y) & !is.character(y)) {
     stop("Invalid type of argument 'y'! character or numeric is required")
   }

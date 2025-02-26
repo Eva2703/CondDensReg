@@ -14,7 +14,7 @@
 #' component and the midpoints of the bins underlying the histograms approximating
 #' the densities for the continuous component. Response observations are the
 #' counts of the discrete observations and the histograms (the count data can
-#' easily be constructed from individual data with \code{\link{preprocess}}).
+#' easily be constructed from individual data with \code{\link{data2counts}}).
 #' Specification of basis and penalization details for the continuous component
 #' is as for \code{bs = "ps"}, see \code{mgcv}'s
 #' \code{\link[mgcv]{smooth.construct.ps.smooth.spec}}, which our implementation
@@ -31,7 +31,7 @@
 #' % (It would be desirable to include a warning, however, object does not seem
 #' % to contain information on which kind of function it was called in.)
 #'
-#' We recommend to use \code{link{dens_reg}} to specify density regression models
+#' We recommend to use \code{link{densreg}} to specify density regression models
 #' (based on \code{smooth.construct.md.smooth.spec}), instead of via \code{\link[mgcv]{gam}}
 #' directly, since the is quite cumbersome and specification has to be done with
 #' extreme care to obtain a reasonable model.
@@ -134,7 +134,7 @@
 #'     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
 #'           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 #' n_bins <- 20
-#' dta_mixed <- preprocess(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+#' dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
 #'                         bin_number = n_bins, values_discrete = c(0, 1),
 #'                         domain_continuous = c(0, 1))
 #'
@@ -142,7 +142,7 @@
 #' dta_cont <- dta_mixed[which(!dta_mixed$discrete), ]
 #'
 #' # data for the discrete case
-#' dta_dis <- preprocess(dta = dta, c("covariate1", "covariate2"),
+#' dta_dis <- data2counts(dta = dta, c("covariate1", "covariate2"),
 #'                       values_discrete = c(0, 1, 2), domain_continuous = FALSE)
 #'
 #' ### fit model in the mixed case
@@ -518,7 +518,7 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
 #'     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
 #'           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 #' n_bins <- 20
-#' dta_mixed <- preprocess(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+#' dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
 #'                         bin_number = n_bins, values_discrete = c(0, 1),
 #'                         domain_continuous = c(0, 1))
 #'

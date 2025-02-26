@@ -1,4 +1,4 @@
-#' CondDensReg: Conditional density regression for individual-level data
+#' DensityRegression: Conditional density regression for individual-level data
 #'
 #' @description
 #' Structured additive regression models for mixed densities as response and
@@ -15,7 +15,7 @@
 #' is then fitted using \code{mgcv}'s \code{\link[mgcv]{gam}} with a new smooth for mixed
 #' densities. For details see Maier et al. (2023).
 #'
-#' The main fitting function is \code{\link{dens_reg}}. Besides the (individual-
+#' The main fitting function is \code{\link{densreg}}. Besides the (individual-
 #' level) data, it takes a variety of arguments related to specification of
 #' the underlying mixed Bayes Hilbert space, histogram construction for its
 #' continuous part, and partial effects (including penalties). We also provide
@@ -28,9 +28,9 @@
 #' @author
 #' Eva-Maria Maier, Lea Runge, and Alexander Fottner
 #'
-#' @aliases CondDensReg_package package-CondDensReg CondDensReg-package
+#' @aliases DensityRegression_package package-DensityRegression DensityRegression-package
 #'
 #' @seealso
-#' \code{\link{dens_reg}} for the main fitting function.
+#' \code{\link{densreg}} for the main fitting function.
 #'
 "_PACKAGE"

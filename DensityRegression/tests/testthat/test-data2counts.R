@@ -98,7 +98,7 @@ test_that("Scenario A", {
     original[, c("response", "featureA", "featureB", "sample_weight")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
-    preprocess(
+    data2counts(
       dta = original,
       var_vec = c(2:3),
       y = 1,
@@ -205,7 +205,7 @@ test_that("Scenario B", {
     original[, c("response", "featureA", "featureB", "sample_weight")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -296,7 +296,7 @@ test_that("Scenario C", {
     original[, c("response", "featureA", "featureB", "sample_weight")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed_2 <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -307,7 +307,7 @@ test_that("Scenario C", {
       domain_continuous = continous_domain
     )
   data_backtransformed_3 <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -318,7 +318,7 @@ test_that("Scenario C", {
       domain_continuous = continous_domain
     )
   data_backtransformed_4 <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -418,7 +418,7 @@ test_that("Scenario D", {
     original[, c("response", "featureA", "featureB", "sample_weight")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed_5 <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -527,7 +527,7 @@ test_that("Scenario E", {
   original <- original[, c("response", "featureA", "featureB")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed_6 <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -630,7 +630,7 @@ test_that("Scenario F", {
     original[, c("response", "featureA", "featureB", "sample_weight")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -702,7 +702,7 @@ test_that("Szenatio G", {
   original <- original[, c("response", "featureA", "featureB")]
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -726,7 +726,7 @@ test_that("Szenatio G", {
   expect_equal(round(data_check$Delta, 5), round(data_bt_check$Delta, 5))
   expect_equal(data_check$discrete, data_bt_check$discrete)
   expect_warning(
-    preprocess(
+    data2counts(
       original,
       var_vec = c(2:3),
       y = 1,
@@ -744,7 +744,7 @@ test_that("Errors", {
                    c = FALSE)
   # invalid type of data
   expect_error(
-    preprocess(
+    data2counts(
       "hhha",
       var_vec = c(2:3),
       y = 1,
@@ -754,21 +754,21 @@ test_that("Errors", {
     )
   )
   # invalid type of y
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = FALSE,
     bin_width = 0.01
   ))
   # invalid type of var_vec
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = FALSE,
     y = 3,
     bin_width = 0.01
   ))
   # invalid type of sample_weights
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = 3,
@@ -776,21 +776,21 @@ test_that("Errors", {
     bin_width = 0.01
   ))
   # invalid type of bin_width
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = 3,
     bin_width = FALSE
   ))
   # invalid type of bin_number
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = 3,
     bin_number = FALSE
   ))
   # invalid type of values_discrete
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = 3,
@@ -799,7 +799,7 @@ test_that("Errors", {
   ))
   # invalid type of domain_continuous
   expect_error(
-    preprocess(
+    data2counts(
       dt,
       var_vec = c(1, 2),
       y = 3,
@@ -808,7 +808,7 @@ test_that("Errors", {
     )
   )
   # invalid type of Weights_discrete
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c(1, 2),
     y = 3,
@@ -816,21 +816,21 @@ test_that("Errors", {
     weights_discrete =  "hhh"
   ))
   # invalid column name in var_vec
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = c("nichtDrin"),
     y = 3,
     bin_number = 10
   ))
   # invalid column name in y
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = c("nichtDrin"),
     bin_number = 10
   ))
   # invalid column name in sample_weights
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
@@ -839,7 +839,7 @@ test_that("Errors", {
   ))
   # domain_continuous and values_discrete both FALSE
   expect_error(
-    preprocess(
+    data2counts(
       dt,
       var_vec = 1,
       y = 2,
@@ -849,7 +849,7 @@ test_that("Errors", {
     )
   )
   # uncompatible bin_number and bin_width
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
@@ -857,7 +857,7 @@ test_that("Errors", {
     bin_width = c(22, 2)
   ))
   # uncompatible bin_number and bin_width
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
@@ -865,21 +865,21 @@ test_that("Errors", {
     bin_width = 22
   ))
   # column index of var_vec out of range
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 5,
     y = 3,
     bin_number = 10
   ))
   # column index of y out of range
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 5,
     bin_number = 10
   ))
   # column index of sample_weights of range
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
@@ -888,7 +888,7 @@ test_that("Errors", {
   ))
   # unequal number of values_discrete and weights_discrete
   expect_error(
-    preprocess(
+    data2counts(
       dt,
       var_vec = 1,
       y = 2,
@@ -897,28 +897,28 @@ test_that("Errors", {
     )
   )
   # values_discrete out of continuous_domain range
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
     values_discrete = c(0, 10)
   ))
   # values of response out of continuous_domain range (data frame)
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
    domain_continuous = c(0, 1)
   ))
   # bin_width incompatible with continuous_domain
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
     bin_width  = c(19, 10, 10, 10)
   ))
   # non-positive weights_discrete
-  expect_error(preprocess(
+  expect_error(data2counts(
     dt,
     var_vec = 1,
     y = 2,
@@ -926,7 +926,7 @@ test_that("Errors", {
     domain_continuous = c(0,10)
   ))
   # values of response out of continuous_domain range (data table)
-  expect_error(preprocess(
+  expect_error(data2counts(
     as.data.table(dt),
     var_vec = 1,
     y = 2,
