@@ -15,7 +15,7 @@
 #' @import data.table
 #' @importFrom Rdpack reprompt
 #' @param dta \code{data.table}-object which is an object of the sub-class
-#' \code{histogram_count_data}, i.e., the output of the
+#' \code{count_data}, i.e., the output of the
 #' \code{\link{data2counts}}-function. Subset in such a way, that
 #' only one covariate combination, i.e. one \code{group_id} is contained.
 #' @param case Plotting case as a \code{character}-object: can be specified as
@@ -681,7 +681,7 @@ plot_single_histo <- function(dta, case = "all", abs = FALSE, main = NULL,
 #' @import cowplot
 #' @import grid
 #' @param dta \code{data.table}-object which is also an object of the sub-class
-#' \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function.
+#' \code{count_data}, i.e., the output of the \code{\link{data2counts}}-function.
 #' Subset in such a way, that only one covariate combination, i.e. one \code{group_id}
 #' is contained.
 #' @param selected_groups Numeric vector of \code{group_id}s for which the respective
@@ -934,14 +934,14 @@ save_plots <- function(dta, selected_groups = unique(dta$group_id), single = TRU
 
 #' Interactive application for plots for all covariate combinations
 #'
-#' \code{interactive_plots} creates for all groups, i.e., all different covariate combinations considered in the data, a plot based on  \code{\link{plot_single_histo}} and integrates them in an interactive application where the user can select a \code{group_id} with a slider. All specified parameters will be passed to \code{\link{plot_single_histo}}. \code{interactive_plots} is also used as default plotting method for data of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function.
+#' \code{interactive_plots} creates for all groups, i.e., all different covariate combinations considered in the data, a plot based on  \code{\link{plot_single_histo}} and integrates them in an interactive application where the user can select a \code{group_id} with a slider. All specified parameters will be passed to \code{\link{plot_single_histo}}. \code{interactive_plots} is also used as default plotting method for data of the sub-class \code{count_data}, i.e., the output of the \code{\link{data2counts}}-function.
 #' @encoding UTF-8
 #' @importFrom dplyr "%>%" arrange mutate filter select distinct
 #' @import data.table
 #' @import stringr
 #' @import manipulate
 #' @importFrom Rdpack reprompt
-#' @param dta \code{data.table}-object which is also an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
+#' @param dta \code{data.table}-object which is also an object of the sub-class \code{count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
 #' @param selected_groups Numeric vector of \code{group_id}s for which the respective plots will be created and included in the interactive plot. If missing (\code{NULL}) plots of all groups within the range of the minimum and maximum \code{group_id} will be included.
 #' @param case Plotting case as a \code{character}-object: can be specified as "all", "continuous" or "discrete". Determines the components of the data which will be plotted: "all" leads to a plot of the complete data, "continuous" only plots the bins displaying data of the continuous domain \eqn{I} and "discrete" shows only bins displaying the counts of the respective discrete values in \eqn{D}. Please note that the plotting case is not the same as the specification of the case in \code{\link{data2counts}} where the bins and discrete values are defined. If the case is not "all" and \code{hist} is TRUE, the sum of the areas under the bins and the discrete bars is not one. If missing (\code{NULL}), the default is "all".
 #' @param abs \code{logical} which determines if the resulting plot shows the absolute, (weighted) counts (\code{abs=TRUE}) or the relative frequencies of the weighed counts (\code{abs=FALSE}). If missing (\code{NULL}), the default is \code{FALSE}.
@@ -1044,9 +1044,9 @@ interactive_plots <- function(dta, selected_groups = unique(dta$group_id), case 
 
 #' Plot function for the observed (histogram) count data
 #'
-#' \code{plot.histogram_count_data} is the default plot method for data of the class \code{histogram_count_data}. It is using the function \code{interactive_plots} with its default parameters, i.e. it is creating an interactive plot of the frequencies of the respective (weighted) counts with histograms on \eqn{I\setminus D} and of the counts on \eqn{D} with simple bars where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of discrete values.. In the plot the areas under the bins and the height of discrete bars times the respective weight of the discrete dirac measure sum up to one.
+#' \code{plot.count_data} is the default plot method for data of the class \code{count_data}. It is using the function \code{interactive_plots} with its default parameters, i.e. it is creating an interactive plot of the frequencies of the respective (weighted) counts with histograms on \eqn{I\setminus D} and of the counts on \eqn{D} with simple bars where \eqn{I} is the interval of the continuous domain and \eqn{D} the set of discrete values.. In the plot the areas under the bins and the height of discrete bars times the respective weight of the discrete dirac measure sum up to one.
 #' @encoding UTF-8
-#' @param x \code{data.table}-object which is an object of the sub-class \code{histogram_count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
+#' @param x \code{data.table}-object which is an object of the sub-class \code{count_data}, i.e., the output of the \code{\link{data2counts}}-function with multiple covariate combinations, i.e. \code{group_id}s, contained.
 #' @param ... Further parameters passed to \code{interactive_plots}.
 #' @return Interactive plot displaying all histograms for the contained groups where the respective \code{group_id} is selectable with a slider. The display of mixed case count (histogram) data is as considered in the work of Maier et al. (2025b).
 #'
@@ -1087,7 +1087,7 @@ interactive_plots <- function(dta, selected_groups = unique(dta$group_id), case 
 #' # Plot histo_data:
 #' plot(histo_data)
 
-plot.histogram_count_data <- function(x, ...) {
+plot.count_data <- function(x, ...) {
   tmp <- as.data.table(x)
   interactive_plots(tmp)
 }

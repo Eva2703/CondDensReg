@@ -134,7 +134,7 @@
 #'     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
 #'           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 #' n_bins <- 20
-#' dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+#' dta_mixed <- data2counts(data = dta_mixed, var_vec = c("covariate1", "covariate2"),
 #'                         bin_number = n_bins, values_discrete = c(0, 1),
 #'                         domain_continuous = c(0, 1))
 #'
@@ -142,7 +142,7 @@
 #' dta_cont <- dta_mixed[which(!dta_mixed$discrete), ]
 #'
 #' # data for the discrete case
-#' dta_dis <- data2counts(dta = dta, c("covariate1", "covariate2"),
+#' dta_dis <- data2counts(data = dta, var_vec = c("covariate1", "covariate2"),
 #'                       values_discrete = c(0, 1, 2), domain_continuous = FALSE)
 #'
 #' ### fit model in the mixed case
@@ -354,9 +354,9 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
       warning("The mixed density smoother is not intended to be used for derivatives. Reasonable behavior is only guaranteed for deriv = 0.")
     }
     # construct design matrices from transformed B-splines integrating to zero (see
-    # Appendix B of Maier et al., 2025a, based on Wood, 2017, Section 1.8.1) and
+    # Appendix D of Maier et al., 2025a, based on Wood, 2017, Section 1.8.1) and
     # apply embedding to combine them to one design matrix of a mixed basis (Maier
-    # et al., 2025a, Proposition A.4; Maier et al., 2022, Section 2.2)
+    # et al., 2025a, Proposition C.2; Maier et al., 2025b, Section 2.2)
     C_cont <- sapply(1:(length(k) - ord), function(j) stats::integrate(function(x)
       splines::splineDesign(knots = k, x, ord = ord, derivs = object$deriv)[, j],
       lower = k[ord], upper = k[length(k) - (ord - 1)])$value)
@@ -371,7 +371,7 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
       stop("SCOP splines are not supported yet!")
     } else {
       # construct penalty matrices including necessary transformation (see Appendix
-      # B of Maier et al., 2021) and combine them to one penalty (block) matrix
+      # D of Maier et al., 2025a) and combine them to one penalty (block) matrix
       # for the mixed design matrix
       if (m[2] > 0) {
         D_cont <- diff(diag(cont_dim), differences = m[2])
@@ -518,7 +518,7 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
 #'     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
 #'           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 #' n_bins <- 20
-#' dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+#' dta_mixed <- data2counts(data = dta_mixed, var_vec = c("covariate1", "covariate2"),
 #'                         bin_number = n_bins, values_discrete = c(0, 1),
 #'                         domain_continuous = c(0, 1))
 #'
@@ -559,7 +559,7 @@ smooth.construct.md.smooth.spec <- function (object, data, knots) {
 #' # compute estimated conditional clr-transformed densities
 #' f_hat_clr <- matrix(c(X %*% theta_hat), nrow = length(unique(dta_mixed$obs_density)))
 #' f_hat <- apply(f_hat_clr, 2,
-#'                FDboost::clr, w = c(1, rep(1/n_bins, n_bins), 1), inverse = TRUE)
+#'                clr, w = c(1, rep(1/n_bins, n_bins), 1), inverse = TRUE)
 #' t <- unique(dta_mixed$obs_density)
 #' matplot(t[2:(length(t) - 1)], f_hat[2:(length(t) - 1), ], type = "l",
 #'         col = rainbow(ncol(f_hat)), lty = rep(1:5, ceiling(ncol(f_hat) / 5)),

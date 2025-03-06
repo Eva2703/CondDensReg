@@ -69,8 +69,9 @@
 #' part of the domain. For details, see Maier et al. (2025b).
 #' \code{densreg} calls \code{\link{data2counts}} to constructs the respective
 #' count data from the individual observations and estimates the corresponding
-#' Poisson model. Furthermore, the resulting densities on pdf- and clr-level as
-#' well as the estimated partial effects on both levels are calculated.
+#' Poisson model via \code{\link[mgcv]{gam}}. Furthermore, the resulting
+#' (clr transformed) densities as well as the estimated (clr transformed) partial
+#' effects are calculated (using \code{\link{clr}}).
 #'
 #' @encoding UTF-8
 #'
@@ -79,29 +80,36 @@
 #' @import data.table
 #' @import tidyr
 #' @importFrom dplyr "%>%" arrange mutate
-#' @importFrom FDboost clr
 #' @importFrom Rdpack reprompt
 #'
-#' @param dta Data set of type \code{\link[base]{data.frame}} or
+#' @param data Data set of type \code{\link[base]{data.frame}} or
 #' \code{\link[data.table]{data.table}} containing the observations \eqn{(y_i, x_i)}
 #' of response and covariates as well as optional sample weights (compare
 #' \code{sample_weights}) for each observation in the rows (\eqn{i = 1, ..., N}).
-#' @param y Variable in \code{dta} containing the response observations
+#' @param y Variable in \code{data} containing the response observations
 #' \eqn{y_i}. Either the variable name can be given as string or the column
-#' position of the variable in \code{dta} as integer. If missing (\code{NULL}),
-#' if there is a unique column of \code{dta} not specified in \code{sample_weights},
+#' position of the variable in \code{data} as integer. If missing (\code{NULL}),
+#' if there is a unique column of \code{data} not specified in \code{sample_weights},
 #' \code{counts}, and \code{weighted_counts} and not used as covariate during
 #' effect specification (see below), this unique column is used.
-#' @param sample_weights (Optional) variable in \code{dta} which contains a sample
+#' @param var_vec (Optional) vector of variables in \code{data} to be passed to
+#' \code{\link{data2counts}}, specifying the order of the covariate combinations.
+#' Must match the covariates used for effect specification (see below).
+#' The vector can either contain the variable names as strings or the column
+#' positions of the respective variables in \code{dta}.
+#' If missing (\code{NULL}), the order of covariates as appearing in
+#' \code{group_specific_intercepts}, \code{linear_effects}, \code{smooth_effects},
+#' \code{varying_coefficients}, \code{smooth_interactions} is used.
+#' @param sample_weights (Optional) variable in \code{data} which contains a sample
 #' weight for each observation. Either the variable name can be given as string
-#' or the column position of the variable in \code{dta} as integer. If missing
+#' or the column position of the variable in \code{data} as integer. If missing
 #' (\code{NULL}), no sample weights are included per default (i.e., all
 #' observations have the same weight 1).
-#' @param counts (Optional) variable in \code{dta} which contains a count for
+#' @param counts (Optional) variable in \code{data} which contains a count for
 #' each observation (for cases, where the available data contains counts instead
 #' of individual observations, which is common in particular for discrete data).
 #' Either the variable name can be given as string or the column position of the
-#' variable in \code{dta} as integer. If \code{bin_number} and \code{bin_width}
+#' variable in \code{data} as integer. If \code{bin_number} and \code{bin_width}
 #' are both \code{NULL}, midpoints of unique observations \eqn{y_i} are used as
 #' boundaries of histogram bins (if \eqn{I} is not empty, i.e., if there is a
 #' continuous component), which are then used to compute the bin widths (which are
@@ -112,23 +120,13 @@
 #' not \code{NULL}, the latter is ignored (also indicated via a warning message).
 #' Please use \code{weighted_counts} (additionally to \code{counts}) to include
 #' possible weighted data.
-#' @param weighted_counts (Optional) variable in \code{dta} which contains a
+#' @param weighted_counts (Optional) variable in \code{data} which contains a
 #' weighted count for each observation (compare Appendix D of Maier et al. (2025b)).
 #' In this case, also absolute counts have to be specified via \code{counts}.
 #' Otherwise, \code{weighted_counts} is ignored. Either the variable name can be
-#' given as string or the column position of the variable in \code{dta} as integer.
+#' given as string or the column position of the variable in \code{data} as integer.
 #' If missing (\code{NULL}), counts are constructed from individual observations
-#' (which is equivalent to all observations counted once)
-#' % @param already_formatted A logical indicating if the data in \code{dta} is
-#' % already formatted as count data. If \code{already_formatted = TRUE}, the data
-#' % have to have a column named \code{"counts"}, an additional column with the
-#' % name \code{"weighted_counts"} is optional.
-#' % % The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{y}.
-#' % The bin width is computed automatically based on the observed continuous
-#' % values unless an integer or a vector is submitted by the user via
-#' % \code{bin_width} and/or \code{bin_number}. In these cases, the binning is
-#' % based on the given bin number or width.
-#' .
+#' (which is equivalent to all observations counted once).
 #' @param values_discrete Vector of values in \eqn{\mathcal{D}}{D} (the subset of
 #' the domain corresponding to the discrete part of the densities). Defaults to
 #' missing (\code{NULL}) in which case it is set to \code{c(0, 1)}. If set to
@@ -199,13 +197,13 @@
 #' technical reasons it is not possible to set the whole penalty matrix to zero).
 #' @param group_specific_intercepts Vector of the form \code{c("x_a", "x_b", ...)}
 #' of names of categorical covariates, i.e., \code{\link[base]{factor}} variables
-#' contained in \code{dta} for which group-specific intercepts \eqn{\beta_{x_a},
+#' contained in \code{data} for which group-specific intercepts \eqn{\beta_{x_a},
 #' \beta_{x_b}, ...} (one per category of the respective covariate) shall be
 #' estimated. For \code{\link[base]{ordered}} factors, the first level is used as reference category
 #' (see \code{\link[mgcv]{gam.models}} for more details).
 #' If missing (\code{NULL}), no group-specific intercept is included.
 #' @param linear_effects Vector of the form \code{c("x_a", "x_b", ...)} of names
-#' of numeric covariates contained in \code{dta} for which linear effects
+#' of numeric covariates contained in \code{data} for which linear effects
 #' \eqn{x_a \odot \beta_{x_a}, x_b \odot \beta_{x_b}, ...} % {x_a * \beta_{x_a}, x_b * \beta_{x_b}, ...}
 #' shall be estimated. If missing (\code{NULL}), no linear effect is included.
 #' @param smooth_effects List of (named) lists of the form
@@ -215,7 +213,7 @@
 #' Each list is adding one (group-specific) smooth effect of the form \eqn{g_{x_b}(x_a)} to the
 #' model with:
 #' \itemize{
-#' \item \code{cov}: Name of a numeric covariate contained in \code{dta}.
+#' \item \code{cov}: Name of a numeric covariate contained in \code{data}.
 #' \item \code{bs}: Character string specifying the type for the marginal
 #' basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
 #' full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -231,7 +229,7 @@
 #' should have centering constraints applied. By default all marginals are
 #' constrained, i.e., \code{mc = TRUE}.
 #' \item \code{by}: Optional, name of a categorical covariate, i.e.,
-#' \code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+#' \code{\link[base]{factor}} variable contained in \code{data} specifying whether
 #' the smooth effect should be modeled specifically for each level of the
 #' \code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
 #' the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
@@ -246,8 +244,8 @@
 #' Each list is adding one varying coefficient of the form \eqn{x_b \odot g(x_a)}
 #' to the model with:
 #' \itemize{
-#' \item \code{cov}: Name of a numeric covariate contained in \code{dta}.
-#' \item \code{by}: Name of a numeric covariate contained in \code{dta}.
+#' \item \code{cov}: Name of a numeric covariate contained in \code{data}.
+#' \item \code{by}: Name of a numeric covariate contained in \code{data}.
 #' \item \code{bs}: Character string specifying the type for the marginal
 #' basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
 #' full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -273,7 +271,7 @@
 #' smooth interaction effect between at least two continuous covariates of the
 #' form \eqn{g_{x_by}(x_a, x_b, ...)} in the model with:
 #' \itemize{
-#' \item \code{covs}: Vector of names of numeric covariates contained in \code{dta}.
+#' \item \code{covs}: Vector of names of numeric covariates contained in \code{data}.
 #' \item \code{bs}: Vector of character strings specifying the types for each
 #' marginal basis of each covariate. See \code{\link[mgcv]{smooth.terms}} for
 #' details and full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -292,7 +290,7 @@
 #' should have centering constraints applied. By default all marginals are
 #' constrained, i.e., \code{TRUE}.
 #' \item \code{by}: Optional, name of a categorical covariate, i.e.,
-#' \code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+#' \code{\link[base]{factor}} variable contained in \code{data} specifying whether
 #' the smooth interaction effect should be modeled specifically for each level of the
 #' \code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
 #' the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
@@ -300,43 +298,57 @@
 #' is not depending on the level of an additional covariate.
 #' }
 #' If missing (\code{NULL}), no (group-specific) smooth interaction is included.
-#' @param effects Indicates if estimated partial effects should be returned
-#' (\code{TRUE}; default) or not (\code{FALSE}).
 #' @param ...  further arguments for passing on to \code{\link[mgcv]{gam}}.
 #'
 #'
-#' @return The function returns an object of the class \code{densreg_obj}, which
+#' @return The function returns an object of the class \code{densreg}, which
 #' is a \code{\link[base]{list}} with elements:
 #' \itemize{
-#' \item \code{count_data}: \code{\link[data.table]{data.table}}-object containing
-#' the count data obtained by using \code{\link{data2counts}} for the given data
-#' \code{dta} and covariates, which is also an object of the sub-class
-#' \code{histogram_count_data}. See \code{\link{data2counts}} for more information.
-#' \item \code{model}: \code{\link[mgcv]{gam}}-object of the estimated model.
-#' \item \code{model_matrix}: Model matrix of the model.
-#' \item \code{theta_hat}: Estimated coeffecient vector \eqn{\hat{\theta}}.
-#' \item \code{f_hat_clr}: Estimated conditional densities on clr-level
-#' \eqn{clr(\hat f)} for every covariate combination in the order of the respective
-#' \code{group_id} in \code{count_data}.
-#' \item \code{f_hat}: Estimated conditional densities on clr-level \eqn{clr(\hat{f})}
-#' for every covariate combination in the order of the respective group_id in
-#' \code{count_data}.
-#' \item \code{effects}: Only contained, if \code{effects = TRUE}; List of lists.
-#' Each list gives one estimated partial effect. Both clr- and density-level are
-#' included.
+#' \item \code{f_hat}: Matrix containing the estimated conditional densities
+#' \eqn{\hat{f}} (evaluated at the bin midpoints and
+#' discrete values respectively, compare row names and \code{domain_data})
+#' for the different covariate combinations as columns, ordered according to
+#' \code{group_id}, compare column names and \code{covariate_data}. Computed by
+#' applying \code{\link{clr}} to \code{f_hat_clr} column-wise.
+#' \item \code{f_hat_clr}: Matrix containing the estimated conditional clr
+#' transformed densities \eqn{clr[\hat{f}]} (evaluated at the bin midpoints and
+#' discrete values respectively, compare \code{obs_density} in \code{count_data})
+#' for the different covariate combinations as columns, ordered according to
+#' \code{group_id}, compare column names and \code{covariate_data}.
+#' \item \code{effects}: List with elements % \code{G} (integer specifying the number of bins for the continuous component),
+#' \code{estimated_effects_clr} and \code{estimated_effects} containing the
+#' (clr transformed) estimated partial effects.
+#' \item \code{count_data}: \code{count_data}-object containing
+#' the count data obtained by applying \code{\link{data2counts}} to \code{data}.
+#' \item \code{covariate_data}: \code{data.table} giving an overview over the assignment
+#' of the unique covariate combinations to the group IDs.
+#' \item \code{domain_data}: \code{data.table} giving an overview over the binning
+#' of the domain \code{Ycal} of the density for the construction of \code{count_data}.
+#' \item \code{model_matrix}: Model matrix.
+#' \item \code{theta_hat}: Estimated coefficient vector \eqn{\hat{\theta}}.
+#' \item \code{covariance}: Estimated covariance matrix of the coefficient vector
+#' \eqn{\hat{\theta}} as list with two elements corresponding to two different
+#' estimation methods: \code{Vp} is the inverse of the (penalized) Fisher information
+#' at \code{theta_hat} (which is identical to the Bayesian posterior covariance
+#' matrix \code{Vp} in the estimated \code{\link[mgcv]{gamObject}}, restricted
+#' to the submatrix corresponding to \code{theta_hat}), \code{Vc} contains a
+#' correction for smoothing parameter uncertainty (corresponds to \code{Vc} in
+#' the estimated \code{\link[mgcv]{gamObject}}, restricted to the submatrix
+#' corresponding to \code{theta_hat}). % compare Wood et al. (2016)
 #' \item \code{params}: List of \code{domain_continuous, values_discrete} and
 #' \code{bin_number} as given to the function.
-#' \item \code{predicted_effects}: List of lists (\code{group_specific_intercepts,
+#' \item \code{specified_effects}: List of lists (\code{group_specific_intercepts,
 #' smooth effects, linear_effects, varying_coefficient, smooth_interactions})
 #' collecting the specification of all partial effects as given to the function
 #' in the respective parameters.
-#' \item \code{ID_covCombi}: Data frame which gives an overview over the assignment
-#' of the unique covariate combinations to the group IDs.
+#' \item \code{model}: \code{\link[mgcv]{gam}}-object corresponding to the
+#' estimated Poisson model.
 #' }
 #' Note that \code{plot}- and \code{predict}-methods for objects of class
-#' \code{densreg_obj} are available via \code{DensityRegression:::plot.densreg_obj}
-#' and \code{DensityRegression:::predict.densreg_obj}, however, they are not exported,
-#' since they are not tested/documented appropriately, yet.
+#' \code{densreg} are available via \code{DensityRegression:::plot.densreg()}
+#' and \code{DensityRegression:::predict.densreg()}, however, they are not exported,
+#' since some functionality (like plots on effect level) are not working properly,
+#' and they are not tested/documented appropriately, yet.
 #'
 #' @author Lea Runge, Eva-Maria Maier
 #'
@@ -349,6 +361,8 @@
 #' Additive Density-on-Scalar Regression in Bayes Hilbert Spaces with an Application to Gender Economics.
 #' Annals of Applied Statistics, 19(1), ???-???.
 #'
+#' % Wood, S. N.; Pya, N. & Säfken, B. Smoothing parameter and model selection for general smooth models Journal of the American Statistical Association, Taylor & Francis, 2016, 111, 1548-1563
+#'
 #' @examples
 #' \donttest{
 #' ### Note that the following simulated data are only to illustrate
@@ -359,16 +373,16 @@
 #' # create data for the mixed case
 #' set.seed(101)
 #'
-#' dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
+#' data <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
 #'                   covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
 #'                   covariate2 = sample(c("c", "d"), 150, replace = TRUE),
 #'                   covariate3 = rep(rnorm(n = 15), 10),
 #'                   covariate4 = rep(rnorm(n = 10), 15),
 #'                   covariate5 = rep(rnorm(n = 10), 15), sample_weights = runif (150, 0, 2))
-#' dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density==  2)),
+#' data[which(data$obs_density == 2), ]$obs_density <- rbeta(length(which(data$obs_density==  2)),
 #'                                                        shape1 = 3, shape2 = 3)
-#' dta$covariate1 <- ordered(dta$covariate1)
-#' dta$covariate2 <- ordered(dta$covariate2)
+#' data$covariate1 <- ordered(data$covariate1)
+#' data$covariate2 <- ordered(data$covariate2)
 #'
 #' # create discrete data
 #'
@@ -403,32 +417,31 @@
 #' # fit models (warning: calculation may take a few minutes)
 #'
 #' ## fit model for the mixed case with group specific intercepts and linear effects
-#' ### use fixed smoothing parameters in density direction and calculate also the partial effects
+#' ### use fixed smoothing parameters in density direction
 #'
-#' m_mixed <- densreg(dta = dta, y = 1, m_continuous = c(2, 2),
+#' m_mixed <- densreg(data = data, y = 1, m_continuous = c(2, 2),
 #'   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
-#'   linear_effects = linear_effects, effects = TRUE, sp_y = c(1, 3, 5, 0.5))
+#'   linear_effects = linear_effects, sp_y = c(1, 3, 5, 0.5))
 #'
 #' ## fit model for the discrete case with smooth effects and smooth interaction
-#' ### do not calculate effects
 #'
 #' m_dis <- densreg(
-#'   dta = dta_dis, y = 1, values_discrete = c(0, 1, 2),
+#'   data = dta_dis, y = 1, values_discrete = c(0, 1, 2),
 #'   weights_discrete = c(1, 1, 1), domain_continuous = FALSE, m_continuous = c(2, 2),
 #'   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
-#'   smooth_effects = smooth_effects, smooth_interactions = smooth_inter, effects = FALSE)
+#'   smooth_effects = smooth_effects, smooth_interactions = smooth_inter)
 #'
 #' # fit model for the continuous case with a functional varying coeffecient
 #'
-#' m_cont <- densreg(dta = dta[which(!(dta$obs_density %in% c(0, 1))), ],
+#' m_cont <- densreg(data = data[which(!(data$obs_density %in% c(0, 1))), ],
 #'   y = 1, values_discrete = FALSE, m_continuous = c(2, 2),
-#'   k_continuous = 12, varying_coefficients = varying_coef, effects = TRUE)
+#'   k_continuous = 12, varying_coefficients = varying_coef)
 #' }
 #'
 #' @export
 
 
-densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
+densreg <- function(data, y = NULL, var_vec = NULL, sample_weights = NULL, counts = NULL,
                      weighted_counts = NULL, values_discrete = c(0, 1),
                      weights_discrete = 1, domain_continuous = c(0, 1),
                      bin_number = NULL, bin_width = NULL, m_continuous = c(2, 2),
@@ -457,43 +470,56 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
                      # list of lists: list(list(c("var_nameA_1", "var_nameB_1", ...), c("basis1A", "basis1B", ...), c(m1A, m1B, ...), c(k1A, k1B, ...)), list(...), ...)
                      ## ti(var_nameA_1, var_nameB_1, y, bs = c(basis1A, basis1B, "md"), m = list(m1A, m1B, m_continuous), k = c(k1a, k1B, k_continuous), mc = c(TRUE, TRUE, FALSE), np = FALSE)
                      ## g(x1, x2)
-                     effects = TRUE, ...) {
+                     # effects = TRUE,
+                    ...) {
+  effects <- TRUE
   if (isFALSE(values_discrete)) {
     weights_discrete <- NULL
   }
   if (is.numeric(sample_weights)) {
-    sample_weights <- colnames(dta)[sample_weights]
+    sample_weights <- colnames(data)[sample_weights]
   }
   if (is.numeric(counts)) {
-    counts <- colnames(dta)[counts]
+    counts <- colnames(data)[counts]
   }
   if (is.numeric(weighted_counts)) {
-    weighted_counts <- colnames(dta)[weighted_counts]
+    weighted_counts <- colnames(data)[weighted_counts]
   }
-  var_vec <- intersect(names(dta),
-                       unlist(c(group_specific_intercepts, linear_effects,
-                                smooth_effects, varying_coefficients,
-                                smooth_interactions)))
+  var_vec_ <- intersect(unlist(c(group_specific_intercepts, linear_effects,
+                                 smooth_effects, varying_coefficients,
+                                 smooth_interactions)),
+                        names(data))
+  if (is.null(var_vec)) {
+    var_vec <- var_vec_
+  } else {
+    stopifnot("Covariates given in var_vec must match the covariates used for effect specification" =
+                var_vec %in% var_vec_ & var_vec_ %in% var_vec)
+  }
+
   if (is.null(y)) {
-    y <- setdiff(names(dta), c(var_vec, sample_weights, counts, weighted_counts))
+    y <- setdiff(names(data), c(var_vec, sample_weights, counts, weighted_counts))
   }
-  stopifnot("y must be one variable contained in dta. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
-  dta_est <- data2counts(dta = dta, var_vec = var_vec, y = y,
-                        sample_weights = sample_weights, counts = counts,
-                        weighted_counts = weighted_counts, bin_width = bin_width,
-                        bin_number = bin_number, values_discrete = values_discrete,
-                        weights_discrete = weights_discrete, domain_continuous = domain_continuous)
+  stopifnot("y must be one variable contained in data. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
+  if (is.numeric(y)) {
+    y <- colnames(data)[y]
+  }
+
+  dta_est <- data2counts(data = data, var_vec = var_vec, y = y,
+                         sample_weights = sample_weights, counts = counts,
+                         weighted_counts = weighted_counts, bin_width = bin_width,
+                         bin_number = bin_number, values_discrete = values_discrete,
+                         weights_discrete = weights_discrete, domain_continuous = domain_continuous)
   cov_combi_id <- unique(subset(dta_est, TRUE,
-                                names(dta_est) %in% c(var_vec, sample_weights)))
+                                names(dta_est) %in% c(var_vec, "group_id")))
+  domain_data <- as.data.table(unique(subset(dta_est, TRUE, names(dta_est) %in% c(y, "discrete", "Delta"))))
+  domain_data[, type := paste0(ifelse(discrete, "discrete.", "bin_mid."), rowid(discrete))][, discrete := NULL]
+  # setnames(domain_data, old = y, new = "u")
 
   checking_densreg_1(m_continuous, k_continuous, sp_y, penalty_discrete,
-                      effects, dta)
+                      effects, data)
 
-  if (is.numeric(y)) {
-    y <- colnames(dta)[y]
-  }
   if (is.numeric(var_vec)) {
-    var_vec <- colnames(dta)[var_vec]
+    var_vec <- colnames(data)[var_vec]
   }
   if (!is.null(weights_discrete)) {
     if (length(weights_discrete)==  1) {
@@ -824,7 +850,7 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
     }
   }
   checking_densreg_2(group_specific_intercepts, linear_effects, smooth_effects,
-                      varying_coefficients, smooth_interactions, dta)
+                      varying_coefficients, smooth_interactions, data)
 
   f <- paste0(f_main, f_intercepts, f_flexibles, f_linear, f_function_var_coef,
               f_flex_interact, "+ as.factor(group_id) -1 + offset(log(Delta) + gam_offsets)")
@@ -861,17 +887,21 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
   X <- X[, -intercepts]
   theta_hat <- m$coefficients[-intercepts]
   f_hat_clr <- X %*% theta_hat
+  covariance <- list(Vp = m$Vp[-intercepts, -intercepts, drop = FALSE],
+                     Vc = m$Vc[-intercepts, -intercepts, drop = FALSE])
   if (is.numeric(y)) {
-    densi <- colnames(dta)[y]
+    densi <- colnames(data)[y]
   } else{
     densi <- y
   }
-  dta_est <- as.data.table(dta_est)
+  # dta_est <- as.data.table(dta_est)
   obs_density <- unique(dta_est[, ..densi])
   f_hat_clr <-
     matrix(f_hat_clr,
            nrow = nrow(obs_density),
            ncol = length(intercepts))
+  rownames(f_hat_clr) <- domain_data$type
+  colnames(f_hat_clr) <- unique(dta_est$group_id)
   if (isFALSE(values_discrete)) {
     if (!is.null(ncol(f_hat_clr))) {
       f_hat <-
@@ -944,34 +974,36 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
   }
   if (!effects) {
     result <-    list(
+      f_hat = f_hat,
+      f_hat_clr = f_hat_clr,
       count_data = dta_est,
-      model = m,
+      covariate_data = as.data.table(cov_combi_id),
+      domain_data = domain_data,
       model_matrix = X,
       theta_hat = theta_hat,
-      f_hat_clr = f_hat_clr,
-      f_hat = f_hat,
+      covariance = covariance,
       params = list(domain_continuous = domain_continuous,
-                    values_discrete = values_discrete, G = bin_number),
-      predicted_effects = list(
+                    values_discrete = values_discrete, bin_number = bin_number),
+      specified_effects = list(
         group_specific_intercepts = group_specific_intercepts,
         smooth_effects = smooth_effects,
         linear_effects = linear_effects,
         varying_coefficients = varying_coefficients,
         smooth_interactions = smooth_interactions
       ),
-      ID_covCombi = cov_combi_id
+      model = m
     )
-    attr(result, "class") <- c("densreg_obj", class(result))
+    attr(result, "class") <- c("densreg", class(result))
     return(result)
   } else {
     pred_terms = stats::predict(m, type = "terms")
     G <- nrow(obs_density)
     n_singles <- length(group_specific_intercepts)
     levels_singles <- c()
-    dta <- as.data.table(dta)
+    data <- as.data.table(data)
     ## find
     for (single in group_specific_intercepts) {
-      n <- length(unlist(unique(dta[, ..single])))
+      n <- length(unlist(unique(data[, ..single])))
       levels_singles <- append(levels_singles, n)
     }
     positions_singles <-
@@ -1028,27 +1060,28 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
         values_discrete = values_discrete,
         weights_discrete = weights_discrete
       )
-    result <-
-      list(
-        count_data = dta_est,
-        model = m,
-        model_matrix = X,
-        theta_hat = theta_hat,
-        f_hat_clr = f_hat_clr,
-        f_hat = f_hat,
-        effects = effects,
-        params = list(domain_continuous = domain_continuous,
-                      values_discrete = values_discrete, G = bin_number),
-        predicted_effects = list(
-          group_specific_intercepts = group_specific_intercepts,
-          smooth_effects = smooth_effects,
-          linear_effects = linear_effects,
-          varying_coefficients = varying_coefficients,
-          smooth_interactions = smooth_interactions
-        ),
-        ID_covCombi = cov_combi_id
-      )
-    attr(result, "class") <- c("densreg_obj", class(result))
+    result <-    list(
+      f_hat = f_hat,
+      f_hat_clr = f_hat_clr,
+      effects = effects,
+      count_data = dta_est,
+      covariate_data = as.data.table(cov_combi_id),
+      domain_data = domain_data,
+      model_matrix = X,
+      theta_hat = theta_hat,
+      covariance = covariance,
+      params = list(domain_continuous = domain_continuous,
+                    values_discrete = values_discrete, bin_number = bin_number),
+      specified_effects = list(
+        group_specific_intercepts = group_specific_intercepts,
+        smooth_effects = smooth_effects,
+        linear_effects = linear_effects,
+        varying_coefficients = varying_coefficients,
+        smooth_interactions = smooth_interactions
+      ),
+      model = m
+    )
+    attr(result, "class") <- c("densreg", class(result))
     return(result)
   }
 }
@@ -1064,7 +1097,7 @@ densreg <- function(dta, y = NULL, sample_weights = NULL, counts = NULL,
 #'
 #' @inheritParams densreg
 checking_densreg_1 <- function(m_continuous, k_continuous, sp_y, penalty_discrete,
-                                effects, dta) {
+                                effects, data) {
 
     # check gam-parameters
     if (!(length(m_continuous) == 2) &&
@@ -1119,7 +1152,7 @@ check_integer_or_null <- function(x) {
 #' @describeIn checking_densreg_1 Check for validity of parameters of \code{\link{densreg}}
 checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
                                 smooth_effects, varying_coefficients,
-                                smooth_interactions, dta) {
+                                smooth_interactions, data) {
 
   # check format of group_specific_intercepts
   if (!is.null(group_specific_intercepts)) {
@@ -1127,13 +1160,13 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       stop("group_specific_intercepts must be NULL or characters.")
     }
 
-    if (!all(group_specific_intercepts %in% colnames(dta))) {
-      stop("All covariates in group_specific intercepts must be variables contained in dta.")
+    if (!all(group_specific_intercepts %in% colnames(data))) {
+      stop("All covariates in group_specific intercepts must be variables contained in data.")
     }
 
     for (col in group_specific_intercepts) {
-      if (!is.factor(dta[[col]])) {
-        stop(paste("Variable", col, "in dta must be of class 'factor'."))
+      if (!is.factor(data[[col]])) {
+        stop(paste("Variable", col, "in data must be of class 'factor'."))
       }
     }
   }
@@ -1144,13 +1177,13 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       stop("linear_effects must be NULL or characters.")
     }
 
-    if (!all(linear_effects %in% colnames(dta))) {
-      stop("All covariates in linear_effects must be variables contained in dta.")
+    if (!all(linear_effects %in% colnames(data))) {
+      stop("All covariates in linear_effects must be variables contained in data.")
     }
 
     for (col in linear_effects) {
-      if (!is.numeric(dta[[col]])) {
-        stop(paste("Variable", col, "in dta must be of class 'numeric'."))
+      if (!is.numeric(data[[col]])) {
+        stop(paste("Variable", col, "in data must be of class 'numeric'."))
       }
     }
   }
@@ -1166,8 +1199,8 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       #   stop("Each smooth_effects list must have 4 or 5 elements.")
       # }
 
-      if (!is.character(effect[[1]]) || !is.numeric(dta[[effect[[1]]]])) {
-        stop("(First) Element cov of each smooth_effect must be a variable contained in dta and the corresponding variable in dta must be numeric.")
+      if (!is.character(effect[[1]]) || !is.numeric(data[[effect[[1]]]])) {
+        stop("(First) Element cov of each smooth_effect must be a variable contained in data and the corresponding variable in data must be numeric.")
       }
 
       if (!is.character(effect[[2]])) {
@@ -1184,7 +1217,7 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       if (!is.logical(effect[[5]])) {
         stop(
           paste(
-            "(Fifth) Element mc of each smooth_effect must be a variable contained in dta and the corresponding variable must be numeric."
+            "(Fifth) Element mc of each smooth_effect must be a variable contained in data and the corresponding variable must be numeric."
           )
         )
       }
@@ -1192,10 +1225,10 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       if (length(effect) ==  6 &&
           !is.null(effect[[6]]) &&
           (!is.character(effect[[6]]) ||
-           !is.factor(dta[[effect[[6]]]]))) {
+           !is.factor(data[[effect[[6]]]]))) {
         stop(
           paste(
-            "(Sixth) Element by of each smooth_effect must be a variable contained in dta and the corresponding variable must be factor."
+            "(Sixth) Element by of each smooth_effect must be a variable contained in data and the corresponding variable must be factor."
           )
         )
       }
@@ -1220,18 +1253,18 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
         }
 
         if (!is.character(effect[[1]]) ||
-            !is.numeric(dta[[effect[[1]]]])) {
+            !is.numeric(data[[effect[[1]]]])) {
           stop(
             paste(
-              "(First) Element cov of each varying_coefficient must be a variable contained in dta and the corresponding variable must be numeric."
+              "(First) Element cov of each varying_coefficient must be a variable contained in data and the corresponding variable must be numeric."
             )
           )
         }
 
-        if (!is.character(effect[[2]]) || !is.numeric(dta[[effect[[2]]]])) {
+        if (!is.character(effect[[2]]) || !is.numeric(data[[effect[[2]]]])) {
           stop(
             paste(
-              "(Second) Element by of each varying_coefficient must be a variable contained in dta and the corresponding variable must be numeric."
+              "(Second) Element by of each varying_coefficient must be a variable contained in data and the corresponding variable must be numeric."
             )
           )
         }
@@ -1252,7 +1285,7 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
         if (!is.logical(effect[[6]])) {
           stop(
             paste(
-              "(Sixth) Element mc of each smooth_effect must be a variable contained in dta and the corresponding variable must be numeric."
+              "(Sixth) Element mc of each smooth_effect must be a variable contained in data and the corresponding variable must be numeric."
             )
           )
         }
@@ -1281,8 +1314,8 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       if (!diff(range((lengths(effect[which(lengths(effect) > 0)])))) == 0) {
         stop("Unequal number of elements in the lists for a smooth interaction effect.")
       }
-      if (!is.character(effect[[1]]) || !is.numeric(unlist(dta[, effect[[1]]]))) {
-        stop("(First) Element covs of each smooth_interaction must be a character vector of variable names contained in dta and the corresponding variables must be numeric.")
+      if (!is.character(effect[[1]]) || !is.numeric(unlist(data[, effect[[1]]]))) {
+        stop("(First) Element covs of each smooth_interaction must be a character vector of variable names contained in data and the corresponding variables must be numeric.")
       }
 
       if (!is.character(effect[[2]])) {
@@ -1310,10 +1343,10 @@ checking_densreg_2 <- function(group_specific_intercepts, linear_effects,
       }
 
       if (length(effect) ==  6 && !is.null(effect[[6]]) &&
-          (!is.character(effect[[6]]) || !is.factor(dta[[effect[[6]]]]))) {
+          (!is.character(effect[[6]]) || !is.factor(data[[effect[[6]]]]))) {
         stop(
           paste(
-            "(Sixth) Element by of each smooth_interaction must be a variable contained in dta and the corresponding variable must be factor."
+            "(Sixth) Element by of each smooth_interaction must be a variable contained in data and the corresponding variable must be factor."
           )
         )
       }

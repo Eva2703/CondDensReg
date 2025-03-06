@@ -134,7 +134,7 @@ dta_mixed[ind_cont, ]$obs_density <-
     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 n_bins <- 20
-dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+dta_mixed <- data2counts(data = dta_mixed, var_vec = c("covariate1", "covariate2"),
                         bin_number = n_bins, values_discrete = c(0, 1),
                         domain_continuous = c(0, 1))
 
@@ -142,7 +142,7 @@ dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"
 dta_cont <- dta_mixed[which(!dta_mixed$discrete), ]
 
 # data for the discrete case
-dta_dis <- data2counts(dta = dta, c("covariate1", "covariate2"),
+dta_dis <- data2counts(data = dta, var_vec = c("covariate1", "covariate2"),
                       values_discrete = c(0, 1, 2), domain_continuous = FALSE)
 
 ### fit model in the mixed case

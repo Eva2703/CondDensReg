@@ -1,8 +1,8 @@
 #' Plot function for conditional density regression models
 #'
-#' \code{plot.densreg_obj} is the default plot method for data of the class \code{densreg_obj}.
+#' \code{plot.densreg} is the default plot method for data of the class \code{densreg}.
 #' @encoding UTF-8
-#' @param x \code{densreg_obj}-object, i.e. the output of the \code{densreg}-function.
+#' @param x \code{densreg}-object, i.e. the output of the \code{densreg}-function.
 #' @param type "histo" or "effects": If \code{type = "histo"}, the underlying
 #' histogram and the estimated conditional density is plotted for each unique
 #' covariate combination. If \code{type = "effects"} the different partial effects
@@ -81,31 +81,31 @@
 #'
 #' @noRd
 
-plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
-                              level = "pdf", display_all = TRUE, pick_sites = FALSE,
-                              predict = NULL, terms = NULL, ...) {
+plot.densreg <- function(x, type = "histo", interactive = FALSE,
+                         level = "pdf", display_all = TRUE, pick_sites = FALSE,
+                         predict = NULL, terms = NULL, ...) {
   obj <- x
   if (type == "histo") {
-    if (any(obj$count_data$discrete==  TRUE) &
-        any(obj$count_data$discrete==  FALSE)) {
+    if (any(obj$count_data$discrete == TRUE) &
+        any(obj$count_data$discrete == FALSE)) {
       interactive_histo_and_dens_mixed(
         obj$count_data,
         obj$f_hat,
         domain = obj$params[[1]],
-        G = obj$params[[3]],
+        G = obj$params$bin_number,
         discretes = obj$params[[2]]
       )
     }
-    if (all(obj$count_data$discrete==  FALSE)) {
+    if (all(obj$count_data$discrete == FALSE)) {
       interactive_histo_and_dens(
         obj$count_data,
         obj$f_hat,
         domain = obj$params[[1]],
-        G = obj$params[[3]],
+        G = obj$params$bin_number,
         ...
       )
     }
-    if (all(obj$count_data$discrete==  TRUE)) {
+    if (all(obj$count_data$discrete == TRUE)) {
       interactive_histo_and_dens_discrete(obj$count_data,
                                           obj$f_hat, discretes = obj$params[[2]], ...)
     }
@@ -113,7 +113,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
   if (type == "effects") {
     if (!is.null(predict)) {
       plot_list <- list()
-      G <- obj$params[[3]]
+      G <- obj$params$bin_number
       domain <- obj$params[[1]]
       if (level == "pdf") {
         effects <-
@@ -167,7 +167,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 
 
-          if (all(obj$count_data$discrete==  FALSE)) {
+          if (all(obj$count_data$discrete == FALSE)) {
 
             p <-
               plot_densities(
@@ -185,7 +185,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
             plot_list <- append(plot_list, list(p))
             j <- j + 1}
 
-          if (all(obj$count_data$discrete==  TRUE)) {
+          if (all(obj$count_data$discrete == TRUE)) {
             p <-
               plot_densities_discrete(
                 eff,
@@ -202,8 +202,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
             plot_list <- append(plot_list, list(p))
             j <- j + 1
           }
-          if (any(obj$count_data$discrete==  FALSE) &
-              any(obj$count_data$discrete==  TRUE)) {
+          if (any(obj$count_data$discrete == FALSE) &
+              any(obj$count_data$discrete == TRUE)) {
             p <-
               plot_densities_mixed(
                 eff,
@@ -234,7 +234,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
           )
         j <- 1
         for (eff in effects) {
-          if (all(obj$count_data$discrete==  FALSE)) {
+          if (all(obj$count_data$discrete == FALSE)) {
             lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
             p <-
               plot_densities(
@@ -250,7 +250,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
             plot_list <- append(plot_list, list(p))
             j <- j + 1
           }
-          if (all(obj$count_data$discrete==  TRUE)) {
+          if (all(obj$count_data$discrete == TRUE)) {
             p <-
               plot_densities_discrete(
                 eff,
@@ -264,8 +264,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
             plot_list <- append(plot_list, list(p))
             j <- j + 1
           }
-          if (any(obj$count_data$discrete==  FALSE) &
-              any(obj$count_data$discrete==  TRUE)) {
+          if (any(obj$count_data$discrete == FALSE) &
+              any(obj$count_data$discrete == TRUE)) {
             p <-
               plot_densities_mixed(
                 eff,
@@ -294,15 +294,15 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 
     } else{
-      if (all(obj$count_data$discrete==  FALSE)) {
+      if (all(obj$count_data$discrete == FALSE)) {
         if (level==  "pdf") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -312,7 +312,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -323,7 +323,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(1 / (
                       domain[2] - domain[1]
                     ), G)),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -336,13 +336,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities(
-                    obj$effects[["pdf_estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects"]][[j]],
                     G = G,
                     single = TRUE,
                     legend_names = round(lev, digits = 3),
@@ -354,12 +354,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- unique(obj$count_data[[smooth_effects[[5]]]])
+                lev_by <- unique(obj$count_data[[smooth_effects$by]])
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -367,7 +367,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                   num_lev <- length(lev)
                   p <-
                     plot_densities(
-                      obj$effects[["pdf_estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects"]][[j]],
                       G = G,
                       single = TRUE,
                       legend_names = round(lev, digits = 3),
@@ -375,7 +375,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -389,12 +389,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   single = TRUE,
                   legend_names = round(lev, digits = 3),
@@ -405,7 +405,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -420,7 +420,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   single = TRUE,
                   legend_names = lev,
@@ -436,7 +436,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -454,7 +454,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -475,12 +475,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 
           } else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -489,7 +489,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -500,7 +500,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(1 / (
                       domain[2] - domain[1]
                     ), G)),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -513,8 +513,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -522,7 +522,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities(
-                    obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects"]][[j]][, used_cols],
                     G = G,
                     single = TRUE,
                     legend_names = paste0(
@@ -537,12 +537,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -555,7 +555,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities(
-                      obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects"]][[j]][, used_cols],
                       G = G,
                       single = TRUE,
                       legend_names = paste0(
@@ -566,7 +566,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -580,7 +580,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -588,7 +588,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   legend_names = paste0(
@@ -603,7 +603,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -622,7 +622,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   legend_names =  lev_used,
@@ -638,7 +638,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -656,7 +656,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -683,12 +683,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
         }
         if (level==  "clr") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities(
-                obj$effects[["estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(paste("clr(", hat(beta)[0], ")")),
@@ -697,7 +697,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -706,7 +706,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_densities(
                   cbind(
                     data.frame(ref = rep(0, G)),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -723,13 +723,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities(
-                    obj$effects[["estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects_clr"]][[j]],
                     G = G,
                     single = TRUE,
                     legend_names = round(lev, digits = 3),
@@ -743,13 +743,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               else{
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_by <-
-                  unique(obj$count_data[[smooth_effects[[5]]]])
+                  unique(obj$count_data[[smooth_effects$by]])
                 num_lev <- length(lev)
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   p <-
                     plot_densities(
-                      obj$effects[["estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects_clr"]][[j]],
                       G = G,
                       single = TRUE,
                       legend_names = round(lev, digits = 3),
@@ -757,7 +757,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -772,12 +772,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   single = TRUE,
                   legend_names = round(lev, digits = 3),
@@ -789,7 +789,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -804,7 +804,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   single = TRUE,
                   legend_names = lev,
@@ -822,7 +822,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -840,7 +840,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -863,12 +863,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
           }
           else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities(
-                obj$effects[["estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "clr(intercept)",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -877,7 +877,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -886,7 +886,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_densities(
                   cbind(
                     data.frame(ref = rep(0, G)),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -903,8 +903,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -912,7 +912,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities(
-                    obj$effects[["estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                     G = G,
                     single = TRUE,
                     legend_names = paste0(
@@ -931,12 +931,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -949,7 +949,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities(
-                      obj$effects[["estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                       G = G,
                       single = TRUE,
                       legend_names = paste0(
@@ -960,7 +960,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -975,7 +975,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -983,7 +983,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   legend_names = paste0(
@@ -998,7 +998,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -1017,7 +1017,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   legend_names =  lev_used,
@@ -1035,7 +1035,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -1053,7 +1053,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1082,15 +1082,15 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
         }
       }
 
-      if (all(obj$count_data$discrete==  TRUE)) {
+      if (all(obj$count_data$discrete == TRUE)) {
         if (level==  "pdf") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_discrete(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -1100,7 +1100,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -1111,7 +1111,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(
                       1 / length(obj$params[[2]]), length(obj$params[[2]])
                     )),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -1125,13 +1125,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities_discrete(
-                    obj$effects[["pdf_estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects"]][[j]],
                     G = G,
                     single = TRUE,
                     legend_names = round(lev, digits = 3),
@@ -1144,12 +1144,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- unique(obj$count_data[[smooth_effects[[5]]]])
+                lev_by <- unique(obj$count_data[[smooth_effects$by]])
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -1157,7 +1157,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                   num_lev <- length(lev)
                   p <-
                     plot_densities_discrete(
-                      obj$effects[["pdf_estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects"]][[j]],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -1166,7 +1166,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -1180,12 +1180,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1198,7 +1198,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -1213,7 +1213,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1230,7 +1230,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -1248,7 +1248,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1270,13 +1270,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 
           } else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_discrete(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
+                obj$effects[["estimated_effects"]][["intercept"]],
                 values_discrete = obj$params[[2]],
-                G = obj$params[[3]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -1285,7 +1285,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -1296,7 +1296,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(
                       1 / length(obj$params[[2]]), length(obj$params[[2]])
                     )),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -1310,8 +1310,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -1319,7 +1319,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities_discrete(
-                    obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects"]][[j]][, used_cols],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -1335,12 +1335,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -1353,7 +1353,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities_discrete(
-                      obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects"]][[j]][, used_cols],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -1365,7 +1365,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -1379,7 +1379,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -1387,7 +1387,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1403,7 +1403,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -1422,7 +1422,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1439,7 +1439,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -1457,7 +1457,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_discrete(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1484,13 +1484,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
         }
         if (level==  "clr") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_discrete(
-                obj$effects[["estimated_effects"]][["intercept"]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
                 values_discrete = obj$params[[2]],
-                G = obj$params[[3]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(paste("clr(", hat(beta)[0], ")")),
@@ -1499,7 +1499,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -1510,7 +1510,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(0, length(
                       obj$params[[2]]
                     ))),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -1528,13 +1528,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities_discrete(
-                    obj$effects[["estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects_clr"]][[j]],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -1549,13 +1549,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               else{
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_by <-
-                  unique(obj$count_data[[smooth_effects[[5]]]])
+                  unique(obj$count_data[[smooth_effects$by]])
                 num_lev <- length(lev)
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   p <-
                     plot_densities_discrete(
-                      obj$effects[["estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects_clr"]][[j]],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -1564,7 +1564,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -1579,12 +1579,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1597,7 +1597,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -1612,7 +1612,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1631,7 +1631,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -1649,7 +1649,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_discrete(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1670,12 +1670,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
             }
           }
           else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_discrete(
-                obj$effects[["estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
+                G = obj$params$bin_number,
                 values_discrete = obj$params[[2]],
                 legend_names = "clr(intercept)",
                 single = TRUE,
@@ -1685,7 +1685,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -1696,7 +1696,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(0, length(
                       obj$params[[2]]
                     ))),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -1714,8 +1714,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -1723,7 +1723,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities_discrete(
-                    obj$effects[["estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -1743,12 +1743,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -1761,7 +1761,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities_discrete(
-                      obj$effects[["estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -1773,7 +1773,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -1788,7 +1788,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -1796,7 +1796,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities_discrete(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   values_discrete = obj$params[[2]],
@@ -1812,7 +1812,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -1831,7 +1831,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_discrete(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1850,7 +1850,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -1868,7 +1868,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -1896,16 +1896,16 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
         }
       }
-      if (any(obj$count_data$discrete==  TRUE) &&
-          any(obj$count_data$discrete==  FALSE)) {
+      if (any(obj$count_data$discrete == TRUE) &&
+          any(obj$count_data$discrete == FALSE)) {
         if (level==  "pdf") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_mixed(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects"]][["intercept"]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -1915,7 +1915,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -1926,7 +1926,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(
                       1 / length(obj$params[[2]]), length(obj$params[[2]])
                     )),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   single = TRUE,
@@ -1940,13 +1940,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities_mixed(
-                    obj$effects[["pdf_estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects"]][[j]],
                     G = G,
                     single = TRUE,
                     legend_names = round(lev, digits = 3),
@@ -1959,12 +1959,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- unique(obj$count_data[[smooth_effects[[5]]]])
+                lev_by <- unique(obj$count_data[[smooth_effects$by]])
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -1972,7 +1972,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                   num_lev <- length(lev)
                   p <-
                     plot_densities_mixed(
-                      obj$effects[["pdf_estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects"]][[j]],
                       G = G,
                       domain = obj$params[[1]],
                       values_discrete = obj$params[[2]],
@@ -1982,7 +1982,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -1996,12 +1996,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   domain = obj$params[[1]],
                   values_discrete = obj$params[[2]],
@@ -2015,7 +2015,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -2030,7 +2030,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   domain = obj$params[[1]],
                   values_discrete = obj$params[[2]],
@@ -2048,7 +2048,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -2066,7 +2066,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2087,13 +2087,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 
           } else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_mixed(
-                obj$effects[["pdf_estimated_effects"]][["intercept"]],
+                obj$effects[["estimated_effects"]][["intercept"]],
                 values_discrete = obj$params[[2]],
-                G = obj$params[[3]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(hat(beta)[0]),
@@ -2102,7 +2102,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -2113,7 +2113,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(
                       1 / length(obj$params[[2]]), length(obj$params[[2]])
                     )),
-                    data.frame(obj$effects[["pdf_estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -2127,8 +2127,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -2136,7 +2136,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities_mixed(
-                    obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects"]][[j]][, used_cols],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -2152,12 +2152,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -2170,7 +2170,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities_mixed(
-                      obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects"]][[j]][, used_cols],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -2182,7 +2182,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1]
                       ),
@@ -2196,7 +2196,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -2204,7 +2204,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2220,7 +2220,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -2239,7 +2239,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2256,7 +2256,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               j <- j + 1
               plot_list <- append(plot_list, list(p))
             }
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -2274,7 +2274,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_mixed(
-                  obj$effects[["pdf_estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2301,13 +2301,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
         }
         if (level==  "clr") {
           if (display_all) {
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_mixed(
-                obj$effects[["estimated_effects"]][["intercept"]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
                 values_discrete = obj$params[[2]],
-                G = obj$params[[3]],
+                G = obj$params$bin_number,
                 legend_names = "intercept",
                 single = TRUE,
                 ylab = expression(paste("clr(", hat(beta)[0], ")")),
@@ -2316,7 +2316,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -2327,7 +2327,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(0, length(
                       obj$params[[2]]
                     ))),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -2345,13 +2345,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 num_lev <- length(lev)
                 p <-
                   plot_densities_mixed(
-                    obj$effects[["estimated_effects"]][[j]],
+                    obj$effects[["estimated_effects_clr"]][[j]],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -2366,13 +2366,13 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               else{
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_by <-
-                  unique(obj$count_data[[smooth_effects[[5]]]])
+                  unique(obj$count_data[[smooth_effects$by]])
                 num_lev <- length(lev)
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   p <-
                     plot_densities_mixed(
-                      obj$effects[["estimated_effects"]][[j]],
+                      obj$effects[["estimated_effects_clr"]][[j]],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -2381,7 +2381,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -2396,12 +2396,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2414,7 +2414,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -2429,7 +2429,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2448,7 +2448,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -2466,7 +2466,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]],
+                  obj$effects[["estimated_effects_clr"]][[j]],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2489,12 +2489,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
           }
           else{
-            G <- obj$params[[3]]
+            G <- obj$params$bin_number
             domain <- obj$params[[1]]
             plot_intercept <-
               plot_densities_mixed(
-                obj$effects[["estimated_effects"]][["intercept"]],
-                G = obj$params[[3]],
+                obj$effects[["estimated_effects_clr"]][["intercept"]],
+                G = obj$params$bin_number,
                 values_discrete = obj$params[[2]],
                 legend_names = "clr(intercept)",
                 single = TRUE,
@@ -2503,7 +2503,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               )
             plot_list <- list(list(plot_intercept))
             j <- 1
-            for (group_spec in obj$predicted_effects[[1]]) {
+            for (group_spec in obj$specified_effects[[1]]) {
               lev <- sort(unique(obj$count_data[[group_spec]]))
               num_lev <- length(lev)
               ind_eff <- c((j + 1):(j + num_lev - 1))
@@ -2514,7 +2514,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                     data.frame(ref = rep(0, length(
                       obj$params[[2]]
                     ))),
-                    data.frame(obj$effects[["estimated_effects"]])[, ind_eff]
+                    data.frame(obj$effects[["estimated_effects_clr"]])[, ind_eff]
                   ),
                   G = G,
                   values_discrete = obj$params[[2]],
@@ -2532,8 +2532,8 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
             j <- j + 1
-            for (smooth_effects in obj$predicted_effects[[2]]) {
-              if (is.null(smooth_effects[[5]])) {
+            for (smooth_effects in obj$specified_effects[[2]]) {
+              if (is.null(smooth_effects$by)) {
                 lev <- sort(unique(obj$count_data[[smooth_effects[[1]]]]))
                 lev_used <- c(min(lev), stats::median(lev), max(lev))
                 used_cols <- c(1, stats::median(c(1:length(
@@ -2541,7 +2541,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 ))), length(lev))
                 p <-
                   plot_densities_mixed(
-                    obj$effects[["estimated_effects"]][[j]][, used_cols],
+                    obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                     G = G,
                     values_discrete = obj$params[[2]],
                     single = TRUE,
@@ -2561,12 +2561,12 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 plot_list <- append(plot_list, list(p))
               }
               else{
-                lev_by <- sort(unique(obj$count_data[[smooth_effects[[5]]]]))
+                lev_by <- sort(unique(obj$count_data[[smooth_effects$by]]))
 
                 num_lev_by <- length(lev_by)
                 for (i in c(1:(num_lev_by - 1))) {
                   lev <-
-                    obj$count_data %>% select(smooth_effects[[5]], smooth_effects[[1]])
+                    obj$count_data %>% select(smooth_effects$by, smooth_effects[[1]])
                   lev <- lev %>% filter(.[[1]]==  lev_by[i + 1])
                   lev <- sort(unname(unlist(unique(
                     lev[, 2]
@@ -2579,7 +2579,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
                   p <-
                     plot_densities_mixed(
-                      obj$effects[["estimated_effects"]][[j]][, used_cols],
+                      obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                       G = G,
                       values_discrete = obj$params[[2]],
                       single = TRUE,
@@ -2591,7 +2591,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                         "clr(Smooth effect of ",
                         smooth_effects[[1]],
                         " given ",
-                        smooth_effects[[5]],
+                        smooth_effects$by,
                         " = ",
                         lev_by[i + 1],
                         ")"
@@ -2606,7 +2606,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               }
             }
 
-            for (linear in obj$predicted_effects[[3]]) {
+            for (linear in obj$specified_effects[[3]]) {
               lev <- sort(unique(obj$count_data[[linear]]))
               num_lev <- length(lev)
               lev_used <- c(min(lev), stats::median(lev), max(lev))
@@ -2614,7 +2614,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
                 c(1, stats::median(c(1:length(lev))), length(lev))
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   single = TRUE,
                   values_discrete = obj$params[[2]],
@@ -2630,7 +2630,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (varying_coef in obj$predicted_effects[[4]]) {
+            for (varying_coef in obj$specified_effects[[4]]) {
               lev_base <-
                 paste0(
                   "(",
@@ -2649,7 +2649,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               num_lev_by <- length(lev_by)
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2668,7 +2668,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
               plot_list <- append(plot_list, list(p))
             }
 
-            for (flexi in obj$predicted_effects[[5]]) {
+            for (flexi in obj$specified_effects[[5]]) {
               lev_base <- round(obj$count_data %>% select(flexi[[1]]), digits = 3)
 
               lev <- unite(lev_base,
@@ -2686,7 +2686,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
               p <-
                 plot_densities_mixed(
-                  obj$effects[["estimated_effects"]][[j]][, used_cols],
+                  obj$effects[["estimated_effects_clr"]][[j]][, used_cols],
                   G = G,
                   values_discrete = obj$params[[2]],
                   single = TRUE,
@@ -2722,7 +2722,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
         plot_list <- plot_list[pick_sites]
       }
 
-      if (!interactive) {
+      if (!interactive | length(plot_list) == 1) {
         return(plot_list)
       } else{
         (manipulate(plot_list[[k]], k = slider(
@@ -2740,9 +2740,9 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 
 #' Predict function for conditonal density regression models
 #'
-#' \code{predict.densreg_obj} is the default predict method for data of the class \code{densreg_obj}.
+#' \code{predict.densreg} is the default predict method for data of the class \code{densreg}.
 
-#' @param object \code{densreg_obj}-object, i.e. the output of the \code{densreg}-function.
+#' @param object \code{densreg}-object, i.e. the output of the \code{densreg}-function.
 #' @param new_data New data in form of a data table with columns named as the relevant covariates for the terms which should be predicted. In each row, the user can specify a value of the respective covariate. If not specyfied (\code{NULL}) the values of the original data set (see object$count_data) are used for the predictions.
 #' @param which Only terms (or their index number) named in this array will be predicted. Covariates only needed for these terms have to be given in \code{new_data}. If \code{which} and \code{exclude} are given, \code{exclude} will be used.
 #' @param exclude Terms (or their index number) named in this array will not be predicted. Covariates only needed for terms which are excluded do not have to be given in \code{new_data}. If \code{which} and \code{exclude} are given, \code{exclude} will be used.
@@ -2750,7 +2750,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 #' @param level If \code{type = "terms"}: "pdf" results in predicted terms on pdf-level, "clr" in terms on clr-level.  \code{type = "pdf"}  or \code{type = "clr"} specifies the prediction of \eqn{\hat f} or \eqn{clr(\hat f)} of the respective covariate values.
 #'
 #' @return A list of matrices (if type = "terms") with one matrix for each term, different columns for every predicted covariate value.
-#'A matrix with columns for the different covariate combinations if \code{type = "pdf"} or \code{ = "clr"} containing the estimated \eqn{\hat f} or \eqn{clr(\hat f)}.
+#'A matrix with columns for the different covariate combinations if \code{type = "pdf"} or \code{ = "clr"} containing the estimated \eqn{\hat f} or \eqn{clr[\hat{f}]}.
 #' @examples
 #'
 #' \donttest{# please run the examples of densreg to estimate the needed models
@@ -2787,7 +2787,7 @@ plot.densreg_obj <- function(x, type = "histo", interactive = FALSE,
 #' }
 #'
 #' @noRd
-predict.densreg_obj <-
+predict.densreg <-
   function(object,
            new_data = NULL,
            which = NULL,
@@ -2795,10 +2795,10 @@ predict.densreg_obj <-
            type = "terms",
            level = "clr") {
     if (!isFALSE(object$params[[2]]) & !isFALSE(object$params[[1]])) {
-      n_bins <- object$params$G + length(object$params[[2]])
+      n_bins <- object$params$bin_number + length(object$params[[2]])
     }
     if (isFALSE(object$params[[2]]) & !isFALSE(object$params[[1]])) {
-      n_bins <- object$params$G
+      n_bins <- object$params$bin_number
     }
     if (!isFALSE(object$params[[2]]) & isFALSE(object$params[[1]])) {
       n_bins <- length(object$params[[2]])
@@ -2850,6 +2850,7 @@ predict.densreg_obj <-
 
       nd <- object$count_data[rep(c(1:n_bins), nrow(new_data))]
       relevant <- match(colnames(new_data), colnames(nd))
+      stopifnot("There are covariates in new data that are not included in the model to predict!" = !any(is.na(relevant)))
       j <- 1
       for (index in relevant) {
         nd[, index] <- rep(new_data[, j], each = n_bins)

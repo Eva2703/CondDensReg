@@ -6,8 +6,9 @@
 \title{Conditional density regression for individual-level data}
 \usage{
 densreg(
-  dta,
+  data,
   y = NULL,
+  var_vec = NULL,
   sample_weights = NULL,
   counts = NULL,
   weighted_counts = NULL,
@@ -26,34 +27,42 @@ densreg(
   smooth_effects = NULL,
   varying_coefficients = NULL,
   smooth_interactions = NULL,
-  effects = TRUE,
   ...
 )
 }
 \arguments{
-\item{dta}{Data set of type \code{\link[base]{data.frame}} or
+\item{data}{Data set of type \code{\link[base]{data.frame}} or
 \code{\link[data.table]{data.table}} containing the observations \eqn{(y_i, x_i)}
 of response and covariates as well as optional sample weights (compare
 \code{sample_weights}) for each observation in the rows (\eqn{i = 1, ..., N}).}
 
-\item{y}{Variable in \code{dta} containing the response observations
+\item{y}{Variable in \code{data} containing the response observations
 \eqn{y_i}. Either the variable name can be given as string or the column
-position of the variable in \code{dta} as integer. If missing (\code{NULL}),
-if there is a unique column of \code{dta} not specified in \code{sample_weights},
+position of the variable in \code{data} as integer. If missing (\code{NULL}),
+if there is a unique column of \code{data} not specified in \code{sample_weights},
 \code{counts}, and \code{weighted_counts} and not used as covariate during
 effect specification (see below), this unique column is used.}
 
-\item{sample_weights}{(Optional) variable in \code{dta} which contains a sample
+\item{var_vec}{(Optional) vector of variables in \code{data} to be passed to
+\code{\link{data2counts}}, specifying the order of the covariate combinations.
+Must match the covariates used for effect specification (see below).
+The vector can either contain the variable names as strings or the column
+positions of the respective variables in \code{dta}.
+If missing (\code{NULL}), the order of covariates as appearing in
+\code{group_specific_intercepts}, \code{linear_effects}, \code{smooth_effects},
+\code{varying_coefficients}, \code{smooth_interactions} is used.}
+
+\item{sample_weights}{(Optional) variable in \code{data} which contains a sample
 weight for each observation. Either the variable name can be given as string
-or the column position of the variable in \code{dta} as integer. If missing
+or the column position of the variable in \code{data} as integer. If missing
 (\code{NULL}), no sample weights are included per default (i.e., all
 observations have the same weight 1).}
 
-\item{counts}{(Optional) variable in \code{dta} which contains a count for
+\item{counts}{(Optional) variable in \code{data} which contains a count for
 each observation (for cases, where the available data contains counts instead
 of individual observations, which is common in particular for discrete data).
 Either the variable name can be given as string or the column position of the
-variable in \code{dta} as integer. If \code{bin_number} and \code{bin_width}
+variable in \code{data} as integer. If \code{bin_number} and \code{bin_width}
 are both \code{NULL}, midpoints of unique observations \eqn{y_i} are used as
 boundaries of histogram bins (if \eqn{I} is not empty, i.e., if there is a
 continuous component), which are then used to compute the bin widths (which are
@@ -65,23 +74,13 @@ not \code{NULL}, the latter is ignored (also indicated via a warning message).
 Please use \code{weighted_counts} (additionally to \code{counts}) to include
 possible weighted data.}
 
-\item{weighted_counts}{(Optional) variable in \code{dta} which contains a
+\item{weighted_counts}{(Optional) variable in \code{data} which contains a
 weighted count for each observation (compare Appendix D of Maier et al. (2025b)).
 In this case, also absolute counts have to be specified via \code{counts}.
 Otherwise, \code{weighted_counts} is ignored. Either the variable name can be
-given as string or the column position of the variable in \code{dta} as integer.
+given as string or the column position of the variable in \code{data} as integer.
 If missing (\code{NULL}), counts are constructed from individual observations
-(which is equivalent to all observations counted once)
-% @param already_formatted A logical indicating if the data in \code{dta} is
-% already formatted as count data. If \code{already_formatted = TRUE}, the data
-% have to have a column named \code{"counts"}, an additional column with the
-% name \code{"weighted_counts"} is optional.
-% % The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{y}.
-% The bin width is computed automatically based on the observed continuous
-% values unless an integer or a vector is submitted by the user via
-% \code{bin_width} and/or \code{bin_number}. In these cases, the binning is
-% based on the given bin number or width.
-.}
+(which is equivalent to all observations counted once).}
 
 \item{values_discrete}{Vector of values in \eqn{\mathcal{D}}{D} (the subset of
 the domain corresponding to the discrete part of the densities). Defaults to
@@ -163,14 +162,14 @@ technical reasons it is not possible to set the whole penalty matrix to zero).}
 
 \item{group_specific_intercepts}{Vector of the form \code{c("x_a", "x_b", ...)}
 of names of categorical covariates, i.e., \code{\link[base]{factor}} variables
-contained in \code{dta} for which group-specific intercepts \eqn{\beta_{x_a},
+contained in \code{data} for which group-specific intercepts \eqn{\beta_{x_a},
 \beta_{x_b}, ...} (one per category of the respective covariate) shall be
 estimated. For \code{\link[base]{ordered}} factors, the first level is used as reference category
 (see \code{\link[mgcv]{gam.models}} for more details).
 If missing (\code{NULL}), no group-specific intercept is included.}
 
 \item{linear_effects}{Vector of the form \code{c("x_a", "x_b", ...)} of names
-of numeric covariates contained in \code{dta} for which linear effects
+of numeric covariates contained in \code{data} for which linear effects
 \eqn{x_a \odot \beta_{x_a}, x_b \odot \beta_{x_b}, ...} % {x_a * \beta_{x_a}, x_b * \beta_{x_b}, ...}
 shall be estimated. If missing (\code{NULL}), no linear effect is included.}
 
@@ -181,7 +180,7 @@ elements. The list is filled with \code{NULL} if it contains less than 6 element
 Each list is adding one (group-specific) smooth effect of the form \eqn{g_{x_b}(x_a)} to the
 model with:
 \itemize{
-\item \code{cov}: Name of a numeric covariate contained in \code{dta}.
+\item \code{cov}: Name of a numeric covariate contained in \code{data}.
 \item \code{bs}: Character string specifying the type for the marginal
 basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
 full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -197,7 +196,7 @@ for more information. If not specified or \code{NULL}, \code{10} is used.
 should have centering constraints applied. By default all marginals are
 constrained, i.e., \code{mc = TRUE}.
 \item \code{by}: Optional, name of a categorical covariate, i.e.,
-\code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+\code{\link[base]{factor}} variable contained in \code{data} specifying whether
 the smooth effect should be modeled specifically for each level of the
 \code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
 the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
@@ -213,8 +212,8 @@ elements. The list is filled with \code{NULL} if it contains less than 6 element
 Each list is adding one varying coefficient of the form \eqn{x_b \odot g(x_a)}
 to the model with:
 \itemize{
-\item \code{cov}: Name of a numeric covariate contained in \code{dta}.
-\item \code{by}: Name of a numeric covariate contained in \code{dta}.
+\item \code{cov}: Name of a numeric covariate contained in \code{data}.
+\item \code{by}: Name of a numeric covariate contained in \code{data}.
 \item \code{bs}: Character string specifying the type for the marginal
 basis in covariate direction. See \code{\link[mgcv]{smooth.terms}} for details and
 full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -241,7 +240,7 @@ if it contains less than 6 elements. Each list is specifying a (group-specific)
 smooth interaction effect between at least two continuous covariates of the
 form \eqn{g_{x_by}(x_a, x_b, ...)} in the model with:
 \itemize{
-\item \code{covs}: Vector of names of numeric covariates contained in \code{dta}.
+\item \code{covs}: Vector of names of numeric covariates contained in \code{data}.
 \item \code{bs}: Vector of character strings specifying the types for each
 marginal basis of each covariate. See \code{\link[mgcv]{smooth.terms}} for
 details and full list. If not specified or \code{NULL}, a P-spline basis \code{"ps"}
@@ -260,7 +259,7 @@ parameter as \code{10} is used.
 should have centering constraints applied. By default all marginals are
 constrained, i.e., \code{TRUE}.
 \item \code{by}: Optional, name of a categorical covariate, i.e.,
-\code{\link[base]{factor}} variable contained in \code{dta} specifying whether
+\code{\link[base]{factor}} variable contained in \code{data} specifying whether
 the smooth interaction effect should be modeled specifically for each level of the
 \code{by}-covariate (group-specific). For \code{\link[base]{ordered}} factors,
 the first level is used as reference category (see \code{\link[mgcv]{gam.models}}
@@ -269,44 +268,57 @@ is not depending on the level of an additional covariate.
 }
 If missing (\code{NULL}), no (group-specific) smooth interaction is included.}
 
-\item{effects}{Indicates if estimated partial effects should be returned
-(\code{TRUE}; default) or not (\code{FALSE}).}
-
 \item{...}{further arguments for passing on to \code{\link[mgcv]{gam}}.}
 }
 \value{
-The function returns an object of the class \code{densreg_obj}, which
+The function returns an object of the class \code{densreg}, which
 is a \code{\link[base]{list}} with elements:
 \itemize{
-\item \code{count_data}: \code{\link[data.table]{data.table}}-object containing
-the count data obtained by using \code{\link{data2counts}} for the given data
-\code{dta} and covariates, which is also an object of the sub-class
-\code{histogram_count_data}. See \code{\link{data2counts}} for more information.
-\item \code{model}: \code{\link[mgcv]{gam}}-object of the estimated model.
-\item \code{model_matrix}: Model matrix of the model.
-\item \code{theta_hat}: Estimated coeffecient vector \eqn{\hat{\theta}}.
-\item \code{f_hat_clr}: Estimated conditional densities on clr-level
-\eqn{clr(\hat f)} for every covariate combination in the order of the respective
-\code{group_id} in \code{count_data}.
-\item \code{f_hat}: Estimated conditional densities on clr-level \eqn{clr(\hat{f})}
-for every covariate combination in the order of the respective group_id in
-\code{count_data}.
-\item \code{effects}: Only contained, if \code{effects = TRUE}; List of lists.
-Each list gives one estimated partial effect. Both clr- and density-level are
-included.
+\item \code{f_hat}: Matrix containing the estimated conditional densities
+\eqn{\hat{f}} (evaluated at the bin midpoints and
+discrete values respectively, compare row names and \code{domain_data})
+for the different covariate combinations as columns, ordered according to
+\code{group_id}, compare column names and \code{covariate_data}. Computed by
+applying \code{\link{clr}} to \code{f_hat_clr} column-wise.
+\item \code{f_hat_clr}: Matrix containing the estimated conditional clr
+transformed densities \eqn{clr[\hat{f}]} (evaluated at the bin midpoints and
+discrete values respectively, compare \code{obs_density} in \code{count_data})
+for the different covariate combinations as columns, ordered according to
+\code{group_id}, compare column names and \code{covariate_data}.
+\item \code{effects}: List with elements % \code{G} (integer specifying the number of bins for the continuous component),
+\code{estimated_effects_clr} and \code{estimated_effects} containing the
+(clr transformed) estimated partial effects.
+\item \code{count_data}: \code{count_data}-object containing
+the count data obtained by applying \code{\link{data2counts}} to \code{data}.
+\item \code{covariate_data}: \code{data.table} giving an overview over the assignment
+of the unique covariate combinations to the group IDs.
+\item \code{domain_data}: \code{data.table} giving an overview over the binning
+of the domain \code{Ycal} of the density for the construction of \code{count_data}.
+\item \code{model_matrix}: Model matrix.
+\item \code{theta_hat}: Estimated coefficient vector \eqn{\hat{\theta}}.
+\item \code{covariance}: Estimated covariance matrix of the coefficient vector
+\eqn{\hat{\theta}} as list with two elements corresponding to two different
+estimation methods: \code{Vp} is the inverse of the (penalized) Fisher information
+at \code{theta_hat} (which is identical to the Bayesian posterior covariance
+matrix \code{Vp} in the estimated \code{\link[mgcv]{gamObject}}, restricted
+to the submatrix corresponding to \code{theta_hat}), \code{Vc} contains a
+correction for smoothing parameter uncertainty (corresponds to \code{Vc} in
+the estimated \code{\link[mgcv]{gamObject}}, restricted to the submatrix
+corresponding to \code{theta_hat}). % compare Wood et al. (2016)
 \item \code{params}: List of \code{domain_continuous, values_discrete} and
 \code{bin_number} as given to the function.
-\item \code{predicted_effects}: List of lists (\code{group_specific_intercepts,
+\item \code{specified_effects}: List of lists (\code{group_specific_intercepts,
 smooth effects, linear_effects, varying_coefficient, smooth_interactions})
 collecting the specification of all partial effects as given to the function
 in the respective parameters.
-\item \code{ID_covCombi}: Data frame which gives an overview over the assignment
-of the unique covariate combinations to the group IDs.
+\item \code{model}: \code{\link[mgcv]{gam}}-object corresponding to the
+estimated Poisson model.
 }
 Note that \code{plot}- and \code{predict}-methods for objects of class
-\code{densreg_obj} are available via \code{DensityRegression:::plot.densreg_obj}
-and \code{DensityRegression:::predict.densreg_obj}, however, they are not exported,
-since they are not tested/documented appropriately, yet.
+\code{densreg} are available via \code{DensityRegression:::plot.densreg()}
+and \code{DensityRegression:::predict.densreg()}, however, they are not exported,
+since some functionality (like plots on effect level) are not working properly,
+and they are not tested/documented appropriately, yet.
 }
 \description{
 This function implements the approach by Maier et al. (2025b) for fitting
@@ -379,8 +391,9 @@ continuous part of the domain of the densities and counts on the discrete
 part of the domain. For details, see Maier et al. (2025b).
 \code{densreg} calls \code{\link{data2counts}} to constructs the respective
 count data from the individual observations and estimates the corresponding
-Poisson model. Furthermore, the resulting densities on pdf- and clr-level as
-well as the estimated partial effects on both levels are calculated.
+Poisson model via \code{\link[mgcv]{gam}}. Furthermore, the resulting
+(clr transformed) densities as well as the estimated (clr transformed) partial
+effects are calculated (using \code{\link{clr}}).
 }
 \examples{
 \donttest{
@@ -392,16 +405,16 @@ well as the estimated partial effects on both levels are calculated.
 # create data for the mixed case
 set.seed(101)
 
-dta <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
+data <- data.frame(obs_density = sample(0:2, 150, replace = TRUE, prob = c(0.15, 0.1, 0.75)),
                   covariate1 = sample(c("a", "b", "c"), 150, replace = TRUE),
                   covariate2 = sample(c("c", "d"), 150, replace = TRUE),
                   covariate3 = rep(rnorm(n = 15), 10),
                   covariate4 = rep(rnorm(n = 10), 15),
                   covariate5 = rep(rnorm(n = 10), 15), sample_weights = runif (150, 0, 2))
-dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density==  2)),
+data[which(data$obs_density == 2), ]$obs_density <- rbeta(length(which(data$obs_density==  2)),
                                                        shape1 = 3, shape2 = 3)
-dta$covariate1 <- ordered(dta$covariate1)
-dta$covariate2 <- ordered(dta$covariate2)
+data$covariate1 <- ordered(data$covariate1)
+data$covariate2 <- ordered(data$covariate2)
 
 # create discrete data
 
@@ -436,26 +449,25 @@ smooth_inter <- list(list(covs = c("covariate3", "covariate4", "covariate5"),
 # fit models (warning: calculation may take a few minutes)
 
 ## fit model for the mixed case with group specific intercepts and linear effects
-### use fixed smoothing parameters in density direction and calculate also the partial effects
+### use fixed smoothing parameters in density direction
 
-m_mixed <- densreg(dta = dta, y = 1, m_continuous = c(2, 2),
+m_mixed <- densreg(data = data, y = 1, m_continuous = c(2, 2),
   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
-  linear_effects = linear_effects, effects = TRUE, sp_y = c(1, 3, 5, 0.5))
+  linear_effects = linear_effects, sp_y = c(1, 3, 5, 0.5))
 
 ## fit model for the discrete case with smooth effects and smooth interaction
-### do not calculate effects
 
 m_dis <- densreg(
-  dta = dta_dis, y = 1, values_discrete = c(0, 1, 2),
+  data = dta_dis, y = 1, values_discrete = c(0, 1, 2),
   weights_discrete = c(1, 1, 1), domain_continuous = FALSE, m_continuous = c(2, 2),
   k_continuous = 4, group_specific_intercepts = group_specific_intercepts,
-  smooth_effects = smooth_effects, smooth_interactions = smooth_inter, effects = FALSE)
+  smooth_effects = smooth_effects, smooth_interactions = smooth_inter)
 
 # fit model for the continuous case with a functional varying coeffecient
 
-m_cont <- densreg(dta = dta[which(!(dta$obs_density \%in\% c(0, 1))), ],
+m_cont <- densreg(data = data[which(!(data$obs_density \%in\% c(0, 1))), ],
   y = 1, values_discrete = FALSE, m_continuous = c(2, 2),
-  k_continuous = 12, varying_coefficients = varying_coef, effects = TRUE)
+  k_continuous = 12, varying_coefficients = varying_coef)
 }
 
 }
@@ -467,6 +479,8 @@ arXiv preprint arXiv:XXXX.XXXXX.
 Maier, E.-M., Stoecker, A., Fitzenberger, B., Greven, S. (2025a):
 Additive Density-on-Scalar Regression in Bayes Hilbert Spaces with an Application to Gender Economics.
 Annals of Applied Statistics, 19(1), ???-???.
+
+% Wood, S. N.; Pya, N. & Säfken, B. Smoothing parameter and model selection for general smooth models Journal of the American Statistical Association, Taylor & Francis, 2016, 111, 1548-1563
 }
 \author{
 Lea Runge, Eva-Maria Maier

@@ -369,10 +369,10 @@ get_estimated_model_effects <-
     # }
     return(
       list(
-        G = G ,
-        estimated_effects = estimated_effects,
+        # G = G ,
+        estimated_effects_clr = estimated_effects,
         #estimated_effects_PLUS_intercept=estimated_effects_PLUS_intercept,
-        pdf_estimated_effects = pdf_estimated_effects
+        estimated_effects = pdf_estimated_effects
       )
     )
     # pdf_estimated_effects_PLUS_intercept=pdf_estimated_effects_PLUS_intercept))

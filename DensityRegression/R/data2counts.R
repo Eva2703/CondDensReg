@@ -17,19 +17,22 @@
 #' @importFrom Rdpack reprompt
 #' @importFrom weights wtd.hist
 #'
-#' @param var_vec Vector of variables of \code{dta} on which the covariate
+#' @param var_vec Vector of variables in \code{data} on which the covariate
 #' combinations are based. The vector can either contain the variable names as
-#' strings or the column positions of the respective variables in \code{dta}.
-#' @param y Variable in \code{dta} containing the response observations
+#' strings or the column positions of the respective variables in \code{data}.
+#' Note that the order of the variables in this vector specifies the order of the
+#' covariate group identifier, i.e., the assignment of \code{group_id} to the
+#' covariate combinations in the returned object.
+#' @param y Variable in \code{data} containing the response observations
 #' \eqn{y_i}. Either the variable name can be given as string or the column
-#' position of the variable in \code{dta} as integer. If missing (\code{NULL}),
-#' if there is a unique column of \code{dta} not specified in \code{var_vec},
+#' position of the variable in \code{data} as integer. If missing (\code{NULL}),
+#' if there is a unique column of \code{data} not specified in \code{var_vec},
 #' \code{sample_weights}, \code{counts}, and \code{weighted_counts} (see below),
 #' this unique column is used.
 #'
 #' @inheritParams densreg
 #'
-#' @return The function returns an object of the class \code{histogram_count_data},
+#' @return The function returns an object of the class \code{count_data},
 #' which is a \code{\link[data.table]{data.table}} with columns:
 #' \itemize{
 #' \item \code{counts} - For each by \code{var_vec} defined covariate combination
@@ -37,21 +40,21 @@
 #' \item \code{weighted_counts} - If \code{sample_weights} is not \code{NULL}:
 #' Weighted (histogram) counts for the respective bin/discrete value incorporating
 #' the sample weights given by \code{sample_weights}.
-#' \item name of variable given to \code{y} - Marks the mid of the respective
+#' \item Name of variable given to \code{y} - Marks the mid of the respective
 #' histogram bin (for values in \eqn{I\setminus D}) or the discrete value. If a
 #' mid corresponds to a discrete value, the mid is shifted to the right by
 #' \eqn{0.0001} times the minimal distance to the next interval limit OR discrete
 #' value so that no mid is exactly corresponding to a discrete value. A warning
 #' message is generated in this case.
-#' \item names of all variable columns which where specified by \code{var_vec} -
+#' \item Names of all variable columns which where specified by \code{var_vec} -
 #' These columns contain the values of the respective variables.
 #' \item \code{group_id} - ID of each covariate combination.
 #' \item \code{gam_weights} - Vector to be passed to argument \code{weights} in
-#' \code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{dta} contains
-#' sample weights, see Appendix C of Maier et al. (2023).
+#' \code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{data} contains
+#' sample weights, see Appendix C of Maier et al. (2025b).
 #' \item \code{gam_offset} - Negative logarithm of \code{gam_weights} to be used
-#' as offset to the predictor of the Poisson Model, if \code{dta} contains sample
-#' weights, see Appendix C of Maier et al. (2023).
+#' as offset to the predictor of the Poisson Model, if \code{data} contains sample
+#' weights, see Appendix C of Maier et al. (2025b).
 #' \item \code{Delta} - Width of the histogram bin or weight of the Dirac measure
 #' for a discrete value defined by \code{weights_discrete}. The Poisson model uses
 #' \code{offset(log(Delta))} to add the necessary additive term in the predictor
@@ -59,8 +62,8 @@
 #' \item \code{discrete} - Logical value indicating whether the respective \code{y}
 #' is a discrete value in \eqn{D}.
 #' }
-#' Note that a \code{plot}-method for objects of class \code{histogram_count_data}
-#' is available via \code{DensityRegression:::histogram_count_data}, however, it is
+#' Note that a \code{plot}-method for objects of class \code{count_data}
+#' is available via \code{DensityRegression:::count_data}, however, it is
 #' not exported, since it is not tested/documented appropriately, yet.
 #'
 #' @author Lea Runge, Eva-Maria Maier
@@ -73,45 +76,44 @@
 #' # create data where 0 and 1 are the discrete observations, values
 #' # equal 2 are replaced below by drawing from a beta distribution
 #'
-#' dta <- data.frame(obs_density = sample(0:2, 100, replace = TRUE,
+#' data <- data.frame(obs_density = sample(0:2, 100, replace = TRUE,
 #'                   prob = c(0.15, 0.1, 0.75)),
 #'                   covariate1 = sample(c("a", "b"), 100, replace = TRUE),
 #'                   covariate2 = sample(c("c", "d"), 100, replace = TRUE),
 #'                   sample_weights = runif (100, 0, 2))
-#' dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density == 2)),
+#' data[which(data$obs_density == 2), ]$obs_density <- rbeta(length(which(data$obs_density == 2)),
 #'                                                         shape1 = 3, shape2 = 3)
 #'
-#' # Create histogram count dataset for dta using 10 equidistant
+#' # Create count dataset for data using 10 equidistant
 #' # bins and default values for continuous domain, discrete
 #' # values and discrete weights while considering a mixed case
 #' # of continuous and discrete domains. The following function calls are
 #' # equivalent:
 #'
-#' data2counts(dta, var_vec = c("covariate1", "covariate2"), y = "obs_density",
+#' data2counts(data, var_vec = c("covariate1", "covariate2"), y = "obs_density",
 #'            sample_weights = "sample_weights", bin_number = 10)
-#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
+#' data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
 #'
 #' # Use the vector bin_width to define non-equidistant bins and
 #' # specify with values_discrete and weights_discrete discrete values
 #' # and weights besides the default (0,1) and weight 1:
 #'
-#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4,
+#' data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4,
 #'            bin_width = c(0.1, 0.5, 0.4), values_discrete = c(0, 1),
 #'            weights_discrete = c(0.5, 2))
 #'
-#' # The use of "values_discrete=FALSE" refers to histogram data in a
-#' # purely continous setting (note that now the observations at 0 and 1 are
-#' # counted towards the outer bins):
+#' # The use of "values_discrete=FALSE" refers to a purely continuous setting,
+#' # i.e., a usual histogram over the whole domain. The observations at 0 and 1
+#' # are now counted towards the outer bins.
 #'
-#' data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
+#' data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
 #'            values_discrete = FALSE)
 #'
 #' # filter data set for only observations valued in discrete domain
 #'
-#' dta_discrete <- dta[which(dta$obs_density %in% c(0, 1)), ]
+#' dta_discrete <- data[which(data$obs_density %in% c(0, 1)), ]
 #'
-#' # The use of "domain_continuous=FALSE" refers to histogram data in a
-#' # purely discrete setting:
+#' # The use of "domain_continuous=FALSE" refers to a purely discrete setting:
 #'
 #' data2counts(dta_discrete, var_vec = c(2, 3), y = 1, sample_weights = 4,
 #'            bin_width = 0.1, values_discrete = c(0, 1),
@@ -133,40 +135,40 @@
 #' Conditional density regression for individual-level data.
 #' arXiv preprint arXiv:XXXX.XXXXX.
 
-data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = NULL,
+data2counts <- function(data, y = NULL, var_vec, sample_weights = NULL, counts = NULL,
                        weighted_counts = NULL, bin_width = NULL,
                        bin_number = NULL, values_discrete = c(0, 1),
                        weights_discrete = 1, domain_continuous = c(0, 1)) { # already_formatted=FALSE
   if (is.null(counts)) {
     # check for invalid arguments
-    checking_data2counts_1(dta, var_vec, sample_weights, bin_width, bin_number,
+    checking_data2counts_1(data, var_vec, sample_weights, bin_width, bin_number,
              values_discrete, weights_discrete, domain_continuous)
     # convert to standardised format and convert given indice vectors into column name vecors
-    if ("response" %in% colnames(dta)) {
-      names(dta)[names(dta) == 'response'] <- 'response_'
+    if ("response" %in% colnames(data)) {
+      names(data)[names(data) == 'response'] <- 'response_'
     }
-    if (!is.data.table(dta)) {
-      dta <- as.data.table(dta)
+    if (!is.data.table(data)) {
+      data <- as.data.table(data)
     }
     if (all(sapply(var_vec, is.numeric))) {
-      var_vec <- colnames(dta)[var_vec]
+      var_vec <- colnames(data)[var_vec]
     }
     if (is.numeric(sample_weights)) {
-      sample_weights <- colnames(dta)[sample_weights]
+      sample_weights <- colnames(data)[sample_weights]
     }
     if (is.numeric(counts)) {
-      counts <- colnames(dta)[counts]
+      counts <- colnames(data)[counts]
     }
     if (is.numeric(weighted_counts)) {
-      weighted_counts <- colnames(dta)[weighted_counts]
+      weighted_counts <- colnames(data)[weighted_counts]
     }
     if (is.null(y)) {
-      y <- setdiff(names(dta), c(var_vec, sample_weights, counts, weighted_counts))
+      y <- setdiff(names(data), c(var_vec, sample_weights, counts, weighted_counts))
     }
-    stopifnot("y must be one variable contained in dta. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
-    checking_data2counts_2(dta, y, domain_continuous)
+    stopifnot("y must be one variable contained in data. Can only be NULL, if uniquely determined by sample_weights and covariates used to specify effects." = length(y)==  1)
+    checking_data2counts_2(data, y, domain_continuous)
     if (is.numeric(y)) {
-      y <- colnames(dta)[y]
+      y <- colnames(data)[y]
     }
     if (isFALSE(weights_discrete)) {
       weights_discrete <- NULL
@@ -198,7 +200,7 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
     # group data by covariate combinations
     keys <- paste(var_vec, collapse = ",")
     selection <- c(y, var_vec, "group_id", sample_weights)
-    dta_grouped <- dta[, group_id := .GRP,
+    dta_grouped <- data[, group_id := .GRP,
                        keyby = keys][, ..selection]
     # standardise name of sample weights
     if (!is.null(sample_weights)) {
@@ -311,7 +313,7 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
       data.table::data.table(
         counts = unlist(list_of_counts_unweighted, recursive = FALSE),
         weighted_counts = unlist(list_of_counts_weighted, recursive = FALSE),
-        # unlist to get dta set
+        # unlist to get data set
         response = unlist(list_of_mids, recursive = FALSE)
       )
     # construct regression features dta_grouped
@@ -412,20 +414,20 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
       warning("Since counts are specified, argument sample_weights is ignored (weighted_counts is not).")
     }
     # if (is.numeric(counts)) {
-    #   counts <- colnames(dta)[counts]
+    #   counts <- colnames(data)[counts]
     # }
     # if (!is.null(weighted_counts)) {
     #   if (is.numeric(weighted_counts)) {
-    #     weighted_counts <- colnames(dta)[weighted_counts]
+    #     weighted_counts <- colnames(data)[weighted_counts]
     #   }
     # }
-    if (!is.data.table(dta)) {
-      dta <- as.data.table(dta)
+    if (!is.data.table(data)) {
+      data <- as.data.table(data)
     }
 
     # Delta
     if (!isFALSE(domain_continuous)) {
-      cont_values <- unlist(unique(dta[, ..y]))
+      cont_values <- unlist(unique(data[, ..y]))
       if (!isFALSE(values_discrete)) {
         cont_values <- setdiff(cont_values, values_discrete)
       }
@@ -458,10 +460,10 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
         } else {
           Delta <- bin_width
         }
-        if (!"weighted_counts" %in% colnames(dta)) {
+        if (!"weighted_counts" %in% colnames(data)) {
           # For histogram construction, counts weight the respective observations,
           # i.e., we "abuse" the argument sample_weights for construction
-          dta_tmp <- Recall(dta, y=y, var_vec=var_vec, bin_number=bin_number,
+          dta_tmp <- Recall(data, y=y, var_vec=var_vec, bin_number=bin_number,
                             bin_width= bin_width, # already_formatted = FALSE,
                             sample_weights = counts, domain_continuous = domain_continuous,
                             values_discrete = values_discrete)
@@ -475,10 +477,10 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
           colnames(dta_est)[1] <- "counts"
           return(dta_est)
         } else {
-          dta_tmp_1 <- Recall(dta, y=y, var_vec=var_vec, bin_number=bin_number,
+          dta_tmp_1 <- Recall(data, y=y, var_vec=var_vec, bin_number=bin_number,
                               bin_width= bin_width, sample_weights = counts,
                               domain_continuous = domain_continuous, values_discrete = values_discrete)
-          dta_tmp_2 <- Recall(dta, y=y, var_vec=var_vec, bin_number=bin_number,
+          dta_tmp_2 <- Recall(data, y=y, var_vec=var_vec, bin_number=bin_number,
                               bin_width= bin_width, sample_weights = weighted_counts,
                               domain_continuous = domain_continuous, values_discrete = values_discrete)
           dta_est <- dta_tmp_2
@@ -512,14 +514,14 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
     }
 
     if (is.numeric(y)) {
-      y <- colnames(dta)[y]
+      y <- colnames(data)[y]
     }
     if (is.numeric(var_vec)) {
-      var_vec <- colnames(dta)[var_vec]
+      var_vec <- colnames(data)[var_vec]
     }
 
-    if (!"weighted_counts"%in% colnames(dta)) {
-      dta_est <- cbind(dta$counts,dta[,..y], dta[,..var_vec])
+    if (!"weighted_counts"%in% colnames(data)) {
+      dta_est <- cbind(data$counts,data[,..y], data[,..var_vec])
       colnames(dta_est)[1] <- "counts"
       keys <- paste(var_vec, collapse = ",")
       selection <- c(y, var_vec, "group_id")
@@ -542,7 +544,7 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
       l <- length(var_vec)
       dta_est <- dta_est[,c(l+2,1,2:(l+1),l+3,l+6,l+7,l+4,l+5)]
     } else {
-      dta_est <- cbind(dta$counts,dta$weighted_counts,dta[,..y], dta[,..var_vec])
+      dta_est <- cbind(data$counts,data$weighted_counts,data[,..y], data[,..var_vec])
       colnames(dta_est)[1] <- "counts"
       colnames(dta_est)[2] <- "weighted_counts"
       keys <- paste(var_vec, collapse = ",")
@@ -568,7 +570,7 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
     }
   }
   dta_est[] <- dta_est
-  attr(dta_est, "class") <- c("histogram_count_data", class(dta_est))
+  attr(dta_est, "class") <- c("count_data", class(dta_est))
   if (length(attr(dta_est, "class"))==4) {
     attr(dta_est, "class") <- attr(dta_est, "class")[c(1,4)]
   }
@@ -590,11 +592,11 @@ data2counts <- function(dta, var_vec, y = NULL, sample_weights = NULL, counts = 
 #'
 #' @inheritParams data2counts
 
-checking_data2counts_1 <- function(dta, var_vec, # y,
+checking_data2counts_1 <- function(data, var_vec, # y,
                         sample_weights, bin_width, bin_number,
                         values_discrete, weights_discrete, domain_continuous) {
 
-  if (!is.data.table(dta) & !is.data.frame(dta)) {
+  if (!is.data.table(data) & !is.data.frame(data)) {
     stop("Invalid type of argument 'dta'! data.frame or data.table is required")
   }
   # if (!is.null(y)) {
@@ -633,14 +635,14 @@ checking_data2counts_1 <- function(dta, var_vec, # y,
   )) {
     stop("Invalid type of argument 'domain_continuous'! numeric is required")
   }
-  if (!is.numeric(var_vec) & !all(var_vec %in% colnames(dta))) {
+  if (!is.numeric(var_vec) & !all(var_vec %in% colnames(data))) {
     stop("Invalid variable names!")
   }
-  # if (!is.numeric(y) & !all(y %in% colnames(dta))) {
+  # if (!is.numeric(y) & !all(y %in% colnames(data))) {
   #   stop("Invalid name for variable of density definition!")
   # }
   if (!is.numeric(sample_weights) &
-      !all(sample_weights %in% colnames(dta))) {
+      !all(sample_weights %in% colnames(data))) {
     stop("Invalid name for sample weights variable!")
   }
   if (isFALSE(values_discrete) & isFALSE(domain_continuous)) {
@@ -659,16 +661,16 @@ checking_data2counts_1 <- function(dta, var_vec, # y,
       stop("Number of bins and bin width not compatible!")
     }
   }
-  if (is.numeric(var_vec) & max(var_vec) > length(colnames(dta))) {
+  if (is.numeric(var_vec) & max(var_vec) > length(colnames(data))) {
     stop("Invalid range of given variables!")
   }
   if (!is.null(sample_weights)) {
     if (is.numeric(sample_weights) &
-        max(sample_weights) > length(colnames(dta))) {
+        max(sample_weights) > length(colnames(data))) {
       stop("Invalid range of given sample weight variable!")
     }
   }
-  # if (is.numeric(y) & max(y) > length(colnames(dta))) {
+  # if (is.numeric(y) & max(y) > length(colnames(data))) {
   #   stop("Invalid range of given density variable!")
   # }
   if (!isFALSE(values_discrete) &
@@ -688,15 +690,15 @@ checking_data2counts_1 <- function(dta, var_vec, # y,
       stop("Discrete values out of range of the continuous domain!")
     }
   }
-  # if (!is.data.table(dta)&!isFALSE(domain_continuous)&is.data.frame(dta)) {
-  #   if (max(dta[,y]) > max(domain_continuous) |
-  #       min(dta[,y]) < min(domain_continuous)) {
+  # if (!is.data.table(data)&!isFALSE(domain_continuous)&is.data.frame(data)) {
+  #   if (max(data[,y]) > max(domain_continuous) |
+  #       min(data[,y]) < min(domain_continuous)) {
   #     stop("Values of response out of range of the continuous domain!")
   #   }
   # }
-  # if (is.data.table(dta)&!isFALSE(domain_continuous)&is.data.frame(dta)) {
-  #   if (max(dta[,..y]) > max(domain_continuous) |
-  #       min(dta[,..y]) < min(domain_continuous)) {
+  # if (is.data.table(data)&!isFALSE(domain_continuous)&is.data.frame(data)) {
+  #   if (max(data[,..y]) > max(domain_continuous) |
+  #       min(data[,..y]) < min(domain_continuous)) {
   #     stop("Values of response out of range of the continuous domain!")
   #   }
   # }
@@ -708,28 +710,28 @@ checking_data2counts_1 <- function(dta, var_vec, # y,
 }
 
 #' @describeIn checking_data2counts_1 Further parameter checks for \code{\link{data2counts}}
-checking_data2counts_2 <- function(dta, y, domain_continuous) {
+checking_data2counts_2 <- function(data, y, domain_continuous) {
   if (!is.numeric(y) & !is.character(y)) {
     stop("Invalid type of argument 'y'! character or numeric is required")
   }
 
-  if (!is.numeric(y) & !all(y %in% colnames(dta))) {
+  if (!is.numeric(y) & !all(y %in% colnames(data))) {
     stop("Invalid name for variable of density definition!")
   }
 
-  if (is.numeric(y) & max(y) > length(colnames(dta))) {
+  if (is.numeric(y) & max(y) > length(colnames(data))) {
     stop("Invalid range of given density variable!")
   }
 
-  if (!is.data.table(dta)&!isFALSE(domain_continuous)&is.data.frame(dta)) {
-    if (max(dta[,y]) > max(domain_continuous) |
-        min(dta[,y]) < min(domain_continuous)) {
+  if (!is.data.table(data)&!isFALSE(domain_continuous)&is.data.frame(data)) {
+    if (max(data[,y]) > max(domain_continuous) |
+        min(data[,y]) < min(domain_continuous)) {
       stop("Values of response out of range of the continuous domain!")
     }
   }
-  if (is.data.table(dta)&!isFALSE(domain_continuous)&is.data.frame(dta)) {
-    if (max(dta[,..y]) > max(domain_continuous) |
-        min(dta[,..y]) < min(domain_continuous)) {
+  if (is.data.table(data)&!isFALSE(domain_continuous)&is.data.frame(data)) {
+    if (max(data[,..y]) > max(domain_continuous) |
+        min(data[,..y]) < min(domain_continuous)) {
       stop("Values of response out of range of the continuous domain!")
     }
   }

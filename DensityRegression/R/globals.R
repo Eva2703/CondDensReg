@@ -8,4 +8,4 @@ utils::globalVariables(c("..covCol", "..densi", "..inds", "..regressors",
                          "weighting_factor", ".", "ind", "response", "k",
                          "value", "variable", "..var_ind", "discrete",
                          "..response_name", "Delta", "height", "freq",
-                         "weighted_counts"))
+                         "weighted_counts", "type"))

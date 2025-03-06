@@ -57,7 +57,7 @@ dta_mixed[ind_cont, ]$obs_density <-
     rbeta(1, shape1 = 1 + exp(dta_mixed$covariate2[i]),
           shape2 = 1 + as.numeric(dta_mixed$covariate1[i])))
 n_bins <- 20
-dta_mixed <- data2counts(dta = dta_mixed, var_vec = c("covariate1", "covariate2"),
+dta_mixed <- data2counts(data = dta_mixed, var_vec = c("covariate1", "covariate2"),
                         bin_number = n_bins, values_discrete = c(0, 1),
                         domain_continuous = c(0, 1))
 
@@ -98,7 +98,7 @@ theta_hat <- m_mixed$coefficients[-intercepts]
 # compute estimated conditional clr-transformed densities
 f_hat_clr <- matrix(c(X \%*\% theta_hat), nrow = length(unique(dta_mixed$obs_density)))
 f_hat <- apply(f_hat_clr, 2,
-               FDboost::clr, w = c(1, rep(1/n_bins, n_bins), 1), inverse = TRUE)
+               clr, w = c(1, rep(1/n_bins, n_bins), 1), inverse = TRUE)
 t <- unique(dta_mixed$obs_density)
 matplot(t[2:(length(t) - 1)], f_hat[2:(length(t) - 1), ], type = "l",
         col = rainbow(ncol(f_hat)), lty = rep(1:5, ceiling(ncol(f_hat) / 5)),

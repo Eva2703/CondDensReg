@@ -6,9 +6,9 @@
 \title{From observations to a vector of observed (histogram) counts}
 \usage{
 data2counts(
-  dta,
-  var_vec,
+  data,
   y = NULL,
+  var_vec,
   sample_weights = NULL,
   counts = NULL,
   weighted_counts = NULL,
@@ -20,33 +20,36 @@ data2counts(
 )
 }
 \arguments{
-\item{dta}{Data set of type \code{\link[base]{data.frame}} or
+\item{data}{Data set of type \code{\link[base]{data.frame}} or
 \code{\link[data.table]{data.table}} containing the observations \eqn{(y_i, x_i)}
 of response and covariates as well as optional sample weights (compare
 \code{sample_weights}) for each observation in the rows (\eqn{i = 1, ..., N}).}
 
-\item{var_vec}{Vector of variables of \code{dta} on which the covariate
-combinations are based. The vector can either contain the variable names as
-strings or the column positions of the respective variables in \code{dta}.}
-
-\item{y}{Variable in \code{dta} containing the response observations
+\item{y}{Variable in \code{data} containing the response observations
 \eqn{y_i}. Either the variable name can be given as string or the column
-position of the variable in \code{dta} as integer. If missing (\code{NULL}),
-if there is a unique column of \code{dta} not specified in \code{var_vec},
+position of the variable in \code{data} as integer. If missing (\code{NULL}),
+if there is a unique column of \code{data} not specified in \code{var_vec},
 \code{sample_weights}, \code{counts}, and \code{weighted_counts} (see below),
 this unique column is used.}
 
-\item{sample_weights}{(Optional) variable in \code{dta} which contains a sample
+\item{var_vec}{Vector of variables in \code{data} on which the covariate
+combinations are based. The vector can either contain the variable names as
+strings or the column positions of the respective variables in \code{data}.
+Note that the order of the variables in this vector specifies the order of the
+covariate group identifier, i.e., the assignment of \code{group_id} to the
+covariate combinations in the returned object.}
+
+\item{sample_weights}{(Optional) variable in \code{data} which contains a sample
 weight for each observation. Either the variable name can be given as string
-or the column position of the variable in \code{dta} as integer. If missing
+or the column position of the variable in \code{data} as integer. If missing
 (\code{NULL}), no sample weights are included per default (i.e., all
 observations have the same weight 1).}
 
-\item{counts}{(Optional) variable in \code{dta} which contains a count for
+\item{counts}{(Optional) variable in \code{data} which contains a count for
 each observation (for cases, where the available data contains counts instead
 of individual observations, which is common in particular for discrete data).
 Either the variable name can be given as string or the column position of the
-variable in \code{dta} as integer. If \code{bin_number} and \code{bin_width}
+variable in \code{data} as integer. If \code{bin_number} and \code{bin_width}
 are both \code{NULL}, midpoints of unique observations \eqn{y_i} are used as
 boundaries of histogram bins (if \eqn{I} is not empty, i.e., if there is a
 continuous component), which are then used to compute the bin widths (which are
@@ -58,23 +61,13 @@ not \code{NULL}, the latter is ignored (also indicated via a warning message).
 Please use \code{weighted_counts} (additionally to \code{counts}) to include
 possible weighted data.}
 
-\item{weighted_counts}{(Optional) variable in \code{dta} which contains a
+\item{weighted_counts}{(Optional) variable in \code{data} which contains a
 weighted count for each observation (compare Appendix D of Maier et al. (2025b)).
 In this case, also absolute counts have to be specified via \code{counts}.
 Otherwise, \code{weighted_counts} is ignored. Either the variable name can be
-given as string or the column position of the variable in \code{dta} as integer.
+given as string or the column position of the variable in \code{data} as integer.
 If missing (\code{NULL}), counts are constructed from individual observations
-(which is equivalent to all observations counted once)
-% @param already_formatted A logical indicating if the data in \code{dta} is
-% already formatted as count data. If \code{already_formatted = TRUE}, the data
-% have to have a column named \code{"counts"}, an additional column with the
-% name \code{"weighted_counts"} is optional.
-% % The relevant variables used for further aggregation are submitted via \code{var_vec}, the relevant column of the observed density via \code{y}.
-% The bin width is computed automatically based on the observed continuous
-% values unless an integer or a vector is submitted by the user via
-% \code{bin_width} and/or \code{bin_number}. In these cases, the binning is
-% based on the given bin number or width.
-.}
+(which is equivalent to all observations counted once).}
 
 \item{bin_width}{Width of histogram bins partitioning \eqn{I}. Can be one
 scalar value (specifying an equidistant bin width), or a vector containing the
@@ -107,7 +100,7 @@ a weighted sum of dirac measures is used as reference measure (discrete special
 case).}
 }
 \value{
-The function returns an object of the class \code{histogram_count_data},
+The function returns an object of the class \code{count_data},
 which is a \code{\link[data.table]{data.table}} with columns:
 \itemize{
 \item \code{counts} - For each by \code{var_vec} defined covariate combination
@@ -115,21 +108,21 @@ the observed (histogram) counts in the first column.
 \item \code{weighted_counts} - If \code{sample_weights} is not \code{NULL}:
 Weighted (histogram) counts for the respective bin/discrete value incorporating
 the sample weights given by \code{sample_weights}.
-\item name of variable given to \code{y} - Marks the mid of the respective
+\item Name of variable given to \code{y} - Marks the mid of the respective
 histogram bin (for values in \eqn{I\setminus D}) or the discrete value. If a
 mid corresponds to a discrete value, the mid is shifted to the right by
 \eqn{0.0001} times the minimal distance to the next interval limit OR discrete
 value so that no mid is exactly corresponding to a discrete value. A warning
 message is generated in this case.
-\item names of all variable columns which where specified by \code{var_vec} -
+\item Names of all variable columns which where specified by \code{var_vec} -
 These columns contain the values of the respective variables.
 \item \code{group_id} - ID of each covariate combination.
 \item \code{gam_weights} - Vector to be passed to argument \code{weights} in
-\code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{dta} contains
-sample weights, see Appendix C of Maier et al. (2023).
+\code{\link[mgcv]{gam}} when fitting the Poisson Model, if \code{data} contains
+sample weights, see Appendix C of Maier et al. (2025b).
 \item \code{gam_offset} - Negative logarithm of \code{gam_weights} to be used
-as offset to the predictor of the Poisson Model, if \code{dta} contains sample
-weights, see Appendix C of Maier et al. (2023).
+as offset to the predictor of the Poisson Model, if \code{data} contains sample
+weights, see Appendix C of Maier et al. (2025b).
 \item \code{Delta} - Width of the histogram bin or weight of the Dirac measure
 for a discrete value defined by \code{weights_discrete}. The Poisson model uses
 \code{offset(log(Delta))} to add the necessary additive term in the predictor
@@ -137,8 +130,8 @@ that includes binwidths/dirac weights into the estimation.
 \item \code{discrete} - Logical value indicating whether the respective \code{y}
 is a discrete value in \eqn{D}.
 }
-Note that a \code{plot}-method for objects of class \code{histogram_count_data}
-is available via \code{DensityRegression:::histogram_count_data}, however, it is
+Note that a \code{plot}-method for objects of class \code{count_data}
+is available via \code{DensityRegression:::count_data}, however, it is
 not exported, since it is not tested/documented appropriately, yet.
 }
 \description{
@@ -159,45 +152,44 @@ set.seed(101)
 # create data where 0 and 1 are the discrete observations, values
 # equal 2 are replaced below by drawing from a beta distribution
 
-dta <- data.frame(obs_density = sample(0:2, 100, replace = TRUE,
+data <- data.frame(obs_density = sample(0:2, 100, replace = TRUE,
                   prob = c(0.15, 0.1, 0.75)),
                   covariate1 = sample(c("a", "b"), 100, replace = TRUE),
                   covariate2 = sample(c("c", "d"), 100, replace = TRUE),
                   sample_weights = runif (100, 0, 2))
-dta[which(dta$obs_density == 2), ]$obs_density <- rbeta(length(which(dta$obs_density == 2)),
+data[which(data$obs_density == 2), ]$obs_density <- rbeta(length(which(data$obs_density == 2)),
                                                         shape1 = 3, shape2 = 3)
 
-# Create histogram count dataset for dta using 10 equidistant
+# Create count dataset for data using 10 equidistant
 # bins and default values for continuous domain, discrete
 # values and discrete weights while considering a mixed case
 # of continuous and discrete domains. The following function calls are
 # equivalent:
 
-data2counts(dta, var_vec = c("covariate1", "covariate2"), y = "obs_density",
+data2counts(data, var_vec = c("covariate1", "covariate2"), y = "obs_density",
            sample_weights = "sample_weights", bin_number = 10)
-data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
+data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1)
 
 # Use the vector bin_width to define non-equidistant bins and
 # specify with values_discrete and weights_discrete discrete values
 # and weights besides the default (0,1) and weight 1:
 
-data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4,
+data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4,
            bin_width = c(0.1, 0.5, 0.4), values_discrete = c(0, 1),
            weights_discrete = c(0.5, 2))
 
-# The use of "values_discrete=FALSE" refers to histogram data in a
-# purely continous setting (note that now the observations at 0 and 1 are
-# counted towards the outer bins):
+# The use of "values_discrete=FALSE" refers to a purely continuous setting,
+# i.e., a usual histogram over the whole domain. The observations at 0 and 1
+# are now counted towards the outer bins.
 
-data2counts(dta, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
+data2counts(data, var_vec = c(2, 3), y = 1, sample_weights = 4, bin_width = 0.1,
            values_discrete = FALSE)
 
 # filter data set for only observations valued in discrete domain
 
-dta_discrete <- dta[which(dta$obs_density \%in\% c(0, 1)), ]
+dta_discrete <- data[which(data$obs_density \%in\% c(0, 1)), ]
 
-# The use of "domain_continuous=FALSE" refers to histogram data in a
-# purely discrete setting:
+# The use of "domain_continuous=FALSE" refers to a purely discrete setting:
 
 data2counts(dta_discrete, var_vec = c(2, 3), y = 1, sample_weights = 4,
            bin_width = 0.1, values_discrete = c(0, 1),

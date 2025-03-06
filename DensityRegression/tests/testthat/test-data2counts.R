@@ -99,7 +99,7 @@ test_that("Scenario A", {
   original = original[sample(1:nrow(original)), ]
   data_backtransformed <-
     data2counts(
-      dta = original,
+      data = original,
       var_vec = c(2:3),
       y = 1,
       sample_weights = 4,
@@ -661,7 +661,7 @@ test_that("Scenario F", {
 })
 
 # Scenario G: mids have to be shifted
-test_that("Szenatio G", {
+test_that("Szenario G", {
   # create small observed (histogram) count data set where one mid (0.25) has to
   # be shifted due to a discrete value of 0.25
   domain_continuous <- c(0, 1)
@@ -933,3 +933,4 @@ test_that("Errors", {
     domain_continuous = c(0,1)
   ))
 })
+
